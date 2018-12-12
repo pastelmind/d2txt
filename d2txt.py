@@ -80,7 +80,7 @@ class D2TXT(collections.abc.Sequence):
         txt_writer.writerows(self._rows)
 
     def load_ini(self, inifile):
-        ini_parser = ConfigParser(interpolation=None)
+        ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
         ini_parser.optionxform = str    # Make column names case-sensitive
         ini_parser.read_file(inifile)
 
@@ -100,7 +100,7 @@ class D2TXT(collections.abc.Sequence):
                 row[column_name] = value
 
     def to_ini(self, inifile):
-        ini_parser = ConfigParser(interpolation=None)
+        ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
         ini_parser.optionxform = str    # Make column names case-sensitive
         ini_parser['Columns'] = {column_name: '' for column_name in self._column_names}
 
