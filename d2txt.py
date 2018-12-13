@@ -111,7 +111,7 @@ class D2TXT(collections.abc.Sequence):
                 if value:
                     ini_parser[section_name][self._column_names[column_index]] = value
 
-        ini_parser.write(inifile)
+        ini_parser.write(inifile, space_around_delimiters=False)
 
 
 if __name__ == '__main__':
