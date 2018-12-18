@@ -90,7 +90,11 @@ class D2TXT(collections.abc.Sequence):
                 column_new_name = f'(col{_column_index_to_str(column_index + 1)})'
                 self._column_names[column_index] = column_new_name
 
-        self._rows = [D2TXTRow(row, self._column_names) for row in txt_reader]
+        self._rows = []
+        for txt_row in txt_reader:
+            # Strip whitespace
+            row = [cell.strip() for cell in txt_row]
+            self._rows.append(D2TXTRow(row, self._column_names))
 
     def to_txt(self, txtfile):
         txt_writer = csv.writer(txtfile, dialect='excel-tab',
