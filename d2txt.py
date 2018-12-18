@@ -6,6 +6,17 @@ import collections.abc
 import argparse
 
 
+def _column_index_to_str(column_index):
+    '''Converts a 1-indexed column number to an Excel-style column name string
+    (A, B, ...).'''
+    column_name = ''
+    while column_index > 0:
+        modulo = (column_index - 1) % 26
+        column_name = chr(modulo + ord('A')) + column_name
+        column_index = (column_index - modulo) // 26
+    return column_name
+
+
 class D2TXTRow(collections.abc.Sequence):
     '''
     Represents a single row in a tabbed txt file.
@@ -70,7 +81,15 @@ class D2TXT(collections.abc.Sequence):
     def load_txt(self, txtfile):
         txt_reader = csv.reader(txtfile, dialect='excel-tab',
             quoting=csv.QUOTE_NONE, quotechar=None)
+
         self._column_names = list(next(txt_reader))
+
+        #Fix for empty column names
+        for column_index, column_name in enumerate(self._column_names):
+            if column_name == '':
+                column_new_name = f'(col{_column_index_to_str(column_index + 1)})'
+                self._column_names[column_index] = column_new_name
+
         self._rows = [D2TXTRow(row, self._column_names) for row in txt_reader]
 
     def to_txt(self, txtfile):
