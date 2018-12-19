@@ -79,6 +79,11 @@ class D2TXT(collections.abc.Sequence):
 
 
     def load_txt(self, txtfile):
+        if isinstance(txtfile, str):
+            with open(txtfile) as txtfile_obj:
+                self.load_txt(txtfile_obj)
+                return
+
         txt_reader = csv.reader(txtfile, dialect='excel-tab',
             quoting=csv.QUOTE_NONE, quotechar=None)
 
@@ -97,12 +102,22 @@ class D2TXT(collections.abc.Sequence):
             self._rows.append(D2TXTRow(row, self._column_names))
 
     def to_txt(self, txtfile):
+        if isinstance(txtfile, str):
+            with open(txtfile, mode='w', newline='') as txtfile_obj:
+                self.to_txt(txtfile_obj)
+                return
+
         txt_writer = csv.writer(txtfile, dialect='excel-tab',
             quoting=csv.QUOTE_NONE, quotechar=None)
         txt_writer.writerow(self._column_names)
         txt_writer.writerows(self._rows)
 
     def load_ini(self, inifile):
+        if isinstance(inifile, str):
+            with open(inifile) as inifile_obj:
+                self.load_ini(inifile_obj)
+                return
+
         ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
         ini_parser.optionxform = str    # Make column names case-sensitive
         ini_parser.read_file(inifile)
@@ -123,6 +138,11 @@ class D2TXT(collections.abc.Sequence):
                 row[column_name] = value
 
     def to_ini(self, inifile):
+        if isinstance(inifile, str):
+            with open(inifile, mode='w', newline='') as inifile_obj:
+                self.to_ini(inifile_obj)
+                return
+
         ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
         ini_parser.optionxform = str    # Make column names case-sensitive
         ini_parser['Columns'] = {column_name: '' for column_name in self._column_names}
@@ -154,14 +174,10 @@ if __name__ == '__main__':
     d2txtfile = D2TXT()
 
     if args.command == 'compile':
-        with open(args.inifile) as inifile:
-            d2txtfile.load_ini(inifile)
-        with open(args.txtfile, mode='w', newline='') as txtfile:
-            d2txtfile.to_txt(txtfile)
+        d2txtfile.load_ini(args.inifile)
+        d2txtfile.to_txt(args.txtfile)
     elif args.command == 'decompile':
-        with open(args.txtfile) as txtfile:
-            d2txtfile.load_txt(txtfile)
-        with open(args.inifile, mode='w', newline='') as inifile:
-            d2txtfile.to_ini(inifile)
+        d2txtfile.load_txt(args.txtfile)
+        d2txtfile.to_ini(args.inifile)
     else:
         print(f'Unknown command: {args.command}')
