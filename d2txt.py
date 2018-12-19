@@ -17,6 +17,52 @@ def _column_index_to_str(column_index):
     return column_name
 
 
+def txt2ini(txtfile, inifile):
+    '''Decompiles Diablo 2 TXT files to INI files.
+
+    Args:
+        txtfile: A path string or readable file object
+        inifile: A path string or writable file object
+    '''
+    if isinstance(txtfile, str):
+        with open(txtfile) as txtfile_obj:
+            txt2ini(txtfile_obj, inifile)
+            return
+    if isinstance(inifile, str):
+        with open(inifile, mode='w', newline='') as inifile_obj:
+            txt2ini(txtfile, inifile_obj)
+            return
+
+    txt_reader = csv.reader(txtfile, dialect='excel-tab',
+        quoting=csv.QUOTE_NONE, quotechar=None)
+
+    ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
+    ini_parser.optionxform = str    # Make column names case-sensitive
+
+    # Parse the first row (column names)
+    column_names = []
+    for column_index, column_name in enumerate(next(txt_reader)):
+        #Fix for empty column names
+        if column_name == '':
+            column_name = f'(col{_column_index_to_str(column_index + 1)})'
+        column_names.append(column_name)
+
+    ini_parser['Columns'] = {column_name: '' for column_name in column_names}
+
+    # Parse the remaining rows
+    for row_index, txt_row in enumerate(txt_reader):
+        section_name = str(row_index + 1)
+        ini_parser[section_name] = {}
+        for column_index, raw_value in enumerate(txt_row):
+            # Strip whitespace
+            value = raw_value.strip()
+            if value:
+                ini_parser[section_name][column_names[column_index]] = value
+
+    ini_parser.write(inifile, space_around_delimiters=False)
+
+
+
 class D2TXTRow(collections.abc.Sequence):
     '''
     Represents a single row in a tabbed txt file.
@@ -177,7 +223,6 @@ if __name__ == '__main__':
         d2txtfile.load_ini(args.inifile)
         d2txtfile.to_txt(args.txtfile)
     elif args.command == 'decompile':
-        d2txtfile.load_txt(args.txtfile)
-        d2txtfile.to_ini(args.inifile)
+        txt2ini(args.txtfile, args.inifile)
     else:
         print(f'Unknown command: {args.command}')
