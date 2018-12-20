@@ -6,6 +6,22 @@ import collections.abc
 import argparse
 
 
+def _backtickify(s):
+    '''If the given string s has leading or trailing space characters, wraps it
+    with a pair of backticks.'''
+    if s[0] == ' ' or s[-1] == ' ':
+        return '`' + s + '`'
+    else:
+        return s
+
+def _unbacktickify(s):
+    '''If the given string s is wrapped in a pair of backticks, removes it.'''
+    if s[0] == s[-1] == '`':
+        return s[1:-1]
+    else:
+        return s
+
+
 def _column_index_to_str(column_index):
     '''Converts a 1-indexed column number to an Excel-style column name string
     (A, B, ...).'''
@@ -45,7 +61,7 @@ def txt2ini(txtfile, inifile):
         #Fix for empty column names
         if column_name == '':
             column_name = f'(col{_column_index_to_str(column_index + 1)})'
-        column_names.append(column_name)
+        column_names.append(_backtickify(column_name))
 
     ini_parser['Columns'] = {column_name: '' for column_name in column_names}
 
@@ -55,6 +71,7 @@ def txt2ini(txtfile, inifile):
         ini_parser[section_name] = {}
         for column_index, value in enumerate(txt_row):
             if value:
+                value = _backtickify(value)
                 ini_parser[section_name][column_names[column_index]] = value
 
     ini_parser.write(inifile, space_around_delimiters=False)
@@ -162,7 +179,7 @@ class D2TXT(collections.abc.Sequence):
         ini_parser.optionxform = str    # Make column names case-sensitive
         ini_parser.read_file(inifile)
 
-        self._column_names = list(ini_parser['Columns'].keys())
+        self._column_names = [_unbacktickify(column_name) for column_name in ini_parser['Columns'].keys()]
 
         for section_name, section in ini_parser.items():
             try:
@@ -175,7 +192,7 @@ class D2TXT(collections.abc.Sequence):
 
             row = self._rows[row_index]
             for column_name, value in section.items():
-                row[column_name] = value
+                row[column_name] = _unbacktickify(value)
 
     def to_ini(self, inifile):
         if isinstance(inifile, str):
@@ -185,13 +202,14 @@ class D2TXT(collections.abc.Sequence):
 
         ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
         ini_parser.optionxform = str    # Make column names case-sensitive
-        ini_parser['Columns'] = {column_name: '' for column_name in self._column_names}
+        ini_parser['Columns'] = {_backtickify(column_name): '' for column_name in self._column_names}
 
         for row_index, row in enumerate(self._rows):
             section_name = str(row_index + 1)
             ini_parser[section_name] = {}
             for column_index, value in enumerate(row):
                 if value:
+                    value = _backtickify(value)
                     ini_parser[section_name][self._column_names[column_index]] = value
 
         ini_parser.write(inifile, space_around_delimiters=False)
