@@ -57,10 +57,19 @@ def txt2ini(txtfile, inifile):
 
     # Parse the first row (column names)
     column_names = []
+    column_name_set = set()
     for column_index, column_name in enumerate(next(txt_reader)):
         #Fix for empty column names
         if column_name == '':
             column_name = f'(col{_column_index_to_str(column_index + 1)})'
+
+        #Fix for duplicate column names
+        while column_name in column_name_set:
+            alt_column_name = f'{column_name}({_column_index_to_str(column_index + 1)})'
+            print(f'Duplicate column name detected: {column_name} replaced with {alt_column_name}')
+            column_name = alt_column_name
+
+        column_name_set.add(column_name)
         column_names.append(_backtickify(column_name))
 
     ini_parser['Columns'] = {column_name: '' for column_name in column_names}
@@ -150,11 +159,20 @@ class D2TXT(collections.abc.Sequence):
 
         self._column_names = list(next(txt_reader))
 
-        #Fix for empty column names
+        column_name_set = set()
         for column_index, column_name in enumerate(self._column_names):
+            #Fix for empty column names
             if column_name == '':
-                column_new_name = f'(col{_column_index_to_str(column_index + 1)})'
-                self._column_names[column_index] = column_new_name
+                column_name = f'(col{_column_index_to_str(column_index + 1)})'
+
+            #Fix for duplicate column names
+            while column_name in column_name_set:
+                alt_column_name = f'{column_name}({_column_index_to_str(column_index + 1)})'
+                print(f'Duplicate column name detected: {column_name} replaced with {alt_column_name}')
+                column_name = alt_column_name
+
+            column_name_set.add(column_name)
+            self._column_names[column_index] = column_name
 
         self._rows = [D2TXTRow(row, self._column_names) for row in txt_reader]
 
