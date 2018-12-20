@@ -53,9 +53,7 @@ def txt2ini(txtfile, inifile):
     for row_index, txt_row in enumerate(txt_reader):
         section_name = str(row_index + 1)
         ini_parser[section_name] = {}
-        for column_index, raw_value in enumerate(txt_row):
-            # Strip whitespace
-            value = raw_value.strip()
+        for column_index, value in enumerate(txt_row):
             if value:
                 ini_parser[section_name][column_names[column_index]] = value
 
@@ -141,11 +139,7 @@ class D2TXT(collections.abc.Sequence):
                 column_new_name = f'(col{_column_index_to_str(column_index + 1)})'
                 self._column_names[column_index] = column_new_name
 
-        self._rows = []
-        for txt_row in txt_reader:
-            # Strip whitespace
-            row = [cell.strip() for cell in txt_row]
-            self._rows.append(D2TXTRow(row, self._column_names))
+        self._rows = [D2TXTRow(row, self._column_names) for row in txt_reader]
 
     def to_txt(self, txtfile):
         if isinstance(txtfile, str):
