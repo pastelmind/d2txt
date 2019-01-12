@@ -24,6 +24,92 @@ def _unbacktickify(s):
         return s
 
 
+# See https://d2mods.info/forum/viewtopic.php?t=43737 for more information
+AURAFILTER_FLAGS = {
+    0x00000001: 'FindPlayers',
+    0x00000002: 'FindMonsters',
+    0x00000004: 'FindOnlyUndead',
+    0x00000008: 'FindMissiles',         # Ignores missiles with explosion=1 in missiles.txt
+    0x00000010: 'FindObjects',
+    0x00000020: 'FindItems',
+#   0x00000040: 'Unknown40',
+    0x00000080: 'FindAttackable',       # Target units flagged as IsAtt in monstats2.txt
+    0x00000100: 'NotInsideTowns',
+    0x00000200: 'UseLineOfSight',
+    0x00000400: 'FindSelectable',       # Checked manually by curse skill functions
+#   0x00000800: 'Unknown800',
+    0x00001000: 'FindCorpses',          # Targets corpses of monsters and players
+    0x00002000: 'NotInsideTowns2',
+    0x00004000: 'IgnoreBoss',           # Ignores units with SetBoss=1 in MonStats.txt
+    0x00008000: 'IgnoreAllies',
+    0x00010000: 'IgnoreNPC',           # Ignores units with npc=1 in MonStats.txt
+    0x00020000: 'Unknown20000',
+    0x00040000: 'IgnorePrimeEvil',     # Ignores units with primeevil=1 in MonStats.txt
+    0x00080000: 'IgnoreJustHitUnits',  # Used by chainlightning
+    # Rest are unknown
+}
+
+AURAFILTER_NAMES = {v: k for k, v in AURAFILTER_FLAGS.items()}
+
+
+def decode_aurafilter(aurafilter):
+    '''Decodes an aurafilter value (integer) to a string of flag names.'''
+    aurafilter = int(aurafilter)
+    if not aurafilter:
+        return '0'
+
+    af_names = []
+    for bitshift in range(0, 32):
+        flag = 1 << bitshift
+        if aurafilter & flag:
+            af_names.append(AURAFILTER_FLAGS.get(flag, f'{flag:#x}'))
+
+    if af_names:
+        return ' | '.join(af_names)
+    else:
+        return '0'
+
+
+def encode_aurafilter(af_str):
+    '''
+    Encodes a string of flag names separated by pipe characters (|) to an
+    aurafilter value (integer).
+    '''
+    if not af_str:
+        return 0
+
+    aurafilter = 0
+    for flag_name in af_str.split('|'):
+        flag = AURAFILTER_NAMES.get(flag_name.strip())
+        if not flag:
+            flag = int(flag_name, 0)
+        aurafilter |= flag
+
+    return aurafilter
+
+
+def txt_value_to_ini(value, column_name):
+    '''
+    Decode a value from a TXT file to a string for an INI file. Uses the given
+    column name to decide how to encode the value.
+    '''
+    if column_name == 'aurafilter':
+        return decode_aurafilter(value)
+
+    return _backtickify(value)
+
+
+def ini_value_to_txt(text, column_name):
+    '''
+    Encode a string from an INI file to a value for a TXT file. Uses the given
+    column name to decide how to decode the value.
+    '''
+    if column_name == 'aurafilter':
+        return encode_aurafilter(text)
+
+    return _unbacktickify(text)
+
+
 def ini_to_d2txt(inifile):
     '''Creates a D2TXT object from an INI file.
 
@@ -52,7 +138,7 @@ def ini_to_d2txt(inifile):
             d2txt.append([])
 
         for column_name, value in section.items():
-            d2txt[row_index, column_name] = _unbacktickify(value)
+            d2txt[row_index, column_name] = ini_value_to_txt(value, column_name)
 
     return d2txt
 
@@ -79,7 +165,7 @@ def d2txt_to_ini(d2txt, inifile):
         for column_index, value in enumerate(row):
             if value:
                 column_name = d2txt._column_names[column_index]
-                ini_parser[section_name][column_name] = _backtickify(value)
+                ini_parser[section_name][column_name] = txt_value_to_ini(value, column_name)
 
     ini_parser.write(inifile, space_around_delimiters=False)
 
