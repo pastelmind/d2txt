@@ -29,7 +29,10 @@ class D2TXTRow(collections.abc.Sequence):
 
     def __getitem__(self, key):
         if isinstance(key, str):
-            key = self._column_names.index(key)
+            try:
+                key = self._column_names.index(key)
+            except ValueError:
+                raise KeyError(key)
         return self._row[key]
 
     def __len__(self):

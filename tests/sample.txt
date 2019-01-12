@@ -1,0 +1,5 @@
+Column Name	Duplicate column name	Duplicate column name		column name
+cell // with # comment ; characters	next cell is empty		cell in column with empty name	0
+next row is empty	cell with trailing spaces	cell with leading spaces		0
+				0
+previous row is empty	next cell contains only spaces	   		0
