@@ -1,98 +1,153 @@
 #!/usr/bin/env python
 
+'''Reads ItemTypes.txt, Weapons.txt and prints graphs of the item type hierarchy.'''
+
+
+import colorama
+import sys
+from os import path
+sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), '..')))
+
 from d2txt import D2TXT
-from colorama import init, Fore
-
-init()
 
 
+colorama.init()
+Fore = colorama.Fore
 
-def walk_item_types(itype_code, item_types_txt):
-    if not itype_code:
-        return []
-    itypes_found = [itype_code]
+
+class ITypeNode:
+    '''Represents a node in an itype tree.'''
+
+    def __init__(self, code):
+        self.code = code
+        self.children = []
+        self.parents = []
+
+    def ancestor_codes(self):
+        '''Returns a list of all ancestor itype codes, including this itype.'''
+        codes = [self.code]
+        for parent_node in self.parents:
+            codes += parent_node.ancestor_codes()
+        return codes
+
+
+def parse_itypes(item_types_txt):
+    '''
+    Reads each item type in ItemTypes.txt and builds a dictionary of ITypeNode
+    objects keyed by itype code.
+    '''
+
+    itype_nodes = {}
+    parent_codes = {}
+
     for item_type in item_types_txt:
-        if item_type['Code'] == itype_code:
-            ancestor_itypes_1 = walk_item_types(item_type['Equiv1'], item_types_txt)
-            ancestor_itypes_2 = walk_item_types(item_type['Equiv2'], item_types_txt)
-            itypes_found += ancestor_itypes_1 + ancestor_itypes_2
-    return itypes_found
+        code = item_type['Code']
+        if not code:
+            continue
+        if code in itype_nodes:
+            raise KeyError(f'Duplicate itype code \'{code}\' found')
+
+        node = itype_nodes[code] = ITypeNode(code)
+        parent_code_list = parent_codes[code] = []
+        if item_type['Equiv1']:
+            parent_code_list.append(item_type['Equiv1'])
+        if item_type['Equiv2']:
+            parent_code_list.append(item_type['Equiv2'])
+
+    # Link parents and children
+    for code, node in itype_nodes.items():
+        for p_code in parent_codes[code]:
+            parent_node = itype_nodes[p_code]
+            parent_node.children.append(node)
+            node.parents.append(parent_node)
+
+    return itype_nodes
 
 
-item_types_txt = D2TXT()
-weapons_txt = D2TXT()
+def classify_itypes_by_hand(itype_nodes, weapons_txt):
+    '''
+    Reads Weapons.txt and classifies item types into 3 groups:
+    1-hand only, 2-hand only, and mixed.
+    Weapons that can be both 1- and 2-hand are classified as 2-hand weapons.
+    Item types not used by weapons are ignored.
 
-TXT_DIR_PATH = '../../../Downloads/D2/PlugY-test/data/global/excel/'
-item_types_txt.load_txt(TXT_DIR_PATH + 'ItemTypes.txt')
-weapons_txt.load_txt(TXT_DIR_PATH + '/Weapons.txt')
+    Returns:
+        A tuple of 3 sets containing itype codes, in order:
+        - Item types that contain only 1-hand weapons
+        - Item types that contain only 2-hand weapons
+        - Item types that have both 1- and 2-hand weapons
+    '''
 
+    one_handers = set()
+    two_handers = set()
 
-one_handers = set()
-two_handers = set()
+    for weapon in weapons_txt:
+        code = weapon['code']
+        if not code:
+            continue
 
-for weapon in weapons_txt:
-    name = weapon['name']
-    code = weapon['code']
-    if not code:
-        continue
-    type1 = weapon['type']
-    type2 = weapon['type2']
+        if weapon['2handed']:
+            target_group = two_handers
+        else:
+            target_group = one_handers
 
-    if weapon['2handed']:
-        target_group = two_handers
-    else:
-        target_group = one_handers
+        itype_codes = []
+        if weapon['type']:
+            itype_codes += itype_nodes[weapon['type']].ancestor_codes()
+        if weapon['type2']:
+            itype_codes += itype_nodes[weapon['type2']].ancestor_codes()
 
-    ancestor_itypes = walk_item_types(type1, item_types_txt) + walk_item_types(type2, item_types_txt)
-    for itype in ancestor_itypes:
-        target_group.add(itype)
+        target_group.update(itype_codes)
 
-mixed_types = one_handers & two_handers
-one_handers -= mixed_types
-two_handers -= mixed_types
+    mixed_types = one_handers & two_handers
+    one_handers -= mixed_types
+    two_handers -= mixed_types
 
-print('One-handers: ' + ','.join(one_handers))
-print('Two-handers: ' + ','.join(two_handers))
-print('Mixed bags : ' + ','.join(mixed_types))
-
-
-# Build type tree
-
-itype_nodes = {}
-for itype_entry in item_types_txt:
-    code = itype_entry['Code']
-    if not code:
-        continue
-    if code in itype_nodes:
-        raise KeyError(f'Duplicate itype code {code} found')
-    itype_node = {'code': code, 'subtypes': [], 'parents': []}
-    itype_equivs = [itype_entry['Equiv1'], itype_entry['Equiv2']]
-    itype_node['parents'] = [equiv for equiv in itype_equivs if equiv]
-    itype_nodes[code] = itype_node
-
-descendant_itypes = set()
-for code, itype_node in itype_nodes.items():
-    if itype_node['parents']:
-        descendant_itypes.add(code)
-        for parent_code in itype_node['parents']:
-            parent_node = itype_nodes[parent_code]
-            parent_node['subtypes'].append(itype_node)
-
-for descendant_code in descendant_itypes:
-    del itype_nodes[descendant_code]
+    return one_handers, two_handers, mixed_types
 
 
-def print_itype_tree(itype_node, current_depth=0):
-    if not itype_node:
+def print_itype_tree(node, one_handers=None, two_handers=None, current_depth=0):
+    '''
+    Prints a tree of itypes, starting at the given node as root.
+    If one_handers and/or two_handers is specified, any itype code present in
+    either collection is highlighted and marked with arrows.
+    '''
+    if not node:
         return
-    output_str = ' ' * (4 * current_depth) + itype_node['code']
-    if itype_node['code'] in one_handers:
-        output_str = Fore.GREEN + output_str + ' <-- 1h' + Fore.RESET
-    elif itype_node['code'] in two_handers:
-        output_str = Fore.CYAN + output_str + ' <-- 2h' + Fore.RESET
-    print(output_str)
-    for child_type in itype_node['subtypes']:
-        print_itype_tree(child_type, current_depth + 1)
 
-for root_node in itype_nodes.values():
-    print_itype_tree(root_node)
+    output_str = ' ' * (4 * current_depth) + node.code
+
+    if one_handers and node.code in one_handers:
+        output_str = Fore.GREEN + output_str + ' <-- 1h' + Fore.RESET
+    elif two_handers and node.code in two_handers:
+        output_str = Fore.CYAN + output_str + ' <-- 2h' + Fore.RESET
+
+    print(output_str)
+
+    for child in node.children:
+        print_itype_tree(child, one_handers, two_handers, current_depth + 1)
+
+
+if __name__ == '__main__':
+    import argparse
+
+    arg_parser = argparse.ArgumentParser(__doc__)
+    arg_parser.add_argument('itemtypes_txt', help='Path to ItemTypes.txt')
+    arg_parser.add_argument('weapons_txt', help='Path to Weapons.txt')
+
+    args = arg_parser.parse_args()
+
+    item_types_txt = D2TXT.load_txt(args.itemtypes_txt)
+    weapons_txt = D2TXT.load_txt(args.weapons_txt)
+
+    itype_nodes = parse_itypes(item_types_txt)
+
+    one_handers, two_handers, mixed_types = classify_itypes_by_hand(itype_nodes, weapons_txt)
+    print('One-handers: ' + ', '.join(one_handers))
+    print('Two-handers: ' + ', '.join(two_handers))
+    print('Mixed bags : ' + ', '.join(mixed_types))
+    print('-' * 80)
+
+    for node in itype_nodes.values():
+        if not node.parents:
+            print_itype_tree(node, one_handers=one_handers, two_handers=two_handers)
