@@ -3,8 +3,11 @@
 '''
 Add formulas in 'skpoints' of Skills.txt that limit how skill points can be
 invested into each skill.
+
 Warning: These formulas do NOT play well with PlugY's skill point reallocation
 feature and may destroy all skill points!
+
+Note: This script modifies Skills.txt.
 '''
 
 

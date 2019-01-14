@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-'''Assigns item codes to `type2` of all weapons based on the number of hands required.'''
+'''
+Assigns item codes to `type2` of all weapons based on the number of hands required.
+
+Note: This script modifies Weapons.txt.
+'''
 
 
 import sys
