@@ -27,11 +27,16 @@ collection of cells, which can be accessed by column name or index:
 fire_ball = skills_txt[47]
 
 # Better way to find Fire Ball (will raise StopIteration if none is found)
+# Not: If you want to do this a lot, consider building a dict() for fast lookups
 fire_ball = next(s for s in skills_txt if s['skill'] == 'Fire Ball')
 
-# Directly read or write to each cell
-print(skills_txt[47]['EType'])  # "fire"
-print(skills_txt[47, 'EType'])  # "fire"
+# Directly read and write each cell
+print(skills_txt[47]['EType'])      # prints "fire"
+print(skills_txt[47, 'EType'])      # prints "fire"
+print(fire_ball['EType'])           # prints "fire"
+
+skills_txt[47]['EType'] = 'ltng'    # Change damage element to lightning
+fire_ball['EType'] = 'ltng'         # Same as above
 
 # To "erase" a cell, set it to '', 0, or any falsy value.
 skills_txt[47]['EType'] = ''
