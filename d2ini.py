@@ -138,7 +138,7 @@ def ini_to_d2txt(inifile):
             d2txt.append([])
 
         for column_name, value in section.items():
-            d2txt[row_index, column_name] = ini_value_to_txt(value, column_name)
+            d2txt[row_index][column_name] = ini_value_to_txt(value, column_name)
 
     return d2txt
 

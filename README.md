@@ -32,7 +32,6 @@ fire_ball = next(s for s in skills_txt if s['skill'] == 'Fire Ball')
 
 # Directly read and write each cell
 print(skills_txt[47]['EType'])      # prints "fire"
-print(skills_txt[47, 'EType'])      # prints "fire"
 print(fire_ball['EType'])           # prints "fire"
 
 skills_txt[47]['EType'] = 'ltng'    # Change damage element to lightning

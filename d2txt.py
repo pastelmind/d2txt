@@ -57,25 +57,13 @@ class D2TXT(collections.abc.MutableSequence):
     #     pass
 
     def __getitem__(self, key):
-        if isinstance(key, tuple):
-            if len(key) != 2:
-                raise KeyError(f'Invalid number of keys given, expected 2: {key}')
-            row_index, column_key = key
-            return self.__getitem__(row_index)[column_key]
-        else:
-            return self._rows[key]
+        return self._rows[key]
 
     def __len__(self):
         return len(self._rows)
 
     def __setitem__(self, key, value):
-        if isinstance(key, tuple):
-            if len(key) != 2:
-                raise KeyError(f'Invalid number of keys given, expected 2: {key}')
-            row_index, column_key = key
-            self._rows[row_index][column_key] = value
-        else:
-            self._rows[key] = D2TXTRow(value, self._column_names)
+        self._rows[key] = D2TXTRow(value, self._column_names)
 
     def __delitem__(self, index):
         del self._rows[index]
