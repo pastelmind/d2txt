@@ -26,7 +26,7 @@ def _column_index_to_str(column_index):
     return column_name
 
 
-class D2TXTRow(collections.abc.Sequence):
+class D2TXTRow(collections.abc.Mapping):
     """
     Represents a single row in a tabbed txt file.
     """
@@ -44,20 +44,24 @@ class D2TXTRow(collections.abc.Sequence):
         self._row += [None] * (num_columns - len(self._row))
 
     def __getitem__(self, key):
-        if isinstance(key, str):
-            try:
-                key = self._column_names.index(key)
-            except ValueError:
-                raise KeyError(key)
-        return self._row[key]
+        try:
+            index = self._column_names.index(key)
+        except ValueError:
+            raise KeyError(key) from None
+        return self._row[index]
+
+    def __iter__(self):
+        return iter(self._column_names)
 
     def __len__(self):
         return len(self._row)
 
     def __setitem__(self, key, value):
-        if isinstance(key, str):
-            key = self._column_names.index(key)
-        self._row[key] = value
+        try:
+            index = self._column_names.index(key)
+        except ValueError:
+            raise KeyError(key) from None
+        self._row[index] = value
 
 
 class D2TXT(collections.abc.MutableSequence):
@@ -153,4 +157,4 @@ class D2TXT(collections.abc.MutableSequence):
         txt_writer = csv.writer(txtfile, dialect='excel-tab',
             quoting=csv.QUOTE_NONE, quotechar=None)
         txt_writer.writerow(self._column_names)
-        txt_writer.writerows(self._rows)
+        txt_writer.writerows(row.values() for row in self._rows)

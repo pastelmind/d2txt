@@ -161,9 +161,8 @@ def d2txt_to_ini(d2txt, inifile):
     for row_index, row in enumerate(d2txt):
         section_name = str(row_index + 1)
         ini_parser[section_name] = {}
-        for column_index, value in enumerate(row):
+        for column_name, value in row.items():
             if value:
-                column_name = d2txt._column_names[column_index]
                 ini_parser[section_name][column_name] = txt_value_to_ini(value, column_name)
 
     ini_parser.write(inifile, space_around_delimiters=False)

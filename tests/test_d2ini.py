@@ -38,13 +38,13 @@ class TestD2TXTLoadIni(unittest.TestCase):
         self.assertEqual(list(d2txt_from_path.column_names()), txt_expected[0], 'Column mismatch')
         for row_index, row in enumerate(d2txt_from_path):
             with self.subTest(row_index=row_index):
-                self.assertEqual(list(row), txt_expected[row_index + 1])
+                self.assertEqual(list(row.values()), txt_expected[row_index + 1])
 
         self.assertEqual(len(d2txt_from_file), len(txt_expected) - 1, 'Row count')
         self.assertEqual(list(d2txt_from_file.column_names()), txt_expected[0], 'Column mismatch')
         for row_index, row in enumerate(d2txt_from_file):
             with self.subTest(row_index=row_index):
-                self.assertEqual(list(row), txt_expected[row_index + 1])
+                self.assertEqual(list(row.values()), txt_expected[row_index + 1])
 
     def test_CheckIfMissingKeyRaisesError(self):
         """Tests if a key that is not specified in the [Columns] section raises
@@ -146,7 +146,7 @@ class AbstractTestCases:
             self.assertEqual(list(d2txt.column_names()), txt_expected[0], 'Column mismatch')
             for row_index, row in enumerate(d2txt):
                 with self.subTest(row_index=row_index):
-                    self.assertEqual(list(row), txt_expected[row_index + 1])
+                    self.assertEqual(list(row.values()), txt_expected[row_index + 1])
 
     # An ABC test case inherited by other test cases in the "SaveIniAndCheck" family.
     class TestD2TXTSaveIniAndCompareContents(unittest.TestCase):

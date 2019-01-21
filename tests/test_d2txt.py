@@ -50,12 +50,12 @@ class TestD2TXT(unittest.TestCase):
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
         d2txt.append(['foo', 'bar', 'baz'])
-        self.assertEqual(list(d2txt[0]), ['foo', 'bar', 'baz'])
+        self.assertEqual(list(d2txt[0].values()), ['foo', 'bar', 'baz'])
 
         d2txt[0]['column 1'] = 'alpha'
         d2txt[0]['column 2'] = 'beta'
         d2txt[0]['column 3'] = 'gamma'
-        self.assertEqual(list(d2txt[0]), ['alpha', 'beta', 'gamma'])
+        self.assertEqual(list(d2txt[0].values()), ['alpha', 'beta', 'gamma'])
 
     def testOutOfBoundsReadWrite(self):
         """Tests if accessing invalid rows and cells raises appropriate exceptions."""
@@ -82,14 +82,14 @@ class TestD2TXT(unittest.TestCase):
         d2txt = D2TXT(['column name', 'Column Name', 'COLUMN NAME'])
 
         d2txt.append(['lowercase', 'capital letters', 'uppercase'])
-        self.assertEqual(list(d2txt[0]), ['lowercase', 'capital letters', 'uppercase'])
+        self.assertEqual(list(d2txt[0].values()), ['lowercase', 'capital letters', 'uppercase'])
         with self.assertRaises(KeyError):
             d2txt[0]['column NAME']
 
         d2txt[0]['COLUMN NAME'] = 'c'
         d2txt[0]['Column Name'] = 'b'
         d2txt[0]['column name'] = 'a'
-        self.assertEqual(list(d2txt[0]), ['a', 'b', 'c'])
+        self.assertEqual(list(d2txt[0].values()), ['a', 'b', 'c'])
         with self.assertRaises(KeyError):
             d2txt[0]['column NAME'] = 1
 
@@ -113,9 +113,9 @@ class TestD2TXT(unittest.TestCase):
             with self.subTest(i=i):
                 self.assertEqual(len(d2txt[i]), 3)
 
-        self.assertEqual(list(d2txt[0]), [None, None, None])
-        self.assertEqual(list(d2txt[1]), ['foo', 'bar', None])
-        self.assertEqual(list(d2txt[2]), ['1', '2', '3'])
+        self.assertEqual(list(d2txt[0].values()), [None, None, None])
+        self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
+        self.assertEqual(list(d2txt[2].values()), ['1', '2', '3'])
 
     def testAppendList(self):
         """Tests if D2TXT.append() accepts lists."""
@@ -133,9 +133,9 @@ class TestD2TXT(unittest.TestCase):
             with self.subTest(i=i):
                 self.assertEqual(len(d2txt[i]), 3)
 
-        self.assertEqual(list(d2txt[0]), [None, None, None])
-        self.assertEqual(list(d2txt[1]), ['foo', 'bar', None])
-        self.assertEqual(list(d2txt[2]), ['1', '2', '3'])
+        self.assertEqual(list(d2txt[0].values()), [None, None, None])
+        self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
+        self.assertEqual(list(d2txt[2].values()), ['1', '2', '3'])
 
     def testExtendList(self):
         """Tests if D2TXT.extend() accepts lists."""
@@ -151,9 +151,9 @@ class TestD2TXT(unittest.TestCase):
             with self.subTest(i=i):
                 self.assertEqual(len(d2txt[i]), 3)
 
-        self.assertEqual(list(d2txt[0]), [None, None, None])
-        self.assertEqual(list(d2txt[1]), ['foo', 'bar', None])
-        self.assertEqual(list(d2txt[2]), ['1', '2', '3'])
+        self.assertEqual(list(d2txt[0].values()), [None, None, None])
+        self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
+        self.assertEqual(list(d2txt[2].values()), ['1', '2', '3'])
 
     def testInsertList(self):
         """Tests if D2TXT.insert() accepts lists."""
@@ -170,9 +170,9 @@ class TestD2TXT(unittest.TestCase):
             with self.subTest(i=i):
                 self.assertEqual(len(d2txt[i]), 3)
 
-        self.assertEqual(list(d2txt[0]), ['foo', 'bar', None])
-        self.assertEqual(list(d2txt[1]), ['1', '2', '3'])
-        self.assertEqual(list(d2txt[2]), [None, None, None])
+        self.assertEqual(list(d2txt[0].values()), ['foo', 'bar', None])
+        self.assertEqual(list(d2txt[1].values()), ['1', '2', '3'])
+        self.assertEqual(list(d2txt[2].values()), [None, None, None])
 
     def testSliceAssignList(self):
         """Tests if D2TXT accepts slice syntax assignment using lists."""
@@ -184,9 +184,9 @@ class TestD2TXT(unittest.TestCase):
             with self.subTest(i=i):
                 self.assertEqual(len(d2txt[i]), 3)
 
-        self.assertEqual(list(d2txt[0]), [None, None, None])
-        self.assertEqual(list(d2txt[1]), ['foo', 'bar', None])
-        self.assertEqual(list(d2txt[2]), ['1', '2', '3'])
+        self.assertEqual(list(d2txt[0].values()), [None, None, None])
+        self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
+        self.assertEqual(list(d2txt[2].values()), ['1', '2', '3'])
 
         d2txt[0:2] = [['car', 'bus', 'cow'], ['one', 'two', 'three', 'four'], ['portal']]
         self.assertEqual(len(d2txt), 4)
@@ -194,10 +194,10 @@ class TestD2TXT(unittest.TestCase):
             with self.subTest(i=i):
                 self.assertEqual(len(d2txt[i]), 3)
 
-        self.assertEqual(list(d2txt[0]), ['car', 'bus', 'cow'])
-        self.assertEqual(list(d2txt[1]), ['one', 'two', 'three'])
-        self.assertEqual(list(d2txt[2]), ['portal', None, None])
-        self.assertEqual(list(d2txt[3]), ['1', '2', '3'])
+        self.assertEqual(list(d2txt[0].values()), ['car', 'bus', 'cow'])
+        self.assertEqual(list(d2txt[1].values()), ['one', 'two', 'three'])
+        self.assertEqual(list(d2txt[2].values()), ['portal', None, None])
+        self.assertEqual(list(d2txt[3].values()), ['1', '2', '3'])
 
 
 class TestD2TXTLoadFileFromSources(unittest.TestCase):
@@ -225,7 +225,7 @@ class TestD2TXTLoadFileFromSources(unittest.TestCase):
         self.assertEqual(tuple(d2txt.column_names()), tuple(sample_txt_expected[0]), 'Column mismatch')
         for row_index, row in enumerate(d2txt):
             with self.subTest(row_index=row_index):
-                self.assertEqual(list(row), sample_txt_expected[row_index + 1])
+                self.assertEqual(list(row.values()), sample_txt_expected[row_index + 1])
 
     def test_LoadFileFromObject(self):
         """Tests if D2TXT can load a file using a file object, and its contents
@@ -239,7 +239,7 @@ class TestD2TXTLoadFileFromSources(unittest.TestCase):
         self.assertEqual(tuple(d2txt.column_names()), tuple(sample_txt_expected[0]), 'Column mismatch')
         for row_index, row in enumerate(d2txt):
             with self.subTest(row_index=row_index):
-                self.assertEqual(list(row), sample_txt_expected[row_index + 1])
+                self.assertEqual(list(row.values()), sample_txt_expected[row_index + 1])
 
 
 # A dummy class that hides abstract test cases from the module-level namespace
@@ -273,7 +273,7 @@ class AbstractTestCases:
             self.assertEqual(tuple(d2txt.column_names()), tuple(load_expected[0]), 'Column mismatch')
             for row_index, row in enumerate(d2txt):
                 with self.subTest(row_index=row_index):
-                    self.assertEqual(list(row), load_expected[row_index + 1])
+                    self.assertEqual(list(row.values()), load_expected[row_index + 1])
 
 
     # An ABC test case inherited by other test cases in the "SaveFile" family.
