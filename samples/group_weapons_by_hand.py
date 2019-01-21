@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-'''
+"""
 Assigns item codes to `type2` of all weapons based on the number of hands required.
 
 Note: This script modifies Weapons.txt.
-'''
+"""
 
 
 import sys
@@ -15,7 +15,7 @@ from d2txt import D2TXT
 
 
 def check_item_code(item_code):
-    '''Checks if item_code is a valid item code. Used to validate argparse options.'''
+    """Checks if item_code is a valid item code. Used to validate argparse options."""
     if not item_code:
         return ''
 

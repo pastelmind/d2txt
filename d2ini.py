@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''Provides methods for converting D2TXT objects to and from INI files.'''
+"""Provides methods for converting D2TXT objects to and from INI files."""
 
 
 from d2txt import D2TXT
@@ -9,15 +9,15 @@ import argparse
 
 
 def _backtickify(s):
-    '''If the given string s has leading or trailing space characters, wraps it
-    with a pair of backticks.'''
+    """If the given string s has leading or trailing space characters, wraps it
+    with a pair of backticks."""
     if s[0] == ' ' or s[-1] == ' ':
         return '`' + s + '`'
     else:
         return s
 
 def _unbacktickify(s):
-    '''If the given string s is wrapped in a pair of backticks, removes it.'''
+    """If the given string s is wrapped in a pair of backticks, removes it."""
     if s[0] == s[-1] == '`':
         return s[1:-1]
     else:
@@ -53,7 +53,7 @@ AURAFILTER_NAMES = {v: k for k, v in AURAFILTER_FLAGS.items()}
 
 
 def decode_aurafilter(aurafilter):
-    '''Decodes an aurafilter value (integer) to a string of flag names.'''
+    """Decodes an aurafilter value (integer) to a string of flag names."""
     aurafilter = int(aurafilter)
     if not aurafilter:
         return '0'
@@ -71,10 +71,10 @@ def decode_aurafilter(aurafilter):
 
 
 def encode_aurafilter(af_str):
-    '''
+    """
     Encodes a string of flag names separated by pipe characters (|) to an
     aurafilter value (integer).
-    '''
+    """
     if not af_str:
         return 0
 
@@ -89,10 +89,10 @@ def encode_aurafilter(af_str):
 
 
 def txt_value_to_ini(value, column_name):
-    '''
+    """
     Decode a value from a TXT file to a string for an INI file. Uses the given
     column name to decide how to encode the value.
-    '''
+    """
     if column_name == 'aurafilter':
         return decode_aurafilter(value)
 
@@ -100,10 +100,10 @@ def txt_value_to_ini(value, column_name):
 
 
 def ini_value_to_txt(text, column_name):
-    '''
+    """
     Encode a string from an INI file to a value for a TXT file. Uses the given
     column name to decide how to decode the value.
-    '''
+    """
     if column_name == 'aurafilter':
         return encode_aurafilter(text)
 
@@ -111,11 +111,11 @@ def ini_value_to_txt(text, column_name):
 
 
 def ini_to_d2txt(inifile):
-    '''Creates a D2TXT object from an INI file.
+    """Creates a D2TXT object from an INI file.
 
     Args:
         inifile: A path string or readable file object
-    '''
+    """
     if isinstance(inifile, str):
         with open(inifile) as inifile_obj:
             return ini_to_d2txt(inifile_obj)
@@ -144,12 +144,12 @@ def ini_to_d2txt(inifile):
 
 
 def d2txt_to_ini(d2txt, inifile):
-    '''Writes a D2TXT object to an INI file.
+    """Writes a D2TXT object to an INI file.
 
     Args:
         d2txt: A D2TXT object
         inifile: A path string or writable file object
-    '''
+    """
     if isinstance(inifile, str):
         with open(inifile, mode='w', newline='') as inifile_obj:
             d2txt_to_ini(d2txt, inifile_obj)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''Reads ItemTypes.txt, Weapons.txt and prints graphs of the item type hierarchy.'''
+"""Reads ItemTypes.txt, Weapons.txt and prints graphs of the item type hierarchy."""
 
 
 import colorama
@@ -16,7 +16,7 @@ Fore = colorama.Fore
 
 
 class ITypeNode:
-    '''Represents a node in an itype tree.'''
+    """Represents a node in an itype tree."""
 
     def __init__(self, code):
         self.code = code
@@ -24,7 +24,7 @@ class ITypeNode:
         self.parents = []
 
     def ancestor_codes(self):
-        '''Returns a list of all ancestor itype codes, including this itype.'''
+        """Returns a list of all ancestor itype codes, including this itype."""
         codes = [self.code]
         for parent_node in self.parents:
             codes += parent_node.ancestor_codes()
@@ -32,10 +32,10 @@ class ITypeNode:
 
 
 def parse_itypes(item_types_txt):
-    '''
+    """
     Reads each item type in ItemTypes.txt and builds a dictionary of ITypeNode
     objects keyed by itype code.
-    '''
+    """
 
     itype_nodes = {}
     parent_codes = {}
@@ -65,7 +65,7 @@ def parse_itypes(item_types_txt):
 
 
 def classify_itypes_by_hand(itype_nodes, weapons_txt):
-    '''
+    """
     Reads Weapons.txt and classifies item types into 3 groups:
     1-hand only, 2-hand only, and mixed.
     Weapons that can be both 1- and 2-hand are classified as 2-hand weapons.
@@ -76,7 +76,7 @@ def classify_itypes_by_hand(itype_nodes, weapons_txt):
         - Item types that contain only 1-hand weapons
         - Item types that contain only 2-hand weapons
         - Item types that have both 1- and 2-hand weapons
-    '''
+    """
 
     one_handers = set()
     two_handers = set()
@@ -107,11 +107,11 @@ def classify_itypes_by_hand(itype_nodes, weapons_txt):
 
 
 def print_itype_tree(node, one_handers=None, two_handers=None, current_depth=0):
-    '''
+    """
     Prints a tree of itypes, starting at the given node as root.
     If one_handers and/or two_handers is specified, any itype code present in
     either collection is highlighted and marked with arrows.
-    '''
+    """
     if not node:
         return
 

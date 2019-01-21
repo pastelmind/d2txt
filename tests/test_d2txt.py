@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''Unit test for d2txt.py'''
+"""Unit test for d2txt.py"""
 
 
 import unittest
@@ -17,7 +17,7 @@ class TestD2TXT(unittest.TestCase):
         cls._d2txt = D2TXT.load_txt(cls._sample_txt_path)
 
     def test1_EverythingIsLoaded(self):
-        '''Tests that all rows and columns have been loaded.'''
+        """Tests that all rows and columns have been loaded."""
         d2txt = self.__class__._d2txt
         column_count = len(d2txt.column_names())
 
@@ -29,7 +29,7 @@ class TestD2TXT(unittest.TestCase):
                 f'Row {row_index + 1} length is not equal to # of columns ({column_count})')
 
     def test_ColumnNameIsCaseSensitive(self):
-        '''Tests that column names are case sensitive.'''
+        """Tests that column names are case sensitive."""
         d2txt = self.__class__._d2txt
         self.assertEqual(d2txt.column_names()[0], 'Column Name')
         self.assertEqual(d2txt.column_names()[4], 'column name')
@@ -38,20 +38,20 @@ class TestD2TXT(unittest.TestCase):
             d2txt[0, 'column Name']
 
     def test_EmptyColumnName(self):
-        '''Tests that empty column names are escaped appropriately'''
+        """Tests that empty column names are escaped appropriately"""
         d2txt = self.__class__._d2txt
         self.assertEqual(d2txt.column_names()[3], '(colD)')
 
     def test_DuplicateColumnNames(self):
-        '''Tests that duplicate column names are escaped appropriately'''
+        """Tests that duplicate column names are escaped appropriately"""
         d2txt = self.__class__._d2txt
         self.assertEqual(d2txt.column_names()[1], 'Duplicate column name')
         self.assertEqual(d2txt.column_names()[2], 'Duplicate column name(C)')
 
     def test_SaveTxt(self):
-        '''
+        """
         Tests that saving and loading TXT files do not modify their contents.
-        '''
+        """
         d2txt = self.__class__._d2txt
         current_dir_path = path.dirname(path.abspath(__file__))
 

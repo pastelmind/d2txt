@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''Provides the D2TXT class for loading and saving Diablo 2 TXT files.'''
+"""Provides the D2TXT class for loading and saving Diablo 2 TXT files."""
 
 
 import csv
@@ -8,8 +8,8 @@ import collections.abc
 
 
 def _column_index_to_str(column_index):
-    '''Converts a 1-indexed column number to an Excel-style column name string
-    (A, B, ...).'''
+    """Converts a 1-indexed column number to an Excel-style column name string
+    (A, B, ...)."""
     column_name = ''
     while column_index > 0:
         modulo = (column_index - 1) % 26
@@ -19,9 +19,9 @@ def _column_index_to_str(column_index):
 
 
 class D2TXTRow(collections.abc.Sequence):
-    '''
+    """
     Represents a single row in a tabbed txt file.
-    '''
+    """
 
     def __init__(self, row, column_names):
         self._row = list(row) + [None] * (len(column_names) - len(row))
@@ -45,9 +45,9 @@ class D2TXTRow(collections.abc.Sequence):
 
 
 class D2TXT(collections.abc.MutableSequence):
-    '''
+    """
     Represents a tab-separated TXT file used in Diablo 2.
-    '''
+    """
 
     def __init__(self):
         self._column_names = []
@@ -85,17 +85,17 @@ class D2TXT(collections.abc.MutableSequence):
 
 
     def column_names(self):
-        '''Returns a tuple of column names.'''
+        """Returns a tuple of column names."""
         return tuple(self._column_names)
 
 
     @classmethod
     def load_txt(cls, txtfile):
-        '''Creates a D2TXT object from a tabbed TXT file.
+        """Creates a D2TXT object from a tabbed TXT file.
 
         Args:
             txtfile: A path string or readable file object
-        '''
+        """
         if isinstance(txtfile, str):
             with open(txtfile) as txtfile_obj:
                 return cls.load_txt(txtfile_obj)
@@ -126,11 +126,11 @@ class D2TXT(collections.abc.MutableSequence):
 
 
     def to_txt(self, txtfile):
-        '''Writes the contents of this object to a TXT file.
+        """Writes the contents of this object to a TXT file.
 
         Args:
             txtfile: A path string or writable file object
-        '''
+        """
         if isinstance(txtfile, str):
             with open(txtfile, mode='w', newline='') as txtfile_obj:
                 self.to_txt(txtfile_obj)

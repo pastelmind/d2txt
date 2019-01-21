@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''
+"""
 Rebalances "degrading" treasureclasses by setting each TC's chance to degrade
 equal to the sum of all `ProbN` fields of the degraded TC.
 
@@ -9,7 +9,7 @@ of all `ProbN` fields of TC 2. This makes each `ProbN` field in TC 2 have equal
 weight as those in TC 1.
 
 Note: This script modifies TreasureClassEx.txt.
-'''
+"""
 
 
 import sys
@@ -25,7 +25,7 @@ class DuplicateKeyError(Exception):
 
 
 def make_tc_dict(tcex_txt):
-    '''Returns a dictionary of rows in TreasureClassEx.txt keyed by name.'''
+    """Returns a dictionary of rows in TreasureClassEx.txt keyed by name."""
     tc_dict = {}
     for tc in tcex_txt:
         name = tc['Treasure Class']
@@ -39,7 +39,7 @@ TC_PROB_COLUMNS = {f'Item{i}': f'Prob{i}' for i in range(1, 11)}
 
 
 def sum_probs(tc):
-    '''Returns the sum of all `ProbN` fields in the given treasureclass row.'''
+    """Returns the sum of all `ProbN` fields in the given treasureclass row."""
     total_probs = 0
     for item_col, prob_col in TC_PROB_COLUMNS.items():
         if not tc[item_col]:
@@ -49,7 +49,7 @@ def sum_probs(tc):
 
 
 def match_in_patterns(text, patterns):
-    '''Tests if a string matches any regex pattern in the given list.'''
+    """Tests if a string matches any regex pattern in the given list."""
     return any(pattern.search(text) for pattern in patterns)
 
 

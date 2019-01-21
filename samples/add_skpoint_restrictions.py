@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''
+"""
 Add formulas in 'skpoints' of Skills.txt that limit how skill points can be
 invested into each skill.
 
@@ -8,7 +8,7 @@ Warning: These formulas do NOT play well with PlugY's skill point reallocation
 feature and may destroy all skill points!
 
 Note: This script modifies Skills.txt.
-'''
+"""
 
 
 import sys
@@ -19,10 +19,10 @@ from d2txt import D2TXT
 
 
 def make_ulvl_check_formula(ulvl_per_blvl, base_ulvl=0):
-    '''
+    """
     Returns a formula that checks if player level is same or greater than
     ulvl_per_blvl * blvl + base_ulvl.
-    '''
+    """
     if ulvl_per_blvl:
         formula = f'ulvl >= {ulvl_per_blvl} * blvl'
         if base_ulvl > 0:
@@ -38,10 +38,10 @@ def make_ulvl_check_formula(ulvl_per_blvl, base_ulvl=0):
 
 
 def make_prereq_level_check_formulas(skill, reqskill_level):
-    '''
+    """
     Returns a list of formulas that check if each of the given skill's
     reqskills, if any, have a base level same or greater than reqskill_level.
-    '''
+    """
     if reqskill_level <= 1:
         return ''
     reqskills = [skill['reqskill1'], skill['reqskill2'], skill['reqskill3']]
@@ -49,10 +49,10 @@ def make_prereq_level_check_formulas(skill, reqskill_level):
 
 
 def combine_skpoints_check_formula(formulas):
-    '''
+    """
     Returns a combined formula for the `skpoints` column that allows a skill to
     be invested in only if all of the given formulas evaluate to true.
-    '''
+    """
     formulas = list(filter(None, formulas))
     if not formulas:
         return ''
