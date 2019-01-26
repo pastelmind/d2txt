@@ -120,7 +120,7 @@ def ini_to_d2txt(inifile):
         with open(inifile) as inifile_obj:
             return ini_to_d2txt(inifile_obj)
 
-    ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
+    ini_parser = ConfigParser(interpolation=None, delimiters='=', comment_prefixes=';')
     ini_parser.optionxform = str    # Make column names case-sensitive
     ini_parser.read_file(inifile)
 
