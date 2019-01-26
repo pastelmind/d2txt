@@ -11,14 +11,14 @@ import argparse
 def _backtickify(s):
     """If the given string s has leading or trailing space characters, wraps it
     with a pair of backticks."""
-    if s[0] == ' ' or s[-1] == ' ':
+    if s and (s[0].isspace() or s[-1].isspace()):
         return '`' + s + '`'
     else:
         return s
 
 def _unbacktickify(s):
     """If the given string s is wrapped in a pair of backticks, removes it."""
-    if s[0] == s[-1] == '`':
+    if s and s[0] == s[-1] == '`':
         return s[1:-1]
     else:
         return s
