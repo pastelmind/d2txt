@@ -73,7 +73,7 @@ def decode_aurafilter(aurafilter):
 def encode_aurafilter(af_str):
     """
     Encodes a string of flag names separated by pipe characters (|) to an
-    aurafilter value (integer).
+    aurafilter value (string representation of decimal number).
     """
     if not af_str:
         return 0
@@ -85,7 +85,7 @@ def encode_aurafilter(af_str):
             flag = int(flag_name, 0)
         aurafilter |= flag
 
-    return aurafilter
+    return str(aurafilter)
 
 
 def txt_value_to_ini(value, column_name):
