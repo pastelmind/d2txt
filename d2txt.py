@@ -6,6 +6,13 @@
 import csv
 import collections.abc
 from itertools import islice
+from warnings import warn
+
+
+class DuplicateColumnNameWarning(Warning):
+    """A warning issued when a duplicate column name is encountered and has been
+    renamed."""
+    pass
 
 
 def _column_index_to_str(column_index):
@@ -112,7 +119,7 @@ class D2TXT(collections.abc.MutableSequence):
             #Fix for duplicate column names
             while column_name in column_name_set:
                 alt_column_name = f'{column_name}({_column_index_to_str(column_index + 1)})'
-                print(f'Duplicate column name detected: {column_name} replaced with {alt_column_name}')
+                warn(f'Column name {column_name!r} replaced with {alt_column_name!r}', DuplicateColumnNameWarning, stacklevel=2)
                 column_name = alt_column_name
 
             column_name_set.add(column_name)
