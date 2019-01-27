@@ -65,9 +65,27 @@ class D2TXT(collections.abc.MutableSequence):
     Represents a tab-separated TXT file used in Diablo 2.
     """
 
-    def __init__(self):
+    def __init__(self, column_names):
+        """Create a D2TXT object.
+
+        Args:
+            column_names: An iterable of column name strings. Duplicate column
+                names are automatically renamed.
+        """
         self._column_names = []
         self._rows = []
+
+        column_names_seen = set()
+        for column_index, name in enumerate(column_names):
+            if name in column_names_seen:
+                new_name = f'{name}({_column_index_to_str(column_index + 1)})'
+                while new_name in column_names_seen:
+                    new_name += f'({_column_index_to_str(column_index + 1)})'
+                warn(f'Column name {name!r} replaced with {new_name!r}',
+                    DuplicateColumnNameWarning, stacklevel=2)
+                name = new_name
+            column_names_seen.add(name)
+            self._column_names.append(name)
 
     # def col(self, column_name):
     #     pass
@@ -116,24 +134,7 @@ class D2TXT(collections.abc.MutableSequence):
         txt_reader = csv.reader(txtfile, dialect='excel-tab',
             quoting=csv.QUOTE_NONE, quotechar=None)
 
-        d2txt = cls()
-        d2txt._column_names = list(next(txt_reader))
-
-        column_name_set = set()
-        for column_index, column_name in enumerate(d2txt._column_names):
-            #Fix for empty column names
-            if column_name == '':
-                column_name = f'(col{_column_index_to_str(column_index + 1)})'
-
-            #Fix for duplicate column names
-            while column_name in column_name_set:
-                alt_column_name = f'{column_name}({_column_index_to_str(column_index + 1)})'
-                warn(f'Column name {column_name!r} replaced with {alt_column_name!r}', DuplicateColumnNameWarning, stacklevel=2)
-                column_name = alt_column_name
-
-            column_name_set.add(column_name)
-            d2txt._column_names[column_index] = column_name
-
+        d2txt = cls(next(txt_reader))
         d2txt._rows = [D2TXTRow(row, d2txt._column_names) for row in txt_reader]
         return d2txt
 

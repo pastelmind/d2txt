@@ -124,8 +124,7 @@ def ini_to_d2txt(inifile):
     ini_parser.optionxform = str    # Make column names case-sensitive
     ini_parser.read_file(inifile)
 
-    d2txt = D2TXT()
-    d2txt._column_names = [_unbacktickify(column_name) for column_name in ini_parser['Columns'].keys()]
+    d2txt = D2TXT(map(_unbacktickify, ini_parser['Columns'].keys()))
 
     for section_name, section in ini_parser.items():
         # Use each section name as the row index
@@ -157,7 +156,7 @@ def d2txt_to_ini(d2txt, inifile):
 
     ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
     ini_parser.optionxform = str    # Make column names case-sensitive
-    ini_parser['Columns'] = {_backtickify(column_name): '' for column_name in d2txt._column_names}
+    ini_parser['Columns'] = {_backtickify(name): '' for name in d2txt.column_names()}
 
     for row_index, row in enumerate(d2txt):
         section_name = str(row_index + 1)

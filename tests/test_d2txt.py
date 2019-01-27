@@ -16,7 +16,7 @@ class TestD2TXT(unittest.TestCase):
 
     def testEmptyTxt(self):
         """Tests if a new D2TXT object has zero rows."""
-        d2txt = D2TXT()
+        d2txt = D2TXT([])
         self.assertEqual(len(d2txt), 0)
         with self.assertRaises(IndexError):
             d2txt[0]
@@ -25,17 +25,13 @@ class TestD2TXT(unittest.TestCase):
 
     def testColumnNameAssignment(self):
         """Tests column name assignment."""
-        base_column_names = ('column 1', 'column 2', 'column 3')
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = list(base_column_names)
-        self.assertEqual(tuple(d2txt.column_names()), base_column_names)
+        base_column_names = ['column 1', 'column 2', 'column 3']
+        d2txt = D2TXT(base_column_names)
+        self.assertEqual(list(d2txt.column_names()), base_column_names)
 
     def testCellReadWrite(self):
         """Tests if cells can be accessed using row indices and column names."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['column 1', 'column 2', 'column 3']
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
         d2txt.append(['foo', 'bar', 'baz'])
         self.assertEqual(d2txt[0]['column 1'], 'foo')
@@ -51,9 +47,7 @@ class TestD2TXT(unittest.TestCase):
 
     def testRowCastToList(self):
         """Tests if a D2TXT row can be converted to a list."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['column 1', 'column 2', 'column 3']
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
         d2txt.append(['foo', 'bar', 'baz'])
         self.assertEqual(list(d2txt[0]), ['foo', 'bar', 'baz'])
@@ -65,9 +59,7 @@ class TestD2TXT(unittest.TestCase):
 
     def testOutOfBoundsReadWrite(self):
         """Tests if accessing invalid rows and cells raises appropriate exceptions."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['column 1', 'column 2', 'column 3']
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
         d2txt.append(['foo', 'bar', 'baz'])
         d2txt.append(['rabbit', 'dog', 'cow'])
         d2txt.append(['one', 'two', 'six'])
@@ -87,9 +79,7 @@ class TestD2TXT(unittest.TestCase):
 
     def testColumnNameIsCaseSensitive(self):
         """Tests if column names are case-sensitive."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['column name', 'Column Name', 'COLUMN NAME']
+        d2txt = D2TXT(['column name', 'Column Name', 'COLUMN NAME'])
 
         d2txt.append(['lowercase', 'capital letters', 'uppercase'])
         self.assertEqual(list(d2txt[0]), ['lowercase', 'capital letters', 'uppercase'])
@@ -111,9 +101,7 @@ class TestD2TXT(unittest.TestCase):
 
     def testAssignList(self):
         """Tests if D2TXT accepts direct assignment using lists."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['column 1', 'column 2', 'column 3']
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
         d2txt.extend([[]] * 3)
         d2txt[0] = []
@@ -131,9 +119,7 @@ class TestD2TXT(unittest.TestCase):
 
     def testAppendList(self):
         """Tests if D2TXT.append() accepts lists."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['column 1', 'column 2', 'column 3']
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
         # Internally uses D2TXT.insert()
         d2txt.append([])
@@ -153,9 +139,7 @@ class TestD2TXT(unittest.TestCase):
 
     def testExtendList(self):
         """Tests if D2TXT.extend() accepts lists."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['column 1', 'column 2', 'column 3']
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
         # Internally uses D2TXT.append(), which uses D2TXT.insert()
         d2txt.extend([[]])
@@ -173,9 +157,7 @@ class TestD2TXT(unittest.TestCase):
 
     def testInsertList(self):
         """Tests if D2TXT.insert() accepts lists."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['column 1', 'column 2', 'column 3']
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
         d2txt.insert(0, [])
         self.assertEqual(len(d2txt), 1)
@@ -194,9 +176,7 @@ class TestD2TXT(unittest.TestCase):
 
     def testSliceAssignList(self):
         """Tests if D2TXT accepts slice syntax assignment using lists."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['column 1', 'column 2', 'column 3']
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
         d2txt[:] = [[], ['foo', 'bar'], ['1', '2', '3', 'these', 'strings', 'are', 'ignored']]
         self.assertEqual(len(d2txt), 3)
@@ -227,7 +207,7 @@ class TestD2TXTLoadFileFromSources(unittest.TestCase):
 
     # Represents the expected structure of D2TXT loaded from sample.txt
     sample_txt_expected = [
-        ['column name', 'duplicate name', 'duplicate name(C)', '(colD)', 'COLUMN NAME'],
+        ['column name', 'duplicate name', 'duplicate name(C)', '', 'COLUMN NAME'],
         ['lowercase column name', 'next cell is empty', '', 'empty column name', 'UPPERCASE COLUMN NAME'],
         ['next row is empty', '   leading spaces', 'trailing spaces   ', '    surrounded by spaces  ', '"double quotes"'],
         ['', '', '', '', '0'],
@@ -313,9 +293,7 @@ class AbstractTestCases:
         def test_SaveFileAndCheckContents(self):
             """Saves D2TXT to a file containing and tests if its content matches
             `save_expected`."""
-            d2txt = D2TXT()
-            # TODO: Replace with proper column assignment when D2TXT is refactored
-            d2txt._column_names = self.__class__.save_source[0]
+            d2txt = D2TXT(self.__class__.save_source[0])
             d2txt.extend(self.__class__.save_source[1:])
 
             # newline='' is required to make csv.writer work correctly
@@ -372,7 +350,7 @@ class TestD2TXTLoadFileAndCheckIfColumnNameWhitespaceIsPreserved(AbstractTestCas
         '3 leading spaces\t4 trailing spaces\t2 surrounding spaces\tempty\t2 spaces only\r\n'
     )
     load_expected = [
-        ['   column 1', 'column 2    ', '  column 3  ', '(colD)', '  '],
+        ['   column 1', 'column 2    ', '  column 3  ', '', '  '],
         ['3 leading spaces', '4 trailing spaces', '2 surrounding spaces', 'empty', '2 spaces only'],
     ]
 
@@ -454,9 +432,7 @@ class TestD2TXTSaveFileToSources(unittest.TestCase):
         os.remove(cls.save_txt_path)
 
     def setUp(self):
-        self.d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        self.d2txt._column_names = self.__class__.save_source[0]
+        self.d2txt = D2TXT(self.__class__.save_source[0])
         self.d2txt.extend(self.__class__.save_source[1:])
 
     def test_SaveFileToPath(self):

@@ -102,9 +102,7 @@ class TestD2TXTSaveIni(unittest.TestCase):
             '[3]\nid=2\nName=Foo\nFull Name=Foo Bar\n\n'
         )
 
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = txt_source[0]
+        d2txt = D2TXT(txt_source[0])
         d2txt.extend(txt_source[1:])
 
         temp_ini_file = StringIO()
@@ -167,9 +165,7 @@ class AbstractTestCases:
         def test_SaveFileAndCheckContents(self):
             """Saves D2TXT to an INI file and tests if it matches the expected
             contents."""
-            d2txt = D2TXT()
-            # TODO: Replace with proper column assignment when D2TXT is refactored
-            d2txt._column_names = self.__class__.txt_source[0]
+            d2txt = D2TXT(self.__class__.txt_source[0])
             d2txt.extend(self.__class__.txt_source[1:])
 
             ini_file = StringIO()
@@ -375,18 +371,14 @@ class TestD2TXTSaveIniAndCheckIfEqualSignsAllowed(AbstractTestCases.TestD2TXTSav
     def test_EqualSignInColumnNameRaisesError(self):
         """Tests if an equal sign in a column name raises an error when
         attempting to save to an INI file."""
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['=leading equal sign']
+        d2txt = D2TXT(['=leading equal sign'])
         d2txt.append(['value'])
 
         ini_file = StringIO()
         with self.assertRaises(Exception):
             d2txt_to_ini(d2txt, ini_file)
 
-        d2txt = D2TXT()
-        # TODO: Replace with proper column assignment when D2TXT is refactored
-        d2txt._column_names = ['equal=sign in middle']
+        d2txt = D2TXT(['equal=sign in middle'])
         d2txt.append(['value'])
 
         ini_file = StringIO()
