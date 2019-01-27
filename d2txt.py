@@ -76,20 +76,8 @@ class D2TXT(collections.abc.MutableSequence):
             column_names: An iterable of column name strings. Duplicate column
                 names are automatically renamed.
         """
-        self._column_names = []
+        self._column_names = self.__class__.dedupe_column_names(column_names)
         self._rows = []
-
-        column_names_seen = set()
-        for column_index, name in enumerate(column_names):
-            if name in column_names_seen:
-                new_name = f'{name}({_column_index_to_str(column_index + 1)})'
-                while new_name in column_names_seen:
-                    new_name += f'({_column_index_to_str(column_index + 1)})'
-                warn(f'Column name {name!r} replaced with {new_name!r}',
-                    DuplicateColumnNameWarning, stacklevel=2)
-                name = new_name
-            column_names_seen.add(name)
-            self._column_names.append(name)
 
     # def col(self, column_name):
     #     pass
@@ -138,7 +126,9 @@ class D2TXT(collections.abc.MutableSequence):
         txt_reader = csv.reader(txtfile, dialect='excel-tab',
             quoting=csv.QUOTE_NONE, quotechar=None)
 
-        d2txt = cls(next(txt_reader))
+        # Manually dedupe column names to ensure that warnings point to correct
+        # lines in the source code
+        d2txt = cls(cls.dedupe_column_names(next(txt_reader)))
         d2txt._rows = [D2TXTRow(row, d2txt._column_names) for row in txt_reader]
         return d2txt
 
@@ -158,3 +148,32 @@ class D2TXT(collections.abc.MutableSequence):
             quoting=csv.QUOTE_NONE, quotechar=None)
         txt_writer.writerow(self._column_names)
         txt_writer.writerows(row.values() for row in self._rows)
+
+
+    @staticmethod
+    def dedupe_column_names(column_names):
+        """Returns a list of de-duplicated names taken from `column_names`.
+
+        Returns a list of names in `column_names`. If a duplicate name is found,
+        issues a DuplicateColumnNameWarning and renames it to a unique name.
+
+        Args:
+            column_names: Iterable of column name strings.
+        """
+        # Build a list rather than yielding each name, as using a generator can
+        # obfuscate the warning message when nested inside another generator.
+        deduped_column_names = []
+        column_names_seen = set()
+
+        for column_index, name in enumerate(column_names):
+            if name in column_names_seen:
+                new_name = f'{name}({_column_index_to_str(column_index + 1)})'
+                while new_name in column_names_seen:
+                    new_name += f'({_column_index_to_str(column_index + 1)})'
+                warn(f'Column name {name!r} replaced with {new_name!r}',
+                    DuplicateColumnNameWarning, stacklevel=3)
+                name = new_name
+            column_names_seen.add(name)
+            deduped_column_names.append(name)
+
+        return deduped_column_names
