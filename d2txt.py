@@ -15,15 +15,15 @@ class DuplicateColumnNameWarning(Warning):
     pass
 
 
-def _column_index_to_str(column_index):
-    """Converts a 1-indexed column number to an Excel-style column name string
-    (A, B, ...)."""
-    column_name = ''
-    while column_index > 0:
-        modulo = (column_index - 1) % 26
-        column_name = chr(modulo + ord('A')) + column_name
-        column_index = (column_index - modulo) // 26
-    return column_name
+def _column_index_to_symbol(column_index):
+    """Converts a 0-indexed column index to an Excel-style column symbol string
+    (A, B, ..., Z, AA, AB, ...)."""
+    column_symbol = ''
+    while column_index >= 0:
+        modulo = column_index % 26
+        column_symbol = chr(modulo + ord('A')) + column_symbol
+        column_index = (column_index - modulo) // 26 - 1
+    return column_symbol
 
 
 class D2TXTRow(collections.abc.Mapping):
@@ -167,9 +167,9 @@ class D2TXT(collections.abc.MutableSequence):
 
         for column_index, name in enumerate(column_names):
             if name in column_names_seen:
-                new_name = f'{name}({_column_index_to_str(column_index + 1)})'
+                new_name = f'{name}({_column_index_to_symbol(column_index)})'
                 while new_name in column_names_seen:
-                    new_name += f'({_column_index_to_str(column_index + 1)})'
+                    new_name += f'({_column_index_to_symbol(column_index)})'
                 warn(f'Column name {name!r} replaced with {new_name!r}',
                     DuplicateColumnNameWarning, stacklevel=3)
                 name = new_name
