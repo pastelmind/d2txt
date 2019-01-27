@@ -274,6 +274,24 @@ class TestD2TXTLoadIniAndCheckIfSemicolonsAllowed(AbstractTestCases.TestD2TXTLoa
         [None, None],
     ]
 
+class TestD2TXTLoadIniAndCheckIfEqualSignsAreUnescaped(AbstractTestCases.TestD2TXTLoadIniAndCompareContents):
+    """Tests if equal signs (=) in keys (but not values) are unescaped."""
+
+    ini_source = (
+        '[Columns]\n${eq}leading equals=\nequals${eq}in${eq}middle=\n\n'
+        '[1]\n'
+        '${eq}leading equals==leading equals\n'
+        'equals${eq}in${eq}middle=equals=in=middle\n\n'
+        '[2]\n'
+        '${eq}leading equals=${eq}leading equals\n'
+        'equals${eq}in${eq}middle=equals${eq}in${eq}middle\n\n'
+    )
+    txt_expected = [
+        ['=leading equals', 'equals=in=middle'],
+        ['=leading equals', 'equals=in=middle'],
+        ['${eq}leading equals', 'equals${eq}in${eq}middle'],
+    ]
+
 class TestD2TXTLoadIniAndCheckBitFieldEncoded(AbstractTestCases.TestD2TXTLoadIniAndCompareContents):
     """Tests if bitfields are correctly encoded when loading an INI file."""
 
@@ -357,33 +375,16 @@ class TestD2TXTSaveIniAndCheckIfColumnNameWithLeadingSemicolonIsBacktickified(Ab
         'semicolons;in;middle=semicolons;in;middle\n\n'
     )
 
-class TestD2TXTSaveIniAndCheckIfEqualSignsAllowed(AbstractTestCases.TestD2TXTSaveIniAndCompareContents):
-    """Tests if the equal sign (=) is allowed in values, but not in column names
-    (to prevent INI parsing bugs) when saving an INI file."""
+class TestD2TXTSaveIniAndCheckIfEqualSignsAreEscaped(AbstractTestCases.TestD2TXTSaveIniAndCompareContents):
+    """Tests if equal signs (=) in column names (but not values) are escaped."""
 
-    txt_source = [['key name'], ['=leading equals'], ['equals=in=middle']]
+    txt_source = [['=leading equals', 'equals=in=middle'], ['=leading equals', 'equals=in=middle']]
     ini_expected = (
-        '[Columns]\nkey name=\n\n'
-        '[1]\nkey name==leading equals\n\n'
-        '[2]\nkey name=equals=in=middle\n\n'
+        '[Columns]\n${eq}leading equals=\nequals${eq}in${eq}middle=\n\n'
+        '[1]\n'
+        '${eq}leading equals==leading equals\n'
+        'equals${eq}in${eq}middle=equals=in=middle\n\n'
     )
-
-    def test_EqualSignInColumnNameRaisesError(self):
-        """Tests if an equal sign in a column name raises an error when
-        attempting to save to an INI file."""
-        d2txt = D2TXT(['=leading equal sign'])
-        d2txt.append(['value'])
-
-        ini_file = StringIO()
-        with self.assertRaises(Exception):
-            d2txt_to_ini(d2txt, ini_file)
-
-        d2txt = D2TXT(['equal=sign in middle'])
-        d2txt.append(['value'])
-
-        ini_file = StringIO()
-        with self.assertRaises(Exception):
-            d2txt_to_ini(d2txt, ini_file)
 
 class TestD2TXTSaveIniAndCheckIfFalsyValuesIgnored(AbstractTestCases.TestD2TXTSaveIniAndCompareContents):
     """Tests if falsy values are ignored when saving to an INI file."""

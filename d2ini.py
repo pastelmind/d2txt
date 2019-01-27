@@ -19,12 +19,15 @@ def escape_column_name(column_name):
     - Has leading/trailing whitespace (includes whitespace-only strings)
     - Has leading semicolon
 
+    Also, all equal signs (`=`) are replaced with `${eq}`.
+
     Args:
         column_name: A column name string.
 
     Returns:
         An escaped key string.
     """
+    column_name = column_name.replace('=', '${eq}')
     if ((not column_name)
         or (column_name[0] == column_name[-1] == '`')
         or (column_name[0].isspace() or column_name[-1].isspace())
@@ -54,14 +57,27 @@ def escape_cell_value(s):
     else:
         return s
 
-def unescape_key_or_value(s):
+def unescape_column_name(column_name):
+    """Un-escapes an INI key to a valid D2TXT column name.
+
+    If the given string is wrapped in a pair of backticks, removes them.
+    Also, all occurrences of `${eq}` are replaced with `=`.
+    """
+    column_name = column_name.replace('${eq}', '=')
+    if column_name and column_name[0] == column_name[-1] == '`':
+        return column_name[1:-1]
+    else:
+        return column_name
+
+def unescape_cell_value(value):
     """Un-escapes an INI key or value to a valid D2TXT column name or value.
 
-    If the given string is wrapped in a pair of backticks, removes them."""
-    if s and s[0] == s[-1] == '`':
-        return s[1:-1]
+    If the given string is wrapped in a pair of backticks, removes them.
+    """
+    if value and value[0] == value[-1] == '`':
+        return value[1:-1]
     else:
-        return s
+        return value
 
 
 # See https://d2mods.info/forum/viewtopic.php?t=43737 for more information
@@ -147,7 +163,7 @@ def ini_value_to_txt(text, column_name):
     if column_name == 'aurafilter':
         return encode_aurafilter(text)
 
-    return unescape_key_or_value(text)
+    return unescape_cell_value(text)
 
 
 def ini_to_d2txt(inifile):
@@ -167,7 +183,7 @@ def ini_to_d2txt(inifile):
     ini_keys = list(ini_parser['Columns'].keys())
     # Manually dedupe column names to ensure that warnings point to correct
     # lines in the source code
-    d2txt = D2TXT(D2TXT.dedupe_column_names(map(unescape_key_or_value, ini_keys)))
+    d2txt = D2TXT(D2TXT.dedupe_column_names(map(unescape_column_name, ini_keys)))
     # Mapping of INI key => unescaped, deduped column name
     ini_key_to_column_name = dict(zip(ini_keys, d2txt.column_names()))
 
