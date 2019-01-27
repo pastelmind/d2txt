@@ -98,8 +98,8 @@ class D2TXT(collections.abc.MutableSequence):
 
 
     def column_names(self):
-        """Returns a tuple of column names."""
-        return tuple(self._column_names)
+        """Returns an iterator of column names in order."""
+        return iter(self._column_names)
 
 
     @classmethod
