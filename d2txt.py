@@ -5,6 +5,7 @@
 
 import csv
 import collections.abc
+from itertools import islice
 
 
 def _column_index_to_str(column_index):
@@ -24,8 +25,16 @@ class D2TXTRow(collections.abc.Sequence):
     """
 
     def __init__(self, row, column_names):
-        self._row = list(row) + [None] * (len(column_names) - len(row))
-        self._column_names = column_names
+        """Creates a row object for D2TXT.
+
+        Args:
+            row: Iterable of values to fill the row with.
+            column_names: Iterable of column name strings.
+        """
+        self._column_names = list(column_names)
+        num_columns = len(self._column_names)
+        self._row = list(islice(row, num_columns))
+        self._row += [None] * (num_columns - len(self._row))
 
     def __getitem__(self, key):
         if isinstance(key, str):
