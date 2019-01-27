@@ -217,7 +217,7 @@ class TestD2TXTLoadIniAndCheckIfUnbacktickfied(AbstractTestCases.TestD2TXTLoadIn
     loading an INI file."""
 
     ini_source = (
-        '[Columns]\n``\n`  whitespace preserved  `\n``backticks``=\n```double backticks```=\n`unpaired backtick=\ninternal `backticks`=\n\n'
+        '[Columns]\n``=\n`  whitespace preserved  `=\n``backticks``=\n```double backticks```=\n`unpaired backtick=\ninternal `backticks`=\n\n'
         '[1]\n'
         '``=``\n'
         '`  whitespace preserved  `=`  whitespace preserved  `\n'
@@ -264,7 +264,7 @@ class TestD2TXTLoadIniAndCheckIfSemicolonsAllowed(AbstractTestCases.TestD2TXTLoa
     non-whitespace character of a line (which marks a comment)."""
 
     ini_source = (
-        '[Columns]`;semicolon in key start`=\n\nsemicolon;in;key;middle=\n\n'
+        '[Columns]\n`;semicolon in key start`=\nsemicolon;in;key;middle=\n\n'
         '[1]\n`;semicolon in key start`=;semicolon in value start\nsemicolon;in;key;middle=semicolon;in;value;middle\n\n'
         '[2]\n;`;semicolon in key start`=;commented line\n;semicolon;in;key;middle=commented line\n\n'
     )

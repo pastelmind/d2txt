@@ -8,16 +8,56 @@ from configparser import ConfigParser
 import argparse
 
 
-def _backtickify(s):
-    """If the given string s has leading or trailing space characters, wraps it
-    with a pair of backticks."""
-    if s and (s[0].isspace() or s[-1].isspace()):
-        return '`' + s + '`'
+def escape_column_name(column_name):
+    """Escapes a D2TXT column name to a valid INI key.
+
+    The given string is escaped (i.e. surrounded by backticks) if it matches any
+    of the following:
+
+    - Is empty
+    - Surrounded by backticks
+    - Has leading/trailing whitespace (includes whitespace-only strings)
+    - Has leading semicolon
+
+    Args:
+        column_name: A column name string.
+
+    Returns:
+        An escaped key string.
+    """
+    if ((not column_name)
+        or (column_name[0] == column_name[-1] == '`')
+        or (column_name[0].isspace() or column_name[-1].isspace())
+        or (column_name[0] == ';')
+        ):
+        return f'`{column_name}`'
+    else:
+        return column_name
+
+def escape_cell_value(s):
+    """Escapes a D2TXT cell value to a valid INI value.
+
+    The given string is escaped (i.e. surrounded by backticks) if it matches any
+    of the following:
+
+    - Surrounded by backticks
+    - Has leading/trailing whitespace (includes whitespace-only strings)
+
+    Args:
+        s: A cell value string.
+
+    Returns:
+        An escaped value string.
+    """
+    if s and (s[0] == s[-1] == '`' or s[0].isspace() or s[-1].isspace()):
+        return f'`{s}`'
     else:
         return s
 
-def _unbacktickify(s):
-    """If the given string s is wrapped in a pair of backticks, removes it."""
+def unescape_key_or_value(s):
+    """Un-escapes an INI key or value to a valid D2TXT column name or value.
+
+    If the given string is wrapped in a pair of backticks, removes them."""
     if s and s[0] == s[-1] == '`':
         return s[1:-1]
     else:
@@ -96,7 +136,7 @@ def txt_value_to_ini(value, column_name):
     if column_name == 'aurafilter':
         return decode_aurafilter(value)
 
-    return _backtickify(value)
+    return escape_cell_value(value)
 
 
 def ini_value_to_txt(text, column_name):
@@ -107,7 +147,7 @@ def ini_value_to_txt(text, column_name):
     if column_name == 'aurafilter':
         return encode_aurafilter(text)
 
-    return _unbacktickify(text)
+    return unescape_key_or_value(text)
 
 
 def ini_to_d2txt(inifile):
@@ -124,10 +164,12 @@ def ini_to_d2txt(inifile):
     ini_parser.optionxform = str    # Make column names case-sensitive
     ini_parser.read_file(inifile)
 
+    ini_keys = list(ini_parser['Columns'].keys())
     # Manually dedupe column names to ensure that warnings point to correct
     # lines in the source code
-    unescaped_column_names = map(_unbacktickify, ini_parser['Columns'].keys())
-    d2txt = D2TXT(D2TXT.dedupe_column_names(unescaped_column_names))
+    d2txt = D2TXT(D2TXT.dedupe_column_names(map(unescape_key_or_value, ini_keys)))
+    # Mapping of INI key => unescaped, deduped column name
+    ini_key_to_column_name = dict(zip(ini_keys, d2txt.column_names()))
 
     for section_name, section in ini_parser.items():
         # Use each section name as the row index
@@ -139,7 +181,8 @@ def ini_to_d2txt(inifile):
         while len(d2txt) <= row_index:
             d2txt.append([])
 
-        for column_name, value in section.items():
+        for ini_key, value in section.items():
+            column_name = ini_key_to_column_name[ini_key]
             d2txt[row_index][column_name] = ini_value_to_txt(value, column_name)
 
     return d2txt
@@ -158,15 +201,21 @@ def d2txt_to_ini(d2txt, inifile):
             return
 
     ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
+    # Note: ConfigParser calls optionxform multiple times for each key/value.
+    #       Because of this, escape_column_name cannot be directly assigned to
+    #       optionxform; doing so causes each column name to be escaped *twice*
+    #       when assigning a dictionary, as well as being generally inefficent.
+    #       Hence, escape_column_name() must be called explicitly.
     ini_parser.optionxform = str    # Make column names case-sensitive
-    ini_parser['Columns'] = {_backtickify(name): '' for name in d2txt.column_names()}
+    ini_parser['Columns'] = {escape_column_name(name): '' for name in d2txt.column_names()}
 
     for row_index, row in enumerate(d2txt):
-        section_name = str(row_index + 1)
-        ini_parser[section_name] = {}
+        section = {}
         for column_name, value in row.items():
             if value:
-                ini_parser[section_name][column_name] = txt_value_to_ini(value, column_name)
+                ini_key = escape_column_name(column_name)
+                section[ini_key] = txt_value_to_ini(value, column_name)
+        ini_parser[str(row_index + 1)] = section
 
     ini_parser.write(inifile, space_around_delimiters=False)
 
