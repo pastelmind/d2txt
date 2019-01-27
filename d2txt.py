@@ -72,16 +72,25 @@ class D2TXT(collections.abc.MutableSequence):
     # def col(self, column_name):
     #     pass
 
-    def __getitem__(self, key):
-        return self._rows[key]
+    def __getitem__(self, index):
+        """Returns a row at the given index, or a `list` of rows if slice syntax
+        is used."""
+        return self._rows[index]
 
     def __len__(self):
         return len(self._rows)
 
-    def __setitem__(self, key, value):
-        self._rows[key] = D2TXTRow(value, self._column_names)
+    def __setitem__(self, index, value):
+        """Sets a row at the given index to `value`. If slice syntax is used,
+        replaces the rows with each item in `value`."""
+        if isinstance(index, slice):
+            self._rows[index] = [D2TXTRow(row, self._column_names) for row in value]
+        else:
+            self._rows[index] = D2TXTRow(value, self._column_names)
 
     def __delitem__(self, index):
+        """Deletes a row at the given index, or multiple rows if slice syntax
+        is used."""
         del self._rows[index]
 
     def insert(self, index, value):
