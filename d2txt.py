@@ -64,6 +64,22 @@ class D2TXTRow(collections.abc.Mapping):
         self._row[index] = value
 
 
+class D2TXTColumnNameView(collections.abc.Sequence):
+    """A read-only view of the list of column names in a D2TXT object."""
+
+    def __init__(self, column_names):
+        self._column_names = column_names
+
+    def __getitem__(self, index):
+        return self._column_names[index]
+
+    def __len__(self):
+        return len(self._column_names)
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}: {self._column_names!r}>'
+
+
 class D2TXT(collections.abc.MutableSequence):
     """
     Represents a tab-separated TXT file used in Diablo 2.
@@ -108,8 +124,8 @@ class D2TXT(collections.abc.MutableSequence):
 
 
     def column_names(self):
-        """Returns an iterator of column names in order."""
-        return iter(self._column_names)
+        """Returns a read-only view of the list of column names."""
+        return D2TXTColumnNameView(self._column_names)
 
 
     @classmethod
