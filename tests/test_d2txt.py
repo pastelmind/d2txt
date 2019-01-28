@@ -209,6 +209,27 @@ class TestD2TXT(unittest.TestCase):
         self.assertEqual(list(d2txt[2].values()), ['portal', None, None])
         self.assertEqual(list(d2txt[3].values()), ['1', '2', '3'])
 
+    def testAssignDict(self):
+        """Tests if D2TXT accepts assignment using dictionaries."""
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
+
+        d2txt.append({})
+        d2txt.extend([
+            {'column 1': 'foo', 'column 2': 'bar'},
+            {'column 1': '1', 'column 2': '2', 'column 3': '3', 'column 4': 'ignored'},
+        ])
+        d2txt.insert(1, {'column 1': 'a', 'column 2': 'b', 'column 3': 'c'})
+
+        self.assertEqual(len(d2txt), 4)
+        for i in range(len(d2txt)):
+            with self.subTest(i=i):
+                self.assertEqual(len(d2txt[i]), 3)
+
+        self.assertEqual(list(d2txt[0].values()), [None, None, None])
+        self.assertEqual(list(d2txt[1].values()), ['a', 'b', 'c'])
+        self.assertEqual(list(d2txt[2].values()), ['foo', 'bar', None])
+        self.assertEqual(list(d2txt[3].values()), ['1', '2', '3'])
+
 
 class TestD2TXTLoadFileFromSources(unittest.TestCase):
     """Tests if D2TXT can be load a file using several sources."""

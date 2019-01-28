@@ -34,14 +34,28 @@ class D2TXTRow(collections.abc.Mapping):
     def __init__(self, d2txt, row):
         """Creates a row object for D2TXT.
 
+        If `row` is a mapping, each key-value pair is copied to the new row.
+        Keys that do not match any column name in `d2txt` are ignored.
+        Otherwise, `row` is treated as an iterable of values to insert into each
+        cell of the new row.
+
         Args:
             d2txt: The parent D2TXT object.
-            row: Iterable of values to fill the row with.
+            row: Mapping or iterable of values to fill the row with.
         """
         self._d2txt = d2txt
         num_columns = len(d2txt.column_names())
-        self._row = list(islice(row, num_columns))
-        self._row += [None] * (num_columns - len(self._row))
+
+        if isinstance(row, collections.abc.Mapping):
+            self._row = [None] * num_columns
+            for column_name, value in row.items():
+                try:
+                    self[column_name] = value
+                except KeyError:
+                    pass
+        else:
+            self._row = list(islice(row, num_columns))
+            self._row += [None] * (num_columns - len(self._row))
 
     def __getitem__(self, key):
         return self._row[self._d2txt.column_index(key)]
