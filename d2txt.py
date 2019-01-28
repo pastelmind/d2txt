@@ -31,37 +31,29 @@ class D2TXTRow(collections.abc.Mapping):
     Represents a single row in a tabbed txt file.
     """
 
-    def __init__(self, row, column_names):
+    def __init__(self, d2txt, row):
         """Creates a row object for D2TXT.
 
         Args:
+            d2txt: The parent D2TXT object.
             row: Iterable of values to fill the row with.
-            column_names: Iterable of column name strings.
         """
-        self._column_names = list(column_names)
-        num_columns = len(self._column_names)
+        self._d2txt = d2txt
+        num_columns = len(d2txt.column_names())
         self._row = list(islice(row, num_columns))
         self._row += [None] * (num_columns - len(self._row))
 
     def __getitem__(self, key):
-        try:
-            index = self._column_names.index(key)
-        except ValueError:
-            raise KeyError(key) from None
-        return self._row[index]
+        return self._row[self._d2txt.column_index(key)]
 
     def __iter__(self):
-        return iter(self._column_names)
+        return iter(self._d2txt.column_names())
 
     def __len__(self):
         return len(self._row)
 
     def __setitem__(self, key, value):
-        try:
-            index = self._column_names.index(key)
-        except ValueError:
-            raise KeyError(key) from None
-        self._row[index] = value
+        self._row[self._d2txt.column_index(key)] = value
 
 
 class D2TXTColumnNameView(collections.abc.Sequence):
@@ -93,6 +85,7 @@ class D2TXT(collections.abc.MutableSequence):
                 names are automatically renamed.
         """
         self._column_names = self.__class__.dedupe_column_names(column_names)
+        self._column_indices = {name: index for index, name in enumerate(self._column_names)}
         self._rows = []
 
     # def col(self, column_name):
@@ -110,9 +103,9 @@ class D2TXT(collections.abc.MutableSequence):
         """Sets a row at the given index to `value`. If slice syntax is used,
         replaces the rows with each item in `value`."""
         if isinstance(index, slice):
-            self._rows[index] = [D2TXTRow(row, self._column_names) for row in value]
+            self._rows[index] = [D2TXTRow(self, row) for row in value]
         else:
-            self._rows[index] = D2TXTRow(value, self._column_names)
+            self._rows[index] = D2TXTRow(self, value)
 
     def __delitem__(self, index):
         """Deletes a row at the given index, or multiple rows if slice syntax
@@ -120,12 +113,21 @@ class D2TXT(collections.abc.MutableSequence):
         del self._rows[index]
 
     def insert(self, index, value):
-        self._rows.insert(index, D2TXTRow(value, self._column_names))
+        self._rows.insert(index, D2TXTRow(self, value))
 
 
     def column_names(self):
         """Returns a read-only view of the list of column names."""
         return D2TXTColumnNameView(self._column_names)
+
+    def column_index(self, column_name):
+        """Returns the index of the column with the given name. Raises KeyError
+        if no match is found.
+
+        Args:
+            column_name: Column name string.
+        """
+        return self._column_indices[column_name]
 
 
     @classmethod
@@ -145,7 +147,7 @@ class D2TXT(collections.abc.MutableSequence):
         # Manually dedupe column names to ensure that warnings point to correct
         # lines in the source code
         d2txt = cls(cls.dedupe_column_names(next(txt_reader)))
-        d2txt._rows = [D2TXTRow(row, d2txt._column_names) for row in txt_reader]
+        d2txt.extend(txt_reader)
         return d2txt
 
 
