@@ -3,7 +3,7 @@
 """Unit test for d2txt.py"""
 
 
-from d2txt import D2TXT
+from d2txt import D2TXT, DuplicateColumnNameWarning
 import unittest
 import os
 from os import path
@@ -95,9 +95,19 @@ class TestD2TXT(unittest.TestCase):
 
     def testDuplicateColumnNames(self):
         """Tests if duplicate column names are renamed correctly."""
-        # TODO: Add actual tests when D2TXT is refactored to handle duplicate
-        # column names by itself
-        pass
+        with self.assertWarns(DuplicateColumnNameWarning):
+            d2txt = D2TXT(['column name'] * 60)
+
+        column_names = list(d2txt.column_names())
+        self.assertEqual(column_names[1], 'column name(B)')
+        self.assertEqual(column_names[2], 'column name(C)')
+        self.assertEqual(column_names[24], 'column name(Y)')
+        self.assertEqual(column_names[25], 'column name(Z)')
+        self.assertEqual(column_names[26], 'column name(AA)')
+        self.assertEqual(column_names[27], 'column name(AB)')
+        self.assertEqual(column_names[51], 'column name(AZ)')
+        self.assertEqual(column_names[52], 'column name(BA)')
+        self.assertEqual(column_names[53], 'column name(BB)')
 
     def testAssignList(self):
         """Tests if D2TXT accepts direct assignment using lists."""
@@ -219,7 +229,8 @@ class TestD2TXTLoadFileFromSources(unittest.TestCase):
         """Tests if D2TXT can load a file using a file path, and its contents
         are preserved."""
         sample_txt_expected = self.__class__.sample_txt_expected
-        d2txt = D2TXT.load_txt(self.__class__.sample_txt_path)
+        with self.assertWarns(DuplicateColumnNameWarning):
+            d2txt = D2TXT.load_txt(self.__class__.sample_txt_path)
 
         self.assertEqual(len(d2txt), len(sample_txt_expected) - 1, 'Row count')
         self.assertEqual(tuple(d2txt.column_names()), tuple(sample_txt_expected[0]), 'Column mismatch')
@@ -232,14 +243,31 @@ class TestD2TXTLoadFileFromSources(unittest.TestCase):
         are preserved."""
         sample_txt_expected = self.__class__.sample_txt_expected
         # newline='' is required to make csv.reader work correctly
-        with open(self.__class__.sample_txt_path, newline='') as sample_txt:
-            d2txt = D2TXT.load_txt(sample_txt)
+        with self.assertWarns(DuplicateColumnNameWarning):
+            with open(self.__class__.sample_txt_path, newline='') as sample_txt:
+                d2txt = D2TXT.load_txt(sample_txt)
 
         self.assertEqual(len(d2txt), len(sample_txt_expected) - 1, 'Row count')
         self.assertEqual(tuple(d2txt.column_names()), tuple(sample_txt_expected[0]), 'Column mismatch')
         for row_index, row in enumerate(d2txt):
             with self.subTest(row_index=row_index):
                 self.assertEqual(list(row.values()), sample_txt_expected[row_index + 1])
+
+    def test_DuplicateColumnNamesAreRenamed(self):
+        """Tests if duplicate column names are renamed when loading a TXT file.
+        """
+        txtfile = StringIO()
+        txtfile.write(
+            'column name\tcolumn name 2\tcolumn name 2\tcolumn name\tcolumn name\tcolumn name 2\r\n'
+            'foo\tbar\tbar\tfoo\tfoo\tbar\r\n'
+        )
+        txtfile.seek(0)
+
+        with self.assertWarns(DuplicateColumnNameWarning):
+            d2txt = D2TXT.load_txt(txtfile)
+
+        expected_column_names = ['column name', 'column name 2', 'column name 2(C)', 'column name(D)', 'column name(E)', 'column name 2(F)']
+        self.assertEqual(list(d2txt.column_names()), expected_column_names)
 
 
 # A dummy class that hides abstract test cases from the module-level namespace
@@ -327,18 +355,6 @@ class TestD2TXTLoadFileAndCheckIfColumnIsCaseSensitive(AbstractTestCases.TestD2T
     load_expected = [
         ['column name', 'Column Name', 'COLUMN NAME'],
         ['lowercase', 'Capitalized', 'UPPERCASE'],
-    ]
-
-class TestD2TXTLoadFileAndCheckIfDuplicateColumnIsRenamed(AbstractTestCases.TestD2TXTLoadFileAndCompareContents):
-    """Tests if D2TXT correctly renames duplicate column names when loading a TXT file."""
-
-    load_contents = (
-        'column name\tcolumn name 2\tcolumn name 2\tcolumn name\tcolumn name\tcolumn name 2\r\n'
-        'foo\tbar\tbar\tfoo\tfoo\tbar\r\n'
-    )
-    load_expected = [
-        ['column name', 'column name 2', 'column name 2(C)', 'column name(D)', 'column name(E)', 'column name 2(F)'],
-        ['foo', 'bar', 'bar', 'foo', 'foo', 'bar'],
     ]
 
 class TestD2TXTLoadFileAndCheckIfColumnNameWhitespaceIsPreserved(AbstractTestCases.TestD2TXTLoadFileAndCompareContents):
