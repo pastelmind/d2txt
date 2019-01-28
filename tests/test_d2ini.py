@@ -106,9 +106,9 @@ class TestD2TXTSaveIni(unittest.TestCase):
         ]
         ini_expected = (
             '[Columns]\nid\nName\nFull Name\n\n'
-            '[1]\nid=0\nName=John\nFull Name=John Doe\n\n'
-            '[2]\nid=1\nName=Mary\nFull Name=Mary Gold\n\n'
-            '[3]\nid=2\nName=Foo\nFull Name=Foo Bar\n\n'
+            '[1]\nid = 0\nName = John\nFull Name = John Doe\n\n'
+            '[2]\nid = 1\nName = Mary\nFull Name = Mary Gold\n\n'
+            '[3]\nid = 2\nName = Foo\nFull Name = Foo Bar\n\n'
         )
 
         d2txt = D2TXT(txt_source[0])
@@ -335,10 +335,10 @@ class TestD2TXTSaveIniAndCheckIfWhitespaceBacktickified(AbstractTestCases.TestD2
     ini_expected = (
         '[Columns]\n`   leading spaces`\n`trailing spaces  `\n`  surrounding spaces  `\n` `\n\n'
         '[1]\n'
-        '`   leading spaces`=`   leading spaces`\n'
-        '`trailing spaces  `=`trailing spaces  `\n'
-        '`  surrounding spaces  `=`  surrounding spaces  `\n'
-        '` `=` `\n\n'
+        '`   leading spaces` = `   leading spaces`\n'
+        '`trailing spaces  ` = `trailing spaces  `\n'
+        '`  surrounding spaces  ` = `  surrounding spaces  `\n'
+        '` ` = ` `\n\n'
     )
 
 class TestD2TXTSaveIniAndCheckIfEmptyColumnNameBacktickified(AbstractTestCases.TestD2TXTSaveIniAndCompareContents):
@@ -346,7 +346,7 @@ class TestD2TXTSaveIniAndCheckIfEmptyColumnNameBacktickified(AbstractTestCases.T
     an INI file."""
 
     txt_source = [[''], ['1']]
-    ini_expected = '[Columns]\n``\n\n[1]\n``=1\n\n'
+    ini_expected = '[Columns]\n``\n\n[1]\n`` = 1\n\n'
 
 class TestD2TXTSaveIniAndCheckIfBackticksAreBacktickified(AbstractTestCases.TestD2TXTSaveIniAndCompareContents):
     """Tests if columns and cells with surrounding backticks (but not unpaired
@@ -360,10 +360,10 @@ class TestD2TXTSaveIniAndCheckIfBackticksAreBacktickified(AbstractTestCases.Test
     ini_expected = (
         '[Columns]\n``backticks``\n```double backticks```\n`unpaired backtick\ninternal `backticks`\n\n'
         '[1]\n'
-        '``backticks``=``backticks``\n'
-        '```double backticks```=```double backticks```\n'
-        '`unpaired backtick=`unpaired backtick\n'
-        'internal `backticks`=internal `backticks`\n\n'
+        '``backticks`` = ``backticks``\n'
+        '```double backticks``` = ```double backticks```\n'
+        '`unpaired backtick = `unpaired backtick\n'
+        'internal `backticks` = internal `backticks`\n\n'
     )
 
 class TestD2TXTSaveIniAndCheckIfColumnNameWithLeadingSemicolonIsBacktickified(AbstractTestCases.TestD2TXTSaveIniAndCompareContents):
@@ -378,8 +378,8 @@ class TestD2TXTSaveIniAndCheckIfColumnNameWithLeadingSemicolonIsBacktickified(Ab
     ini_expected = (
         '[Columns]\n`;leading semicolon`\nsemicolons;in;middle\n\n'
         '[1]\n'
-        '`;leading semicolon`=;leading semicolon\n'
-        'semicolons;in;middle=semicolons;in;middle\n\n'
+        '`;leading semicolon` = ;leading semicolon\n'
+        'semicolons;in;middle = semicolons;in;middle\n\n'
     )
 
 class TestD2TXTSaveIniAndCheckIfEqualSignsAreEscaped(AbstractTestCases.TestD2TXTSaveIniAndCompareContents):
@@ -389,8 +389,8 @@ class TestD2TXTSaveIniAndCheckIfEqualSignsAreEscaped(AbstractTestCases.TestD2TXT
     ini_expected = (
         '[Columns]\n${eq}leading equals\nequals${eq}in${eq}middle\n\n'
         '[1]\n'
-        '${eq}leading equals==leading equals\n'
-        'equals${eq}in${eq}middle=equals=in=middle\n\n'
+        '${eq}leading equals = =leading equals\n'
+        'equals${eq}in${eq}middle = equals=in=middle\n\n'
     )
 
 class TestD2TXTSaveIniAndCheckIfFalsyValuesIgnored(AbstractTestCases.TestD2TXTSaveIniAndCompareContents):
@@ -411,8 +411,8 @@ class TestD2TXTLoadIniAndCheckBitFieldDecoded(AbstractTestCases.TestD2TXTSaveIni
     txt_source = [['aurafilter'], ['33025'], ['0'], ['65535'], ['4294901760']]
     ini_expected = (
         '[Columns]\naurafilter\n\n'
-        '[1]\naurafilter=FindPlayers | NotInsideTowns | IgnoreAllies\n\n'
-        '[2]\naurafilter=0\n\n'
-        '[3]\naurafilter=FindPlayers | FindMonsters | FindOnlyUndead | FindMissiles | FindObjects | FindItems | 0x40 | FindAttackable | NotInsideTowns | UseLineOfSight | FindSelectable | 0x800 | FindCorpses | NotInsideTowns2 | IgnoreBoss | IgnoreAllies\n\n'
-        '[4]\naurafilter=IgnoreNPC | Unknown20000 | IgnorePrimeEvil | IgnoreJustHitUnits | 0x100000 | 0x200000 | 0x400000 | 0x800000 | 0x1000000 | 0x2000000 | 0x4000000 | 0x8000000 | 0x10000000 | 0x20000000 | 0x40000000 | 0x80000000\n\n'
+        '[1]\naurafilter = FindPlayers | NotInsideTowns | IgnoreAllies\n\n'
+        '[2]\naurafilter = 0\n\n'
+        '[3]\naurafilter = FindPlayers | FindMonsters | FindOnlyUndead | FindMissiles | FindObjects | FindItems | 0x40 | FindAttackable | NotInsideTowns | UseLineOfSight | FindSelectable | 0x800 | FindCorpses | NotInsideTowns2 | IgnoreBoss | IgnoreAllies\n\n'
+        '[4]\naurafilter = IgnoreNPC | Unknown20000 | IgnorePrimeEvil | IgnoreJustHitUnits | 0x100000 | 0x200000 | 0x400000 | 0x800000 | 0x1000000 | 0x2000000 | 0x4000000 | 0x8000000 | 0x10000000 | 0x20000000 | 0x40000000 | 0x80000000\n\n'
     )

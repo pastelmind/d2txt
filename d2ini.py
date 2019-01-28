@@ -260,7 +260,7 @@ def d2txt_to_ini(d2txt, inifile):
                 section[ini_key] = txt_value_to_ini(value, column_name)
         ini_parser[str(row_index + 1)] = section
 
-    ini_parser.write(inifile, space_around_delimiters=False)
+    ini_parser.write(inifile, space_around_delimiters=True)
 
 
 if __name__ == '__main__':
