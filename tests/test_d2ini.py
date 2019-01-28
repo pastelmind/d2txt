@@ -12,7 +12,6 @@ from io import StringIO
 from tempfile import NamedTemporaryFile
 
 
-# @unittest.skip("Skip this until d2ini is fixed")
 class TestD2TXTLoadIni(unittest.TestCase):
     """Contains tests that load a D2TXT object from an INI file."""
 
@@ -59,17 +58,27 @@ class TestD2TXTLoadIni(unittest.TestCase):
         with self.assertRaises(KeyError):
             ini_to_d2txt(ini_file)
 
-    @unittest.skip("Skip until a proper exception is implemented")
     def test_CheckIfMultilineValueRaisesError(self):
         """Tests if a multiline value in an INI file raises an exception."""
         ini_source = (
-            '[Columns]\ncolumn 1=\ncolumn 2\n\n'
+            '[Columns]\ncolumn 1=\ncolumn 2=\n\n'
             '[1]\ncolumn 1=value\n  column 2=value\n\n'
         )
 
-        # TODO: Raise MultilineValueError
         ini_file = StringIO(ini_source)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
+            ini_to_d2txt(ini_file)
+
+    def test_CheckIfMultilineValueInColumnsSectionRaisesError(self):
+        """Tests if a multiline value in the Columns section of an INI file
+        raises an exception."""
+        ini_source = (
+            '[Columns]\ncolumn 1=\n  column 2=\n\n'
+            '[1]\ncolumn 1=value\n\n'
+        )
+
+        ini_file = StringIO(ini_source)
+        with self.assertRaises(ValueError):
             ini_to_d2txt(ini_file)
 
 
@@ -303,7 +312,6 @@ class TestD2TXTLoadIniAndCheckBitFieldEncoded(AbstractTestCases.TestD2TXTLoadIni
     )
     txt_expected = [['aurafilter'], ['33025'], ['33025'], ['1281']]
 
-    @unittest.skip("Skip until a proper exception is implemented")
     def test_InvalidBitFieldRaiseError(self):
         """Tests if an invalid bitfield string raises an error."""
         ini_source = (
@@ -312,8 +320,7 @@ class TestD2TXTLoadIniAndCheckBitFieldEncoded(AbstractTestCases.TestD2TXTLoadIni
         )
 
         ini_file = StringIO(ini_source)
-        # TODO: Raise BitfieldEncodingError
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             ini_to_d2txt(ini_file)
 
 

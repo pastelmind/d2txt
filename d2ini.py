@@ -136,9 +136,13 @@ def encode_aurafilter(af_str):
 
     aurafilter = 0
     for flag_name in af_str.split('|'):
-        flag = AURAFILTER_NAMES.get(flag_name.strip())
+        flag_name = flag_name.strip()
+        flag = AURAFILTER_NAMES.get(flag_name)
         if not flag:
-            flag = int(flag_name, 0)
+            try:
+                flag = int(flag_name, 0)
+            except ValueError:
+                raise ValueError(f'Unknown bit flag for aurafilter: {flag_name!r}') from None
         aurafilter |= flag
 
     return str(aurafilter)
@@ -180,7 +184,15 @@ def ini_to_d2txt(inifile):
     ini_parser.optionxform = str    # Make column names case-sensitive
     ini_parser.read_file(inifile)
 
-    ini_keys = list(ini_parser['Columns'].keys())
+    ini_keys = []
+    for key, value in ini_parser['Columns'].items():
+        if '\n' in value:
+            raise ValueError(
+                f'Multiple lines found in value for key {key!r}, section [Columns].\n'
+                f'Try removing all whitespace characters before {value.splitlines()[1]!r}.'
+            )
+        ini_keys.append(key)
+
     # Manually dedupe column names to ensure that warnings point to correct
     # lines in the source code
     d2txt = D2TXT(D2TXT.dedupe_column_names(map(unescape_column_name, ini_keys)))
@@ -198,6 +210,11 @@ def ini_to_d2txt(inifile):
             d2txt.append([])
 
         for ini_key, value in section.items():
+            if '\n' in value:
+                raise ValueError(
+                    f'Multiple lines found in value for key {key!r}, section [{section_name}].\n'
+                    f'Try removing all whitespace characters before {value.splitlines()[1]!r}.'
+                )
             column_name = ini_key_to_column_name[ini_key]
             d2txt[row_index][column_name] = ini_value_to_txt(value, column_name)
 
