@@ -105,7 +105,7 @@ class TestD2TXTSaveIni(unittest.TestCase):
             ['2', 'Foo', 'Foo Bar'],
         ]
         ini_expected = (
-            '[Columns]\nid=\nName=\nFull Name=\n\n'
+            '[Columns]\nid\nName\nFull Name\n\n'
             '[1]\nid=0\nName=John\nFull Name=John Doe\n\n'
             '[2]\nid=1\nName=Mary\nFull Name=Mary Gold\n\n'
             '[3]\nid=2\nName=Foo\nFull Name=Foo Bar\n\n'
@@ -209,16 +209,16 @@ class TestD2TXTLoadIniAndCheckIfWhitespaceIsStripped(AbstractTestCases.TestD2TXT
     ]
 
 class TestD2TXTLoadIniAndCheckEmptyOrOmittedKeys(AbstractTestCases.TestD2TXTLoadIniAndCompareContents):
-    """Tests if empty or omitted keys are set to an empty string when loading an
-    INI file."""
+    """Tests if empty keys, empty values, or omitted keys are set to None or an
+    empty string when loading an INI file."""
 
     ini_source = (
-        '[Columns]\nKey with value=\nEmpty key=\nOmitted key=\n\n'
-        '[1]\nKey with value=has value\nEmpty key=\n\n'
+        '[Columns]\nKey with empty value=\nEmpty key\nOmitted key=\n\n'
+        '[1]\nKey with empty value\nEmpty key=\n\n'
     )
     txt_expected = [
-        ['Key with value', 'Empty key', 'Omitted key'],
-        ['has value', '', None],
+        ['Key with empty value', 'Empty key', 'Omitted key'],
+        [None, '', None],
     ]
 
 class TestD2TXTLoadIniAndCheckIfUnbacktickfied(AbstractTestCases.TestD2TXTLoadIniAndCompareContents):
@@ -333,7 +333,7 @@ class TestD2TXTSaveIniAndCheckIfWhitespaceBacktickified(AbstractTestCases.TestD2
         ['   leading spaces', 'trailing spaces  ', '  surrounding spaces  ', ' '],
     ]
     ini_expected = (
-        '[Columns]\n`   leading spaces`=\n`trailing spaces  `=\n`  surrounding spaces  `=\n` `=\n\n'
+        '[Columns]\n`   leading spaces`\n`trailing spaces  `\n`  surrounding spaces  `\n` `\n\n'
         '[1]\n'
         '`   leading spaces`=`   leading spaces`\n'
         '`trailing spaces  `=`trailing spaces  `\n'
@@ -346,7 +346,7 @@ class TestD2TXTSaveIniAndCheckIfEmptyColumnNameBacktickified(AbstractTestCases.T
     an INI file."""
 
     txt_source = [[''], ['1']]
-    ini_expected = '[Columns]\n``=\n\n[1]\n``=1\n\n'
+    ini_expected = '[Columns]\n``\n\n[1]\n``=1\n\n'
 
 class TestD2TXTSaveIniAndCheckIfBackticksAreBacktickified(AbstractTestCases.TestD2TXTSaveIniAndCompareContents):
     """Tests if columns and cells with surrounding backticks (but not unpaired
@@ -358,7 +358,7 @@ class TestD2TXTSaveIniAndCheckIfBackticksAreBacktickified(AbstractTestCases.Test
         ['`backticks`', '``double backticks``', '`unpaired backtick', 'internal `backticks`'],
     ]
     ini_expected = (
-        '[Columns]\n``backticks``=\n```double backticks```=\n`unpaired backtick=\ninternal `backticks`=\n\n'
+        '[Columns]\n``backticks``\n```double backticks```\n`unpaired backtick\ninternal `backticks`\n\n'
         '[1]\n'
         '``backticks``=``backticks``\n'
         '```double backticks```=```double backticks```\n'
@@ -376,7 +376,7 @@ class TestD2TXTSaveIniAndCheckIfColumnNameWithLeadingSemicolonIsBacktickified(Ab
         [';leading semicolon', 'semicolons;in;middle'],
     ]
     ini_expected = (
-        '[Columns]\n`;leading semicolon`=\nsemicolons;in;middle=\n\n'
+        '[Columns]\n`;leading semicolon`\nsemicolons;in;middle\n\n'
         '[1]\n'
         '`;leading semicolon`=;leading semicolon\n'
         'semicolons;in;middle=semicolons;in;middle\n\n'
@@ -387,7 +387,7 @@ class TestD2TXTSaveIniAndCheckIfEqualSignsAreEscaped(AbstractTestCases.TestD2TXT
 
     txt_source = [['=leading equals', 'equals=in=middle'], ['=leading equals', 'equals=in=middle']]
     ini_expected = (
-        '[Columns]\n${eq}leading equals=\nequals${eq}in${eq}middle=\n\n'
+        '[Columns]\n${eq}leading equals\nequals${eq}in${eq}middle\n\n'
         '[1]\n'
         '${eq}leading equals==leading equals\n'
         'equals${eq}in${eq}middle=equals=in=middle\n\n'
@@ -401,7 +401,7 @@ class TestD2TXTSaveIniAndCheckIfFalsyValuesIgnored(AbstractTestCases.TestD2TXTSa
         [0, 0.0, False, None],
     ]
     ini_expected = (
-        '[Columns]\nint 0=\nfloat 0.0=\nFalse=\nNone=\n\n'
+        '[Columns]\nint 0\nfloat 0.0\nFalse\nNone\n\n'
         '[1]\n\n'
     )
 
@@ -410,7 +410,7 @@ class TestD2TXTLoadIniAndCheckBitFieldDecoded(AbstractTestCases.TestD2TXTSaveIni
 
     txt_source = [['aurafilter'], ['33025'], ['0'], ['65535'], ['4294901760']]
     ini_expected = (
-        '[Columns]\naurafilter=\n\n'
+        '[Columns]\naurafilter\n\n'
         '[1]\naurafilter=FindPlayers | NotInsideTowns | IgnoreAllies\n\n'
         '[2]\naurafilter=0\n\n'
         '[3]\naurafilter=FindPlayers | FindMonsters | FindOnlyUndead | FindMissiles | FindObjects | FindItems | 0x40 | FindAttackable | NotInsideTowns | UseLineOfSight | FindSelectable | 0x800 | FindCorpses | NotInsideTowns2 | IgnoreBoss | IgnoreAllies\n\n'

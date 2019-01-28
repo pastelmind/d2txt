@@ -180,13 +180,18 @@ def ini_to_d2txt(inifile):
         with open(inifile) as inifile_obj:
             return ini_to_d2txt(inifile_obj)
 
-    ini_parser = ConfigParser(interpolation=None, delimiters='=', comment_prefixes=';')
+    ini_parser = ConfigParser(
+        interpolation=None,
+        comment_prefixes=';',
+        delimiters='=',
+        allow_no_value=True,
+    )
     ini_parser.optionxform = str    # Make column names case-sensitive
     ini_parser.read_file(inifile)
 
     ini_keys = []
     for key, value in ini_parser['Columns'].items():
-        if '\n' in value:
+        if value and '\n' in value:
             raise ValueError(
                 f'Multiple lines found in value for key {key!r}, section [Columns].\n'
                 f'Try removing all whitespace characters before {value.splitlines()[1]!r}.'
@@ -210,7 +215,7 @@ def ini_to_d2txt(inifile):
             d2txt.append([])
 
         for ini_key, value in section.items():
-            if '\n' in value:
+            if value and '\n' in value:
                 raise ValueError(
                     f'Multiple lines found in value for key {key!r}, section [{section_name}].\n'
                     f'Try removing all whitespace characters before {value.splitlines()[1]!r}.'
@@ -233,14 +238,19 @@ def d2txt_to_ini(d2txt, inifile):
             d2txt_to_ini(d2txt, inifile_obj)
             return
 
-    ini_parser = ConfigParser(interpolation=None, comment_prefixes=';')
+    ini_parser = ConfigParser(
+        interpolation=None,
+        comment_prefixes=';',
+        delimiters='=',
+        allow_no_value=True,
+    )
     # Note: ConfigParser calls optionxform multiple times for each key/value.
     #       Because of this, escape_column_name cannot be directly assigned to
     #       optionxform; doing so causes each column name to be escaped *twice*
     #       when assigning a dictionary, as well as being generally inefficent.
     #       Hence, escape_column_name() must be called explicitly.
     ini_parser.optionxform = str    # Make column names case-sensitive
-    ini_parser['Columns'] = {escape_column_name(name): '' for name in d2txt.column_names()}
+    ini_parser['Columns'] = {escape_column_name(name): None for name in d2txt.column_names()}
 
     for row_index, row in enumerate(d2txt):
         section = {}
