@@ -9,6 +9,34 @@ import os
 from os import path
 from io import StringIO
 from tempfile import NamedTemporaryFile
+from typing import Iterable, Sequence
+
+
+class TestD2TXTBase(unittest.TestCase):
+    """Base class for D2TXT-related tests. Provides convenience methods."""
+
+    def compare_D2TXT(self, d2txt: D2TXT, column_names: Iterable[str],
+                           rows: Sequence[Iterable[str]]):
+        """Compares a D2TXT object with the given column names and rows.
+
+        A convenience method. Compares the column names and rows of a D2TXT
+        object with the given values using `self.assertEqual()`.
+
+        Args:
+            d2txt: A D2TXT object.
+            column_names: An iterable of strings to compare with the column
+                names in `d2txt`.
+            rows: A sequence of iterables of strings. Each iterable is compared
+                with each row in `d2txt`.
+
+        Raises:
+            AssertionError: The D2TXT object does not match the given values.
+        """
+        self.assertEqual(list(d2txt.column_names()), list(column_names))
+        self.assertEqual(len(d2txt), len(rows), 'Row count')
+        for row_index, row in enumerate(d2txt):
+            with self.subTest(row_index=row_index):
+                self.assertEqual(list(row.values()), list(rows[row_index]))
 
 
 class TestD2TXT(unittest.TestCase):
@@ -231,230 +259,133 @@ class TestD2TXT(unittest.TestCase):
         self.assertEqual(list(d2txt[3].values()), ['1', '2', '3'])
 
 
-class TestD2TXTLoadFileFromSources(unittest.TestCase):
-    """Tests if D2TXT can be load a file using several sources."""
+class TestD2TXTLoadFile(TestD2TXTBase):
+    """Contains tests that load D2TXT objects from TXT files."""
 
-    sample_txt_path = path.join(path.dirname(path.abspath(__file__)), 'sample.txt')
-
-    # Represents the expected structure of D2TXT loaded from sample.txt
-    sample_txt_expected = [
-        ['column name', 'duplicate name', 'duplicate name(C)', '', 'COLUMN NAME'],
-        ['lowercase column name', 'next cell is empty', '', 'empty column name', 'UPPERCASE COLUMN NAME'],
-        ['next row is empty', '   leading spaces', 'trailing spaces   ', '    surrounded by spaces  ', '"double quotes"'],
-        ['', '', '', '', '0'],
-        ['this row and the next has not enough cells', None, None, None, None],
-        [None, None, None, None, None],
-    ]
-
-    def test_LoadFileFromPath(self):
+    def test_load_path(self):
         """Tests if D2TXT can load a file using a file path, and its contents
         are preserved."""
-        sample_txt_expected = self.__class__.sample_txt_expected
+        FILE_PATH = path.join(path.dirname(path.abspath(__file__)), 'sample.txt')
         with self.assertWarns(DuplicateColumnNameWarning):
-            d2txt = D2TXT.load_txt(self.__class__.sample_txt_path)
+            d2txt = D2TXT.load_txt(FILE_PATH)
 
-        self.assertEqual(len(d2txt), len(sample_txt_expected) - 1, 'Row count')
-        self.assertEqual(tuple(d2txt.column_names()), tuple(sample_txt_expected[0]), 'Column mismatch')
-        for row_index, row in enumerate(d2txt):
-            with self.subTest(row_index=row_index):
-                self.assertEqual(list(row.values()), sample_txt_expected[row_index + 1])
+        self.compare_D2TXT(
+            d2txt,
+            ['column name', 'duplicate name', 'duplicate name(C)', '', 'COLUMN NAME'],
+            [
+                ['lowercase column name', 'next cell is empty', '', 'empty column name', 'UPPERCASE COLUMN NAME'],
+                ['next row is empty', '   leading spaces', 'trailing spaces   ', '    surrounded by spaces  ', '"double quotes"'],
+                ['', '', '', '', '0'],
+                ['this row and the next has not enough cells', None, None, None, None],
+                [None, None, None, None, None],
+            ]
+        )
 
-    def test_LoadFileFromObject(self):
-        """Tests if D2TXT can load a file using a file object, and its contents
-        are preserved."""
-        sample_txt_expected = self.__class__.sample_txt_expected
-        # newline='' is required to make csv.reader work correctly
-        with self.assertWarns(DuplicateColumnNameWarning):
-            with open(self.__class__.sample_txt_path, newline='') as sample_txt:
-                d2txt = D2TXT.load_txt(sample_txt)
+    def test_load_file_object(self):
+        """Tests if D2TXT can load a TXT file from a file object."""
+        d2txt = D2TXT.load_txt(StringIO(
+            'column 1\tcolumn 2\tcolumn 3\r\n'
+            'value 1\tvalue 2\tvalue 3\r\n'
+            'foo\tbar\tbaz\r\n',
+            newline=''  # Required to make csv.reader work correctly
+        ))
+        self.compare_D2TXT(
+            d2txt, ['column 1', 'column 2', 'column 3'],
+            [['value 1', 'value 2', 'value 3'], ['foo', 'bar', 'baz']]
+        )
 
-        self.assertEqual(len(d2txt), len(sample_txt_expected) - 1, 'Row count')
-        self.assertEqual(tuple(d2txt.column_names()), tuple(sample_txt_expected[0]), 'Column mismatch')
-        for row_index, row in enumerate(d2txt):
-            with self.subTest(row_index=row_index):
-                self.assertEqual(list(row.values()), sample_txt_expected[row_index + 1])
-
-    def test_DuplicateColumnNamesAreRenamed(self):
+    def test_duplicate_column_names(self):
         """Tests if duplicate column names are renamed when loading a TXT file.
         """
-        txtfile = StringIO()
-        txtfile.write(
-            'column name\tcolumn name 2\tcolumn name 2\tcolumn name\tcolumn name\tcolumn name 2\r\n'
-            'foo\tbar\tbar\tfoo\tfoo\tbar\r\n'
-        )
-        txtfile.seek(0)
-
         with self.assertWarns(DuplicateColumnNameWarning):
-            d2txt = D2TXT.load_txt(txtfile)
+            d2txt = D2TXT.load_txt(StringIO(
+                'column name\tcolumn name 2\tcolumn name 2\t'
+                'column name\tcolumn name\tcolumn name 2\r\n'
+                'foo\tbar\tbar\tfoo\tfoo\tbar\r\n',
+                newline=''  # Required to make csv.reader work correctly
+            ))
 
-        expected_column_names = ['column name', 'column name 2', 'column name 2(C)', 'column name(D)', 'column name(E)', 'column name 2(F)']
+        expected_column_names = [
+            'column name', 'column name 2', 'column name 2(C)',
+            'column name(D)', 'column name(E)', 'column name 2(F)'
+        ]
         self.assertEqual(list(d2txt.column_names()), expected_column_names)
 
+    def test_column_name_case_preserving(self):
+        """Tests if column names are case-preserved when loading a TXT file."""
+        d2txt = D2TXT.load_txt(StringIO(
+            'column name\tColumn Name\tCOLUMN NAME\r\n'
+            'lowercase\tCapitalized\tUPPERCASE\r\n',
+            newline=''  # Required to make csv.reader work correctly
+        ))
+        self.compare_D2TXT(
+            d2txt, ['column name', 'Column Name', 'COLUMN NAME'],
+            [['lowercase', 'Capitalized', 'UPPERCASE']]
+        )
 
-# A dummy class that hides abstract test cases from the module-level namespace
-# to prevent `unittest` from discovering and running them.
-# Original idea from https://stackoverflow.com/a/25695512/9943202
-class AbstractTestCases:
-    # An ABC test case inherited by other test cases in the "LoadFile" family.
-    class TestD2TXTLoadFileAndCompareContents(unittest.TestCase):
-        """Loads D2TXT from a file object and tests if it matches the expected
-        contents."""
+    def test_column_name_whitespace(self):
+        """Tests if whitespace in columns are preserved when loading a TXT file.
+        """
+        d2txt = D2TXT.load_txt(StringIO(
+            '   column 1\tcolumn 2    \t  column 3  \t\t  \r\n'
+            '3 before\t4 after\t2 both\tempty\tspaces only\r\n',
+            newline=''  # Required to make csv.reader work correctly
+        ))
+        self.compare_D2TXT(
+            d2txt, ['   column 1', 'column 2    ', '  column 3  ', '', '  '],
+            [['3 before', '4 after', '2 both', 'empty', 'spaces only']]
+        )
 
-        # A string representing the contents of the TXT file to test.
-        # Must be redefined by concrete test cases that inherit this class.
-        load_contents = NotImplementedError('load_contents')
+    def test_empty_cell(self):
+        """Tests if D2TXT correctly loads empty cells and rows in a TXT file."""
+        d2txt = D2TXT.load_txt(StringIO(
+            'column 1\tcolumn 2\tcolumn 3\r\nempty\t\t\r\n\t\t\r\n',
+            newline=''  # Required to make csv.reader work correctly
+        ))
+        self.compare_D2TXT(
+            d2txt, ['column 1', 'column 2', 'column 3'],
+            [['empty', '', ''], ['', '', '']]
+        )
 
-        # A list-of-lists representation of the expected contents of the D2TXT
-        # object loaded from `load_contents`, with the column names in the first
-        # child list.
-        # Must be redefined by concrete test cases that inherit this class.
-        load_expected = NotImplementedError('load_expected')
+    def test_cell_whitespace(self):
+        """Tests if whitespace in cells are preserved when loading a TXT file.
+        """
+        d2txt = D2TXT.load_txt(StringIO(
+            'column 1\tcolumn 2\tcolumn 3\r\n'
+            '  2 leading spaces\t3 trailing spaces   \t     \r\n',
+            newline=''  # Required to make csv.reader work correctly
+        ))
+        self.compare_D2TXT(
+            d2txt, ['column 1', 'column 2', 'column 3'],
+            [['  2 leading spaces', '3 trailing spaces   ', '     ']],
+        )
 
-        def test_LoadFileAndCheckContents(self):
-            """Loads D2TXT from a file containing `load_contents` and tests if it
-            matches `load_expected`."""
-            load_expected = self.__class__.load_expected
-            # newline='' is required to make csv.reader work correctly
-            with StringIO(self.__class__.load_contents, newline='') as txtfile:
-                d2txt = D2TXT.load_txt(txtfile)
+    def test_surrounding_quotes(self):
+        """Tests if surrounding quotes are preserved when loading a TXT file."""
+        d2txt = D2TXT.load_txt(StringIO(
+            '\'single quotes\'\t"double quotes"\t`backticks`\r\n'
+            '\'single quotes\'\t"double quotes"\t`backticks`\r\n',
+            newline=''  # Required to make csv.reader work correctly
+        ))
+        self.compare_D2TXT(
+            d2txt, ['\'single quotes\'', '"double quotes"', '`backticks`'],
+            [['\'single quotes\'', '"double quotes"', '`backticks`']]
+        )
 
-            self.assertEqual(len(d2txt), len(load_expected) - 1, 'Row count')
-            self.assertEqual(tuple(d2txt.column_names()), tuple(load_expected[0]), 'Column mismatch')
-            for row_index, row in enumerate(d2txt):
-                with self.subTest(row_index=row_index):
-                    self.assertEqual(list(row.values()), load_expected[row_index + 1])
-
-
-    # An ABC test case inherited by other test cases in the "SaveFile" family.
-    class TestD2TXTSaveFileAndCompareContents(unittest.TestCase):
-        """Saves D2TXT to a file object and tests if its content matches the
-        expected value."""
-
-        # A list-of-lists representation of the D2TXT object to save to a TXT
-        # file object, with the column names in the first child list.
-        # Must be redefined by concrete test cases that inherit this class.
-        save_source = NotImplementedError('save_source')
-
-        # A string representing the expected contents of the TXT file saved.
-        # Must be redefined by concrete test cases that inherit this class.
-        save_expected = NotImplementedError('save_expected')
-
-        def test_SaveFileAndCheckContents(self):
-            """Saves D2TXT to a file containing and tests if its content matches
-            `save_expected`."""
-            d2txt = D2TXT(self.__class__.save_source[0])
-            d2txt.extend(self.__class__.save_source[1:])
-
-            # newline='' is required to make csv.writer work correctly
-            save_txt = StringIO(newline='')
-            d2txt.to_txt(save_txt)
-
-            self.assertEqual(save_txt.getvalue(), self.__class__.save_expected)
-
-
-class TestD2TXTLoadFileNormal(AbstractTestCases.TestD2TXTLoadFileAndCompareContents):
-    """Tests if D2TXT loads a normal TXT file correctly."""
-
-    load_contents = (
-        'column 1\tcolumn 2\tcolumn 3\r\n'
-        'value 1\tvalue 2\tvalue 3\r\n'
-        'foo\tbar\tbaz\r\n'
-    )
-    load_expected = [
-        ['column 1', 'column 2', 'column 3'],
-        ['value 1', 'value 2', 'value 3'],
-        ['foo', 'bar', 'baz'],
-    ]
-
-class TestD2TXTLoadFileAndCheckIfColumnIsCaseSensitive(AbstractTestCases.TestD2TXTLoadFileAndCompareContents):
-    """Tests if D2TXT treats column names as case sensitive when loading a TXT file."""
-
-    load_contents = (
-        'column name\tColumn Name\tCOLUMN NAME\r\n'
-        'lowercase\tCapitalized\tUPPERCASE\r\n'
-    )
-    load_expected = [
-        ['column name', 'Column Name', 'COLUMN NAME'],
-        ['lowercase', 'Capitalized', 'UPPERCASE'],
-    ]
-
-class TestD2TXTLoadFileAndCheckIfColumnNameWhitespaceIsPreserved(AbstractTestCases.TestD2TXTLoadFileAndCompareContents):
-    """Tests if D2TXT can correctly load from a TXT file column names that have
-    leading/trailing whitespaces, is empty, or has only whitespace."""
-
-    load_contents = (
-        '   column 1\tcolumn 2    \t  column 3  \t\t  \r\n'
-        '3 leading spaces\t4 trailing spaces\t2 surrounding spaces\tempty\t2 spaces only\r\n'
-    )
-    load_expected = [
-        ['   column 1', 'column 2    ', '  column 3  ', '', '  '],
-        ['3 leading spaces', '4 trailing spaces', '2 surrounding spaces', 'empty', '2 spaces only'],
-    ]
-
-class TestD2TXTLoadFileAndCheckIfEmptyCellsAreLoaded(AbstractTestCases.TestD2TXTLoadFileAndCompareContents):
-    """Tests if D2TXT can correctly load empty cells and rows in a TXT file."""
-
-    load_contents = 'column 1\tcolumn 2\tcolumn 3\r\nempty\t\t\r\n\t\t\r\n'
-    load_expected = [
-        ['column 1', 'column 2', 'column 3'],
-        ['empty', '', ''],
-        ['', '', ''],
-    ]
-
-class TestD2TXTLoadFileAndCheckIfCellWhitespaceIsPreserved(AbstractTestCases.TestD2TXTLoadFileAndCompareContents):
-    """Tests if D2TXT can correctly load whitespace in column names and cells in
-    a TXT file."""
-
-    load_contents = (
-        'column 1\tcolumn 2\tcolumn 3\r\n'
-        '  2 leading spaces\t3 trailing spaces   \t     \r\n'
-    )
-    load_expected = [
-        ['column 1', 'column 2', 'column 3'],
-        ['  2 leading spaces', '3 trailing spaces   ', '     '],
-    ]
-
-class TestD2TXTLoadFileAndCheckIfSurroundingQuotesArePreserved(AbstractTestCases.TestD2TXTLoadFileAndCompareContents):
-    """Tests if D2TXT can correctly load single, double, and backtick-quoted
-    column names and cell values in a TXT file."""
-
-    load_contents = (
-        '\'single quoted column\'\t"double quoted column"\t`backticked column`\r\n'
-        '\'single quoted value\'\t"double quoted value"\t`backticked value`\r\n'
-    )
-    load_expected = [
-        ['\'single quoted column\'', '"double quoted column"', '`backticked column`'],
-        ['\'single quoted value\'', '"double quoted value"', '`backticked value`'],
-    ]
-
-class TestD2TXTLoadFileAndCheckIfMissingCellsAreLoaded(AbstractTestCases.TestD2TXTLoadFileAndCompareContents):
-    """Tests if D2TXT can correctly load missing cells (caused by missing tabs)
-    in a TXT file."""
-
-    load_contents = 'column 1\tcolumn 2\tcolumn 3\r\n1 tab\t\r\nno tabs\r\n\r\n'
-    load_expected = [
-        ['column 1', 'column 2', 'column 3'],
-        ['1 tab', '', None],
-        ['no tabs', None, None],
-        [None, None, None],
-    ]
+    def test_missing_cells(self):
+        """Tests if missing cells corrected parsed when loading a TXT file."""
+        d2txt = D2TXT.load_txt(StringIO(
+            'column 1\tcolumn 2\tcolumn 3\r\n1 tab\t\r\nno tabs\r\n\r\n',
+            newline=''  # Required to make csv.reader work correctly
+        ))
+        self.compare_D2TXT(
+            d2txt, ['column 1', 'column 2', 'column 3'],
+            [['1 tab', '', None], ['no tabs', None, None], [None, None, None]]
+        )
 
 
-class TestD2TXTSaveFileToSources(unittest.TestCase):
-    """Tests if D2TXT can be saved to a file using several sources."""
-
-    # Represents the source structure of D2TXT to be saved
-    save_source = [
-        ['column 1', 'column 2', 'column 3'],
-        ['value 1', 'value 2', 'value 3'],
-        ['foo', 'bar', 'baz'],
-    ]
-    # Expected contents of D2TXT written to a TXT file
-    save_expected = (
-        'column 1\tcolumn 2\tcolumn 3\r\n'
-        'value 1\tvalue 2\tvalue 3\r\n'
-        'foo\tbar\tbaz\r\n'
-    )
+class TestD2TXTSaveFile(unittest.TestCase):
+    """Contains tests that save D2TXT objects to TXT files."""
 
     @classmethod
     def setUpClass(cls):
@@ -468,112 +399,133 @@ class TestD2TXTSaveFileToSources(unittest.TestCase):
         # Delete the temporary file
         os.remove(cls.save_txt_path)
 
-    def setUp(self):
-        self.d2txt = D2TXT(self.__class__.save_source[0])
-        self.d2txt.extend(self.__class__.save_source[1:])
+    def test_save_to_path(self):
+        """Tests if D2TXT can be saved to a file path."""
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
+        d2txt.extend([['value 1', 'value 2', 'value 3'], ['foo', 'bar', 'baz']])
 
-    def test_SaveFileToPath(self):
-        """Tests if D2TXT can save a file using a file path, and its contents
-        are preserved."""
-        self.d2txt.to_txt(self.__class__.save_txt_path)
-
-        with open(self.__class__.save_txt_path, newline='') as save_txt:
-            save_contents = save_txt.read()
-
-        self.assertEqual(save_contents, self.__class__.save_expected)
-
-    def test_SaveFileToObject(self):
-        """Tests if D2TXT can save a file using a file object, and its contents
-        are preserved."""
+        d2txt.to_txt(type(self).save_txt_path)
         # newline='' is required to make csv.writer work correctly
-        save_txt = StringIO(newline='')
-        self.d2txt.to_txt(save_txt)
+        with open(type(self).save_txt_path, newline='') as save_txt:
+            saved_contents = save_txt.read()
 
-        self.assertEqual(save_txt.getvalue(), self.__class__.save_expected)
+        self.assertEqual(
+            saved_contents,
+            'column 1\tcolumn 2\tcolumn 3\r\n'
+            'value 1\tvalue 2\tvalue 3\r\n'
+            'foo\tbar\tbaz\r\n'
+        )
 
+    def test_save_to_file_object(self):
+        """Tests if D2TXT can be saved to a file object."""
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
+        d2txt.extend([['value 1', 'value 2', 'value 3'], ['foo', 'bar', 'baz']])
 
-class TestD2TXTSaveFileAndCheckIfColumnIsCaseSensitive(AbstractTestCases.TestD2TXTSaveFileAndCompareContents):
-    """Tests if D2TXT treats column names as case sensitive when saving a TXT file."""
+        # newline='' is required to make csv.writer work correctly
+        txtfile = StringIO(newline = '')
+        d2txt.to_txt(txtfile)
+        self.assertEqual(
+            txtfile.getvalue(),
+            'column 1\tcolumn 2\tcolumn 3\r\n'
+            'value 1\tvalue 2\tvalue 3\r\n'
+            'foo\tbar\tbaz\r\n'
+        )
 
-    save_source = [
-        ['column name', 'Column Name', 'COLUMN NAME'],
-        ['lowercase', 'Capitalized', 'UPPERCASE'],
-    ]
-    save_expected = (
-        'column name\tColumn Name\tCOLUMN NAME\r\n'
-        'lowercase\tCapitalized\tUPPERCASE\r\n'
-    )
+    def test_column_name_case_preserving(self):
+        """Tests if column names are case-preserved when saved to a TXT file."""
+        d2txt = D2TXT(['column name', 'Column Name', 'COLUMN NAME'])
+        d2txt.extend([['lowercase', 'Capitalized', 'UPPERCASE']])
 
-class TestD2TXTSaveFileAndCheckIfColumnNameWhitespaceIsPreserved(AbstractTestCases.TestD2TXTSaveFileAndCompareContents):
-    """Tests if D2TXT can correctly save to a TXT file column names that have
-    leading/trailing whitespaces, is empty, or has only whitespace."""
+        # newline='' is required to make csv.writer work correctly
+        txtfile = StringIO(newline = '')
+        d2txt.to_txt(txtfile)
+        self.assertEqual(
+            txtfile.getvalue(),
+            'column name\tColumn Name\tCOLUMN NAME\r\n'
+            'lowercase\tCapitalized\tUPPERCASE\r\n'
+        )
 
-    save_source = [
-        ['   column 1', 'column 2    ', '  column 3  ', '', '  '],
-        ['3 leading spaces', '4 trailing spaces', '2 surrounding spaces', 'empty', '2 spaces only'],
-    ]
-    save_expected = (
-        '   column 1\tcolumn 2    \t  column 3  \t\t  \r\n'
-        '3 leading spaces\t4 trailing spaces\t2 surrounding spaces\tempty\t2 spaces only\r\n'
-    )
+    def test_column_name_whitespace(self):
+        """Tests if whitespace in columns are preserved when saved to a file."""
+        d2txt = D2TXT(['   column 1', 'column 2    ', '  column 3  ', '', '  '])
+        d2txt.extend([['3 before', '4 after', '2 both', 'empty', 'spaces only']])
 
-class TestD2TXTSaveFileAndCheckIfFalsyCellsArePreserved(AbstractTestCases.TestD2TXTSaveFileAndCompareContents):
-    """Tests if D2TXT can correctly save cells and rows that are empty (''),
-    contain None, integer 0, float 0.0, or False to a TXT file."""
+        # newline='' is required to make csv.writer work correctly
+        txtfile = StringIO(newline = '')
+        d2txt.to_txt(txtfile)
+        self.assertEqual(
+            txtfile.getvalue(),
+            '   column 1\tcolumn 2    \t  column 3  \t\t  \r\n'
+            '3 before\t4 after\t2 both\tempty\tspaces only\r\n'
+        )
 
-    save_source = [
-        ['column 1', 'column 2', 'column 3'],
-        ['empty', '', ''],
-        ['', '', ''],
-        ['None', None, None],
-        [None, None, None],
-        ['integer 0', 0, 0],
-        [0, 0, 0],
-        ['float 0.0', 0.0, 0.0],
-        [0.0, 0.0, 0.0],
-        ['False', False, False],
-        [False, False, False],
-        ['truncated row'],
-        []
-    ]
-    save_expected = (
-        'column 1\tcolumn 2\tcolumn 3\r\n'
-        'empty\t\t\r\n'
-        '\t\t\r\n'
-        'None\t\t\r\n'
-        '\t\t\r\n'
-        'integer 0\t0\t0\r\n'
-        '0\t0\t0\r\n'
-        'float 0.0\t0.0\t0.0\r\n'
-        '0.0\t0.0\t0.0\r\n'
-        'False\tFalse\tFalse\r\n'
-        'False\tFalse\tFalse\r\n'
-        'truncated row\t\t\r\n'
-        '\t\t\r\n'
-    )
+    def test_falsy_cell(self):
+        """Tests if falsy values in cells are preserved when saved to a file.
 
-class TestD2TXTSaveFileAndCheckIfCellWhitespaceIsPreserved(AbstractTestCases.TestD2TXTSaveFileAndCompareContents):
-    """Tests if D2TXT can correctly save whitespace in column names and cells to
-    a TXT file."""
+        Tested values include None, integer 0, float 0.0, and False.
+        """
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
+        d2txt.extend([
+            ['empty', '', ''],
+            ['', '', ''],
+            ['None', None, None],
+            [None, None, None],
+            ['integer 0', 0, 0],
+            [0, 0, 0],
+            ['float 0.0', 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            ['False', False, False],
+            [False, False, False],
+            ['truncated row'],
+            [],
+        ])
 
-    save_source = [
-        ['column 1', 'column 2', 'column 3'],
-        ['  2 leading spaces', '3 trailing spaces   ', '     '],
-    ]
-    save_expected = (
-        'column 1\tcolumn 2\tcolumn 3\r\n'
-        '  2 leading spaces\t3 trailing spaces   \t     \r\n'
-    )
+        # newline='' is required to make csv.writer work correctly
+        txtfile = StringIO(newline = '')
+        d2txt.to_txt(txtfile)
+        self.assertEqual(
+            txtfile.getvalue(),
+            'column 1\tcolumn 2\tcolumn 3\r\n'
+            'empty\t\t\r\n'
+            '\t\t\r\n'
+            'None\t\t\r\n'
+            '\t\t\r\n'
+            'integer 0\t0\t0\r\n'
+            '0\t0\t0\r\n'
+            'float 0.0\t0.0\t0.0\r\n'
+            '0.0\t0.0\t0.0\r\n'
+            'False\tFalse\tFalse\r\n'
+            'False\tFalse\tFalse\r\n'
+            'truncated row\t\t\r\n'
+            '\t\t\r\n'
+        )
 
-class TestD2TXTSaveFileAndCheckIfSurroundingQuotesArePreserved(AbstractTestCases.TestD2TXTSaveFileAndCompareContents):
-    """Tests if D2TXT can correctly save single, double, and backtick-quoted
-    column names and cell values to a TXT file."""
+    def test_cell_whitespace(self):
+        """Tests if whitespace in cells are preserved when saved to a TXT file.
+        """
+        d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
+        d2txt.extend([['  2 leading spaces', '3 trailing spaces   ', '     ']])
 
-    save_source = [
-        ['\'single quoted column\'', '"double quoted column"', '`backticked column`'],
-        ['\'single quoted value\'', '"double quoted value"', '`backticked value`'],
-    ]
-    save_expected = (
-        '\'single quoted column\'\t"double quoted column"\t`backticked column`\r\n'
-        '\'single quoted value\'\t"double quoted value"\t`backticked value`\r\n'
-    )
+        # newline='' is required to make csv.writer work correctly
+        txtfile = StringIO(newline = '')
+        d2txt.to_txt(txtfile)
+        self.assertEqual(
+            txtfile.getvalue(),
+            'column 1\tcolumn 2\tcolumn 3\r\n'
+            '  2 leading spaces\t3 trailing spaces   \t     \r\n'
+        )
+
+    def test_surrounding_quotes(self):
+        """Tests if surrounding quotes are preserved when saved to a TXT file.
+        """
+        d2txt = D2TXT(['\'single quotes\'', '"double quotes"', '`backticks`'])
+        d2txt.extend([['\'single quotes\'', '"double quotes"', '`backticks`']])
+
+        # newline='' is required to make csv.writer work correctly
+        txtfile = StringIO(newline = '')
+        d2txt.to_txt(txtfile)
+        self.assertEqual(
+            txtfile.getvalue(),
+            '\'single quotes\'\t"double quotes"\t`backticks`\r\n'
+            '\'single quotes\'\t"double quotes"\t`backticks`\r\n'
+        )
