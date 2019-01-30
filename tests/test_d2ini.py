@@ -16,7 +16,7 @@ from tests.test_d2txt import TestD2TXTBase
 class TestD2TXTLoadIni(TestD2TXTBase):
     """Contains tests that load D2TXT objects from INI files."""
 
-    def test_LoadIniFromObjectAndPath(self):
+    def test_file_object_or_path(self):
         """Tests if loading an INI from a file object or a file path produces
         the same results."""
 
@@ -37,7 +37,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             d2txt_from_file = ini_to_d2txt(ini_file)
         self.compare_D2TXT(d2txt_from_file, COLUMN_NAMES_EXPECTED, ROWS_EXPECTED)
 
-    def test_CheckIfMissingKeyRaisesError(self):
+    def test_missing_column_name(self):
         """Tests if a key that is not specified in the [Columns] section raises
         an exception."""
 
@@ -50,7 +50,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
         with self.assertRaises(KeyError):
             ini_to_d2txt(ini_file)
 
-    def test_CheckIfMultilineValueRaisesError(self):
+    def test_multiline_value(self):
         """Tests if a multiline value in an INI file raises an exception."""
         ini_source = (
             '[Columns]\ncolumn 1=\ncolumn 2=\n\n'
@@ -61,7 +61,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
         with self.assertRaises(ValueError):
             ini_to_d2txt(ini_file)
 
-    def test_CheckIfMultilineValueInColumnsSectionRaisesError(self):
+    def test_multiline_value_in_columns(self):
         """Tests if a multiline value in the Columns section of an INI file
         raises an exception."""
         ini_source = (
@@ -237,7 +237,7 @@ class TestD2TXTSaveIni(unittest.TestCase):
     def tearDownClass(cls):
         os.remove(cls.temp_ini_path)
 
-    def test_SaveToFileObject(self):
+    def test_save_to_file_object(self):
         """Tests if saving to a file object and a file path produce the same
         results."""
 

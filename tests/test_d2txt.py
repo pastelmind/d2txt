@@ -42,7 +42,7 @@ class TestD2TXTBase(unittest.TestCase):
 class TestD2TXT(unittest.TestCase):
     """Contains tests that create and modify a new D2TXT object."""
 
-    def testEmptyTxt(self):
+    def test_empty_txt(self):
         """Tests if a new D2TXT object has zero rows."""
         d2txt = D2TXT([])
         self.assertEqual(len(d2txt), 0)
@@ -51,13 +51,13 @@ class TestD2TXT(unittest.TestCase):
         with self.assertRaises(IndexError):
             d2txt[0] = []
 
-    def testColumnNameAssignment(self):
+    def test_column_assignment(self):
         """Tests column name assignment."""
         base_column_names = ['column 1', 'column 2', 'column 3']
         d2txt = D2TXT(base_column_names)
         self.assertEqual(list(d2txt.column_names()), base_column_names)
 
-    def testCellReadWrite(self):
+    def test_cell_access(self):
         """Tests if cells can be accessed using row indices and column names."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
@@ -73,7 +73,7 @@ class TestD2TXT(unittest.TestCase):
         self.assertEqual(d2txt[0]['column 2'], 'beta')
         self.assertEqual(d2txt[0]['column 3'], 'gamma')
 
-    def testRowCastToList(self):
+    def test_convert_row_to_list(self):
         """Tests if a D2TXT row can be converted to a list."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
@@ -85,7 +85,7 @@ class TestD2TXT(unittest.TestCase):
         d2txt[0]['column 3'] = 'gamma'
         self.assertEqual(list(d2txt[0].values()), ['alpha', 'beta', 'gamma'])
 
-    def testOutOfBoundsReadWrite(self):
+    def test_invalid_row_and_cell(self):
         """Tests if accessing invalid rows and cells raises appropriate exceptions."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
         d2txt.append(['foo', 'bar', 'baz'])
@@ -105,7 +105,7 @@ class TestD2TXT(unittest.TestCase):
         with self.assertRaises(KeyError):
             d2txt[0]['column 99'] = 'bird'
 
-    def testColumnNameIsCaseSensitive(self):
+    def test_column_name_case_sensitivity(self):
         """Tests if column names are case-sensitive."""
         d2txt = D2TXT(['column name', 'Column Name', 'COLUMN NAME'])
 
@@ -121,7 +121,7 @@ class TestD2TXT(unittest.TestCase):
         with self.assertRaises(KeyError):
             d2txt[0]['column NAME'] = 1
 
-    def testDuplicateColumnNames(self):
+    def test_duplicate_column_renaming(self):
         """Tests if duplicate column names are renamed correctly."""
         with self.assertWarns(DuplicateColumnNameWarning):
             d2txt = D2TXT(['column name'] * 60)
@@ -137,7 +137,7 @@ class TestD2TXT(unittest.TestCase):
         self.assertEqual(column_names[52], 'column name(BA)')
         self.assertEqual(column_names[53], 'column name(BB)')
 
-    def testAssignList(self):
+    def test_assign_list(self):
         """Tests if D2TXT accepts direct assignment using lists."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
@@ -155,7 +155,7 @@ class TestD2TXT(unittest.TestCase):
         self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
         self.assertEqual(list(d2txt[2].values()), ['1', '2', '3'])
 
-    def testAppendList(self):
+    def test_append_list(self):
         """Tests if D2TXT.append() accepts lists."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
@@ -175,7 +175,7 @@ class TestD2TXT(unittest.TestCase):
         self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
         self.assertEqual(list(d2txt[2].values()), ['1', '2', '3'])
 
-    def testExtendList(self):
+    def test_extend_list(self):
         """Tests if D2TXT.extend() accepts lists."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
@@ -193,7 +193,7 @@ class TestD2TXT(unittest.TestCase):
         self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
         self.assertEqual(list(d2txt[2].values()), ['1', '2', '3'])
 
-    def testInsertList(self):
+    def test_insert_list(self):
         """Tests if D2TXT.insert() accepts lists."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
@@ -212,7 +212,7 @@ class TestD2TXT(unittest.TestCase):
         self.assertEqual(list(d2txt[1].values()), ['1', '2', '3'])
         self.assertEqual(list(d2txt[2].values()), [None, None, None])
 
-    def testSliceAssignList(self):
+    def test_slice_syntax(self):
         """Tests if D2TXT accepts slice syntax assignment using lists."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
@@ -237,7 +237,7 @@ class TestD2TXT(unittest.TestCase):
         self.assertEqual(list(d2txt[2].values()), ['portal', None, None])
         self.assertEqual(list(d2txt[3].values()), ['1', '2', '3'])
 
-    def testAssignDict(self):
+    def test_assign_dict(self):
         """Tests if D2TXT accepts assignment using dictionaries."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
