@@ -3,8 +3,8 @@
 """Unit test for d2ini.py"""
 
 
-from d2ini import d2txt_to_ini, ini_to_d2txt
-from d2txt import D2TXT
+from d2txt.d2ini import d2txt_to_ini, ini_to_d2txt
+from d2txt.d2txt import D2TXT
 import unittest
 import os
 from os import path

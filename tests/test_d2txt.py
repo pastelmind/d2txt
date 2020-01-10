@@ -3,7 +3,7 @@
 """Unit test for d2txt.py"""
 
 
-from d2txt import D2TXT, DuplicateColumnNameWarning
+from d2txt.d2txt import D2TXT, DuplicateColumnNameWarning
 import unittest
 import os
 from os import path

@@ -3,7 +3,7 @@
 """Provides methods for converting D2TXT objects to and from INI files."""
 
 
-from d2txt import D2TXT
+from .d2txt import D2TXT
 from configparser import ConfigParser
 import argparse
 
