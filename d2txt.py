@@ -156,9 +156,13 @@ class D2TXT(collections.abc.MutableSequence):
         Args:
             txtfile: A path string or readable file object
         """
-        if isinstance(txtfile, str):
-            with open(txtfile) as txtfile_obj:
-                return cls.load_txt(txtfile_obj)
+        try:
+            txtfile_fd = open(txtfile)
+        except TypeError:
+            txtfile_fd = None
+        if txtfile_fd:
+            with txtfile_fd:
+                return cls.load_txt(txtfile_fd)
 
         txt_reader = csv.reader(
             txtfile, dialect='excel-tab', quoting=csv.QUOTE_NONE, quotechar=None
@@ -176,9 +180,13 @@ class D2TXT(collections.abc.MutableSequence):
         Args:
             txtfile: A path string or writable file object
         """
-        if isinstance(txtfile, str):
-            with open(txtfile, mode='w', newline='') as txtfile_obj:
-                self.to_txt(txtfile_obj)
+        try:
+            txtfile_fd = open(txtfile, mode='w', newline='')
+        except TypeError:
+            txtfile_fd = None
+        if txtfile_fd:
+            with txtfile_fd:
+                self.to_txt(txtfile_fd)
                 return
 
         txt_writer = csv.writer(
