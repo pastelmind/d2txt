@@ -1,10 +1,18 @@
 #!/usr/bin/env python
 """Provides the D2TXT class for loading and saving Diablo 2 TXT files."""
 
+from argparse import ArgumentParser
 import collections.abc
 import csv
 from itertools import islice
+from typing import Any
+from typing import List
+from typing import Tuple
+from typing import Union
 from warnings import warn
+
+import qtoml
+import toml
 
 
 class DuplicateColumnNameWarning(Warning):
@@ -208,3 +216,245 @@ class D2TXT(collections.abc.MutableSequence):
             deduped_column_names.append(name)
 
         return deduped_column_names
+
+
+def _int_or_str(value: str) -> Union[str, int]:
+    """Attempts to convert a string to integer.
+
+    Args:
+        value: String to convert.
+
+    Returns:
+        Integer if the conversion is successful. On failure, returns the
+        original string.
+    """
+    try:
+        return int(value)
+    except ValueError:
+        return value
+
+
+# See https://d2mods.info/forum/viewtopic.php?t=43737 for more information
+AURAFILTER_FLAGS = {
+    'FindPlayers': 0x00000001,
+    'FindMonsters': 0x00000002,
+    'FindOnlyUndead': 0x00000004,
+    # Ignores missiles with explosion=1 in missiles.txt
+    'FindMissiles': 0x00000008,
+    'FindObjects': 0x00000010,
+    'FindItems': 0x00000020,
+    # 'Unknown40': 0x00000040,
+    # Target units flagged as IsAtt in monstats2.txt
+    'FindAttackable': 0x00000080,
+    'NotInsideTowns': 0x00000100,
+    'UseLineOfSight': 0x00000200,
+    # Checked manually by curse skill functions
+    'FindSelectable': 0x00000400,
+    # 'Unknown800': 0x00000800,
+    # Targets corpses of monsters and players
+    'FindCorpses': 0x00001000,
+    'NotInsideTowns2': 0x00002000,
+    # Ignores units with SetBoss=1 in MonStats.txt
+    'IgnoreBoss': 0x00004000,
+    'IgnoreAllies': 0x00008000,
+    # Ignores units with npc=1 in MonStats.txt
+    'IgnoreNPC': 0x00010000,
+    # 'Unknown20000': 0x00020000,
+    # Ignores units with primeevil=1 in MonStats.txt
+    'IgnorePrimeEvil': 0x00040000,
+    'IgnoreJustHitUnits': 0x00080000,   # Used by chainlightning
+    # Rest are unknown
+}
+
+
+class _Hex(int):
+    """Subclass of int that is always converted to a hexadecimal format string.
+
+    This takes advantage of the way toml.dumps() and qtoml.dumps() handles
+    integers: they simply convert them to strings.
+    """
+
+    def __str__(self) -> str:
+        """Returns a hexadecimal representation of this value."""
+        return f'0x{self:X}'
+
+
+def decode_aurafilter(aurafilter: int) -> Tuple[List[str], _Hex]:
+    """Decodes an AuraFilter value into a list of flag names.
+
+    Args:
+        aurafilter: Value of AuraFilter field in Skills.txt
+
+    Returns:
+        Tuple of (flag_names, unknown_bits).
+        `flag_names` is a list containing known aurafilter names.
+        `unknown_bits` is an integer containing all unknown bits in aurafilter.
+
+    Raises:
+        TypeError: If aurafilter is not an integer.
+    """
+    af_names = []
+    for name, flag in AURAFILTER_FLAGS.items():
+        if aurafilter & flag:
+            aurafilter &= ~flag
+            af_names.append(name)
+    return af_names, _Hex(aurafilter)
+
+
+def encode_aurafilter(flags: List[str]) -> int:
+    """Returns an integer made from combining the list of AuraFilter flag names.
+
+    Args:
+        flags: List of AuraFilter flag names.
+
+    Returns:
+        Integer representing the combination of the given flags.
+        If `flags` is empty, returns 0.
+
+    Raises:
+        ValueError: If an unknown flag name is encountered.
+    """
+    aurafilter = 0
+    for name in flags:
+        try:
+            aurafilter |= AURAFILTER_FLAGS[name]
+        except KeyError:
+            raise ValueError(
+                f'Unknown AuraFilter flag name: {name!r}'
+            ) from None
+    return aurafilter
+
+
+def decode_txt_value(column_name: str, value: Union[int, str]) -> Any:
+    """Decodes a value from a TXT cell so that it can be converted to TOML.
+
+    Args:
+        column_name: Column name of the cell, used to determine the appropriate
+            decoding method.
+        value: Value of the cell.
+
+    Returns:
+        Decoded value suitable for passing to a TOML dumper.
+    """
+    if column_name.casefold() == 'aurafilter':
+        try:
+            af_flags, unknown_bits = decode_aurafilter(_int_or_str(value))
+        except TypeError:
+            return value
+        # Dirty workaround for the lack of heterogeneous arrays in TOML v0.5.0
+        # NOTE: Revisit this when uiri/toml adds support for hetero arrays.
+        return [af_flags, [unknown_bits]] if unknown_bits else [af_flags]
+
+    return value
+
+
+def encode_txt_value(column_name: str, value: Any) -> Union[int, str]:
+    """Encodes a value loaded from TOML so that it can be stored in D2TXT.
+
+    Args:
+        column_name: Column name of the cell, used to determine the appropriate
+            encoding method.
+        value: Value loaded from TOML.
+
+    Returns:
+        Decoded value suitable for passing to D2TXT.
+    """
+    if column_name.casefold() == 'aurafilter':
+        try:
+            aurafilter = encode_aurafilter(value[0])
+        except TypeError:
+            return value
+        try:
+            unknown_bits = value[1][0]
+        except (IndexError, TypeError):
+            unknown_bits = 0
+        return aurafilter | unknown_bits
+
+    return value
+
+
+def d2txt_to_toml(d2txt: D2TXT) -> str:
+    """Converts a D2TXT object to TOML markup.
+
+    Args:
+        d2txt: D2TXT object to convert.
+
+    Returns:
+        String containing TOML markup.
+    """
+    # Use qtoml.dumps(), because toml does not properly escape backslashes.
+    # Possibly related issues:
+    #   https://github.com/uiri/toml/issues/261
+    #   https://github.com/uiri/toml/issues/201
+    toml_rows = qtoml.dumps(
+        {
+            'rows': [
+                {
+                    key: decode_txt_value(key, value)
+                    for key, value in row.items()
+                    if not (value is None or value == '')
+                }
+                for row in d2txt
+            ],
+        }
+    )
+    toml_encoder = qtoml.encoder.TOMLEncoder()
+    toml_columns = (
+        'columns = [\n'
+        + ''.join(
+            f'  {toml_encoder.dump_value(key)},\n'
+            for key in d2txt.column_names()
+        )
+        + ']\n\n'
+    )
+    return toml_columns + toml_rows
+
+
+def toml_to_d2txt(toml_data: str) -> D2TXT:
+    """Loads a D2TXT file from TOML markup.
+
+    Args:
+        toml_data: String containing TOML markup.
+
+    Returns:
+        D2TXT object loaded from `toml_data`.
+    """
+    # Use toml.loads() because it's ~50% faster than qtoml.loads()
+    toml_data = toml.loads(toml_data)
+    d2txt_data = D2TXT(D2TXT.dedupe_column_names(toml_data['columns']))
+    for row in toml_data['rows']:
+        d2txt_data.append([])
+        d2txt_row = d2txt_data[-1]
+        for key, value in row.items():
+            d2txt_row[key] = encode_txt_value(key, value)
+    return d2txt_data
+
+
+if __name__ == '__main__':
+    arg_parser = ArgumentParser()
+    arg_subparsers = arg_parser.add_subparsers(dest='command', required=True)
+
+    arg_parser_compile = arg_subparsers.add_parser(
+        'compile', help='Compile a TOML file to a tabbed TXT file'
+    )
+    arg_parser_compile.add_argument('tomlfile', help='TOML file to read from')
+    arg_parser_compile.add_argument('txtfile', help='TXT file to write to')
+
+    arg_parser_decompile = arg_subparsers.add_parser(
+        'decompile', help='Decompile a tabbed TXT file to a TOML file'
+    )
+    arg_parser_decompile.add_argument('txtfile', help='TXT file to read from')
+    arg_parser_decompile.add_argument('tomlfile', help='TOML file to write to')
+
+    args = arg_parser.parse_args()
+
+    if args.command == 'compile':
+        with open(args.tomlfile) as toml_file:
+            d2txt_data = toml_to_d2txt(toml_file.read())
+        d2txt_data.to_txt(args.txtfile)
+    elif args.command == 'decompile':
+        d2txt_file = D2TXT.load_txt(args.txtfile)
+        with open(args.tomlfile, mode='w', encoding='utf-8') as toml_file:
+            toml_file.write(d2txt_to_toml(d2txt_file))
+    else:
+        assert RuntimeError(f'Unexpected command: {args.command!r}')

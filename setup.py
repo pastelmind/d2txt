@@ -16,6 +16,10 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/pastelmind/d2txt',
     packages=setuptools.find_packages(),
+    install_requires=[
+        'qtoml >= 0.3.0, <1',
+        'toml >= 0.10.0, <1',
+    ],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
