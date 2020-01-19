@@ -8,7 +8,7 @@ from tempfile import NamedTemporaryFile
 from typing import Iterable, Sequence
 import unittest
 
-from d2txt.d2txt import D2TXT, DuplicateColumnNameWarning
+from d2txt import D2TXT, DuplicateColumnNameWarning
 
 
 class TestD2TXTBase(unittest.TestCase):

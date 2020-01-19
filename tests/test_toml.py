@@ -6,9 +6,9 @@ from os import path
 from tempfile import NamedTemporaryFile
 import unittest
 
-from d2txt.d2txt import D2TXT
-from d2txt.d2txt import d2txt_to_toml
-from d2txt.d2txt import toml_to_d2txt
+from d2txt import D2TXT
+from d2txt import d2txt_to_toml
+from d2txt import toml_to_d2txt
 from tests.test_d2txt import TestD2TXTBase
 
 
