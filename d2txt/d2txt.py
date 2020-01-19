@@ -266,7 +266,19 @@ AURAFILTER_FLAGS = {
 }
 
 
-def decode_aurafilter(aurafilter: int) -> Tuple[List[str], int]:
+class _Hex(int):
+    """Subclass of int that is always converted to a hexadecimal format string.
+
+    This takes advantage of the way toml.dumps() and qtoml.dumps() handles
+    integers: they simply convert them to strings.
+    """
+
+    def __str__(self) -> str:
+        """Returns a hexadecimal representation of this value."""
+        return f'0x{self:X}'
+
+
+def decode_aurafilter(aurafilter: int) -> Tuple[List[str], _Hex]:
     """Decodes an AuraFilter value into a list of flag names.
 
     Args:
@@ -285,7 +297,7 @@ def decode_aurafilter(aurafilter: int) -> Tuple[List[str], int]:
         if aurafilter & flag:
             aurafilter &= ~flag
             af_names.append(name)
-    return af_names, aurafilter
+    return af_names, _Hex(aurafilter)
 
 
 def encode_aurafilter(flags: List[str]) -> int:
