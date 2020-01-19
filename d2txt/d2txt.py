@@ -5,6 +5,8 @@ import collections.abc
 import csv
 from itertools import islice
 from typing import Any
+from typing import List
+from typing import Tuple
 from typing import Union
 from warnings import warn
 
@@ -229,6 +231,85 @@ def _int_or_str(value: str) -> Union[str, int]:
         return int(value)
     except ValueError:
         return value
+
+
+# See https://d2mods.info/forum/viewtopic.php?t=43737 for more information
+AURAFILTER_FLAGS = {
+    'FindPlayers': 0x00000001,
+    'FindMonsters': 0x00000002,
+    'FindOnlyUndead': 0x00000004,
+    # Ignores missiles with explosion=1 in missiles.txt
+    'FindMissiles': 0x00000008,
+    'FindObjects': 0x00000010,
+    'FindItems': 0x00000020,
+    # 'Unknown40': 0x00000040,
+    # Target units flagged as IsAtt in monstats2.txt
+    'FindAttackable': 0x00000080,
+    'NotInsideTowns': 0x00000100,
+    'UseLineOfSight': 0x00000200,
+    # Checked manually by curse skill functions
+    'FindSelectable': 0x00000400,
+    # 'Unknown800': 0x00000800,
+    # Targets corpses of monsters and players
+    'FindCorpses': 0x00001000,
+    'NotInsideTowns2': 0x00002000,
+    # Ignores units with SetBoss=1 in MonStats.txt
+    'IgnoreBoss': 0x00004000,
+    'IgnoreAllies': 0x00008000,
+    # Ignores units with npc=1 in MonStats.txt
+    'IgnoreNPC': 0x00010000,
+    # 'Unknown20000': 0x00020000,
+    # Ignores units with primeevil=1 in MonStats.txt
+    'IgnorePrimeEvil': 0x00040000,
+    'IgnoreJustHitUnits': 0x00080000,   # Used by chainlightning
+    # Rest are unknown
+}
+
+
+def decode_aurafilter(aurafilter: int) -> Tuple[List[str], int]:
+    """Decodes an AuraFilter value into a list of flag names.
+
+    Args:
+        aurafilter: Value of AuraFilter field in Skills.txt
+
+    Returns:
+        Tuple of (flag_names, unknown_bits).
+        `flag_names` is a list containing known aurafilter names.
+        `unknown_bits` is an integer containing all unknown bits in aurafilter.
+
+    Raises:
+        TypeError: If aurafilter is not an integer.
+    """
+    af_names = []
+    for name, flag in AURAFILTER_FLAGS.items():
+        if aurafilter & flag:
+            aurafilter &= ~flag
+            af_names.append(name)
+    return af_names, aurafilter
+
+
+def encode_aurafilter(flags: List[str]) -> int:
+    """Returns an integer made from combining the list of AuraFilter flag names.
+
+    Args:
+        flags: List of AuraFilter flag names.
+
+    Returns:
+        Integer representing the combination of the given flags.
+        If `flags` is empty, returns 0.
+
+    Raises:
+        ValueError: If an unknown flag name is encountered.
+    """
+    aurafilter = 0
+    for name in flags:
+        try:
+            aurafilter |= AURAFILTER_FLAGS[name]
+        except KeyError:
+            raise ValueError(
+                f'Unknown AuraFilter flag name: {name!r}'
+            ) from None
+    return aurafilter
 
 
 def d2txt_to_toml(d2txt: D2TXT) -> str:
