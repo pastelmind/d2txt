@@ -1,14 +1,73 @@
-# D2TXT README
+# d2txt
 
-D2TXT is a set of Python scripts that can be used to make [mods][mod] for
-[Diablo 2]. It consists of two modules: `d2txt.py` and `d2ini.py`.
+d2txt is a Python script that can be used to make [mods][mod] for [Diablo 2].
+It consists of a single module: `d2txt.py`.
 
-D2TXT requires Python 3.
+D2TXT requires Python 3.6 or higher.
 
-## d2txt.py
+The latest version of d2txt is 0.0.2. To install, run:
 
-This module provides the `D2TXT` class, which can be used to read and write to
-tabbed *.TXT files used by Diablo 2.
+```
+pip install git+https://github.com/pastelmind/d2txt.git@v0.0.2
+```
+
+If you're feeling adventurous, remove `@` and everything after it to install
+from the tip of the `master` branch.
+
+## Command Line Interface
+
+d2txt can "decompile" Diablo 2's tabbed TXT files to [TOML] files, and compile
+them back to TXT files. TOML files are easier to view in code editors, generates
+more readable diffs, and play nice with version control systems like Git.
+
+Call the script using the command line:
+
+```
+d2txt.py decompile <txt_path> <toml_path>
+d2txt.py compile <toml_path> <txt_path>
+```
+
+Diff logs for TXT files are horrendous. See example:
+
+```diff
+--- a/data/global/excel/skills.txt
++++ b/data/global/excel/skills.txt
+@@ -67,7 +67,7 @@
+ Teeth	67	nec	teeth		8												teeth																																																												necromancer_bone_cast														19	17					teeth	teeth	bonecast										1	1		none												SC	SC	xx																	1						necromancer_bone_cast			1	20													1						1	7	6	1	1										"min(ln12,24)"	# missiles	par3	activation frame					2	number of missiles	1	additional missiles/level	0	Acivation frame of teeth									15	damage synergy	1								7															mag	4	2	2	3	4	5	8	2	3	4	5	6	(skill('Bone Wall'.blvl)+skill('Bone Prison'.blvl)+skill('Bone Spear'.blvl)+skill('Bone Spirit'.blvl))*par8								256	1000
+-Bone Armor	68	nec	bone armor		18																	bonearmor				bonearmor	(ln12 + (skill('Bone Wall'.blvl) + skill('Bone Prison'.blvl)) * par8)*256	bonearmormax	(ln12 + (skill('Bone Wall'.blvl) + skill('Bone Prison'.blvl)) * par8)*256									absorbdamage	22																																						necromancer_bonearmor																																1	3		none												SC	SC	xx																	1						necromancer_bonearmor			1	20																			1	8	11	1	1	1																	20	damage absorbed	10	additional absorbed/level											15	absorb synergy	1								8																																				256	1000
++Bone Armor	68	nec	bone armor		18																	bonearmor				bonearmor	(ln12 + (skill('Bone Wall'.blvl) + skill('Bone Prison'.blvl)) * par8)*256	bonearmormax	(ln12 + (skill('Bone Wall'.blvl) + skill('Bone Prison'.blvl)) * par8)*256									absorbdamage	22																																						necromancer_bonearmor																																1	3		none												SC	SC	xx																	1						necromancer_bonearmor			1	20																			1	8	11	1	1	1		1	100														20	damage absorbed	10	additional absorbed/level											15	absorb synergy	1								8																																				256	1000
+ Skeleton Mastery	69	nec	skeleton mastery																																											skel_mastery																																																															1	0		none												SC	SC	xx																										1	20					Raise Skeleton														0	8	0	0	1						1												8	additional hit points/level	2	additional damage per level	5	hp% per level for revive	10	dmg% per level for revive									1								8																																				256	1000
+```
+
+TOML files make your diff logs readable:
+
+```diff
+--- a/toml/skills.toml
++++ b/toml/skills.toml
+@@ -3729,6 +3729,8 @@
+ lvlmana = 1
+ interrupt = 1
+ InTown = 1
++periodic = 1
++perdelay = 100
+ Param1 = 20
+ '*Param1 Description' = 'damage absorbed'
+ Param2 = 10
+```
+
+### Notes
+
+- The list named `columns` at the top of decompiled TOML files store the order
+  and casing of column names. Don't touch it, or you might be unable to restore
+  your TXT file from the TOML file.
+- If you have empty or duplicate column names in your TXT file, they will be
+  automatically renamed to ensure that the script works correctly.
+
+## API Usage
+
+d2txt can also be used programmatically to modify TXT files.
+
+Use the `d2txt.D2TXT` class to read and write to tabbed *.TXT files.
 
 To read a TXT file, use `D2TXT.load_txt()`:
 
@@ -66,57 +125,7 @@ D2TXT.to_txt('./data/global/excel/Skills.txt')
 
 For more examples, check out the scripts in the `/samples/` directory.
 
-## d2ini.py
-
-This script converts tabbed TXT files to and from INI files. INI files are
-easier to view in code editors, generate better diffs, and play nice with
-version control systems such as Git.
-
-Call the script using the command line:
-
-```
-./d2txt.py decompile <txt_path> <ini_path>
-./d2txt.py compile <ini_path> <txt_path>
-```
-
-Diff logs for TXT files are horrendous:
-
-```diff
---- a/data/global/excel/skills.txt
-+++ b/data/global/excel/skills.txt
-@@ -67,7 +67,7 @@
- Teeth	67	nec	teeth		8												teeth																																																												necromancer_bone_cast														19	17					teeth	teeth	bonecast										1	1		none												SC	SC	xx																	1						necromancer_bone_cast			1	20													1						1	7	6	1	1										"min(ln12,24)"	# missiles	par3	activation frame					2	number of missiles	1	additional missiles/level	0	Acivation frame of teeth									15	damage synergy	1								7															mag	4	2	2	3	4	5	8	2	3	4	5	6	(skill('Bone Wall'.blvl)+skill('Bone Prison'.blvl)+skill('Bone Spear'.blvl)+skill('Bone Spirit'.blvl))*par8								256	1000
--Bone Armor	68	nec	bone armor		18																	bonearmor				bonearmor	(ln12 + (skill('Bone Wall'.blvl) + skill('Bone Prison'.blvl)) * par8)*256	bonearmormax	(ln12 + (skill('Bone Wall'.blvl) + skill('Bone Prison'.blvl)) * par8)*256									absorbdamage	22																																						necromancer_bonearmor																																1	3		none												SC	SC	xx																	1						necromancer_bonearmor			1	20																			1	8	11	1	1	1																	20	damage absorbed	10	additional absorbed/level											15	absorb synergy	1								8																																				256	1000
-+Bone Armor	68	nec	bone armor		18																	bonearmor				bonearmor	(ln12 + (skill('Bone Wall'.blvl) + skill('Bone Prison'.blvl)) * par8)*256	bonearmormax	(ln12 + (skill('Bone Wall'.blvl) + skill('Bone Prison'.blvl)) * par8)*256									absorbdamage	22																																						necromancer_bonearmor																																1	3		none												SC	SC	xx																	1						necromancer_bonearmor			1	20																			1	8	11	1	1	1		1	100														20	damage absorbed	10	additional absorbed/level											15	absorb synergy	1								8																																				256	1000
- Skeleton Mastery	69	nec	skeleton mastery																																											skel_mastery																																																															1	0		none												SC	SC	xx																										1	20					Raise Skeleton														0	8	0	0	1						1												8	additional hit points/level	2	additional damage per level	5	hp% per level for revive	10	dmg% per level for revive									1								8																																				256	1000
-```
-
-INI files make your diff logs readable:
-
-```diff
---- a/ini/skills.ini
-+++ b/ini/skills.ini
-@@ -3729,6 +3729,8 @@
- lvlmana=1
- interrupt=1
- InTown=1
-+periodic=1
-+perdelay=100
- Param1=20
- *Param1 Description=damage absorbed
- Param2=10
-```
-
-### Notes
-
-- Don't touch the first section (`[Columns]`) in the INI file. It is used to
-  restore the order of columns when converting from INI to TXT.
-- If you have empty or duplicate column names in your TXT file, they will be
-  automatically renamed to ensure that the script works correctly.
-- Don't use backticks (`` ` ``) in your TXT files, as they are used to preserve
-  cells that contain leading or trailing spaces.
-
-
+[TOML]: https://github.com/toml-lang/toml
 [mod]: https://en.wikipedia.org/wiki/Mod_(video_gaming)
 [Diablo 2]: http://blizzard.com/diablo2/
 [sequence]: https://docs.python.org/3/glossary.html#term-sequence
