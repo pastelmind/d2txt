@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Provides the D2TXT class for loading and saving Diablo 2 TXT files."""
 
+from argparse import ArgumentParser
 import collections.abc
 import csv
 from itertools import islice
@@ -427,3 +428,33 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
         for key, value in row.items():
             d2txt_row[key] = encode_txt_value(key, value)
     return d2txt_data
+
+
+if __name__ == '__main__':
+    arg_parser = ArgumentParser()
+    arg_subparsers = arg_parser.add_subparsers(dest='command', required=True)
+
+    arg_parser_compile = arg_subparsers.add_parser(
+        'compile', help='Compile a TOML file to a tabbed TXT file'
+    )
+    arg_parser_compile.add_argument('tomlfile', help='TOML file to read from')
+    arg_parser_compile.add_argument('txtfile', help='TXT file to write to')
+
+    arg_parser_decompile = arg_subparsers.add_parser(
+        'decompile', help='Decompile a tabbed TXT file to a TOML file'
+    )
+    arg_parser_decompile.add_argument('txtfile', help='TXT file to read from')
+    arg_parser_decompile.add_argument('tomlfile', help='TOML file to write to')
+
+    args = arg_parser.parse_args()
+
+    if args.command == 'compile':
+        with open(args.tomlfile) as toml_file:
+            d2txt_data = toml_to_d2txt(toml_file.read())
+        d2txt_data.to_txt(args.txtfile)
+    elif args.command == 'decompile':
+        d2txt_file = D2TXT.load_txt(args.txtfile)
+        with open(args.tomlfile, mode='w', encoding='utf-8') as toml_file:
+            toml_file.write(d2txt_to_toml(d2txt_file))
+    else:
+        assert RuntimeError(f'Unexpected command: {args.command!r}')
