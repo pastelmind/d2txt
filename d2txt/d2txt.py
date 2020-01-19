@@ -218,22 +218,6 @@ class D2TXT(collections.abc.MutableSequence):
         return deduped_column_names
 
 
-def _int_or_str(value: str) -> Union[str, int]:
-    """Attempts to convert a string to integer.
-
-    Args:
-        value: String to convert.
-
-    Returns:
-        Integer if the conversion is successful. On failure, returns the
-        original string.
-    """
-    try:
-        return int(value)
-    except ValueError:
-        return value
-
-
 # See https://d2mods.info/forum/viewtopic.php?t=43737 for more information
 AURAFILTER_FLAGS = {
     'FindPlayers': 0x00000001,
@@ -336,9 +320,16 @@ def decode_txt_value(column_name: str, value: Union[int, str]) -> Any:
     Returns:
         Decoded value suitable for passing to a TOML dumper.
     """
+    # If possible, attempt to convert strings to integers (but not other types)
+    if isinstance(value, str):
+        try:
+            value = int(value)
+        except ValueError:
+            pass
+
     if column_name.casefold() == 'aurafilter':
         try:
-            af_flags, unknown_bits = decode_aurafilter(_int_or_str(value))
+            af_flags, unknown_bits = decode_aurafilter(value)
         except TypeError:
             return value
         # Dirty workaround for the lack of heterogeneous arrays in TOML v0.5.0
