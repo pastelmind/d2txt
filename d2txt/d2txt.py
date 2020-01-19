@@ -312,6 +312,54 @@ def encode_aurafilter(flags: List[str]) -> int:
     return aurafilter
 
 
+def decode_txt_value(column_name: str, value: Union[int, str]) -> Any:
+    """Decodes a value from a TXT cell so that it can be converted to TOML.
+
+    Args:
+        column_name: Column name of the cell, used to determine the appropriate
+            decoding method.
+        value: Value of the cell.
+
+    Returns:
+        Decoded value suitable for passing to a TOML dumper.
+    """
+    if column_name.casefold() == 'aurafilter':
+        try:
+            af_flags, unknown_bits = decode_aurafilter(_int_or_str(value))
+        except TypeError:
+            return value
+        # Dirty workaround for the lack of heterogeneous arrays in TOML v0.5.0
+        # NOTE: Revisit this when uiri/toml adds support for hetero arrays.
+        return [af_flags, [unknown_bits]] if unknown_bits else [af_flags]
+
+    return value
+
+
+def encode_txt_value(column_name: str, value: Any) -> Union[int, str]:
+    """Encodes a value loaded from TOML so that it can be stored in D2TXT.
+
+    Args:
+        column_name: Column name of the cell, used to determine the appropriate
+            encoding method.
+        value: Value loaded from TOML.
+
+    Returns:
+        Decoded value suitable for passing to D2TXT.
+    """
+    if column_name.casefold() == 'aurafilter':
+        try:
+            aurafilter = encode_aurafilter(value[0])
+        except TypeError:
+            return value
+        try:
+            unknown_bits = value[1][0]
+        except (IndexError, TypeError):
+            unknown_bits = 0
+        return aurafilter | unknown_bits
+
+    return value
+
+
 def d2txt_to_toml(d2txt: D2TXT) -> str:
     """Converts a D2TXT object to TOML markup.
 
@@ -329,7 +377,7 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
         {
             'rows': [
                 {
-                    key: _int_or_str(value)
+                    key: decode_txt_value(key, value)
                     for key, value in row.items()
                     if not (value is None or value == '')
                 }
@@ -365,5 +413,5 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
         d2txt_data.append([])
         d2txt_row = d2txt_data[-1]
         for key, value in row.items():
-            d2txt_row[key] = value
+            d2txt_row[key] = encode_txt_value(key, value)
     return d2txt_data
