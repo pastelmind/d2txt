@@ -1,22 +1,25 @@
 #!/usr/bin/env python
-
 """Unit test for d2txt.py"""
 
-
-from d2txt.d2txt import D2TXT, DuplicateColumnNameWarning
-import unittest
+from io import StringIO
 import os
 from os import path
-from io import StringIO
 from tempfile import NamedTemporaryFile
 from typing import Iterable, Sequence
+import unittest
+
+from d2txt.d2txt import D2TXT, DuplicateColumnNameWarning
 
 
 class TestD2TXTBase(unittest.TestCase):
     """Base class for D2TXT-related tests. Provides convenience methods."""
 
-    def compare_D2TXT(self, d2txt: D2TXT, column_names: Iterable[str],
-                           rows: Sequence[Iterable[str]]):
+    def compare_d2txt(
+            self,
+            d2txt: D2TXT,
+            column_names: Iterable[str],
+            rows: Sequence[Iterable[str]],
+    ):
         """Compares a D2TXT object with the given column names and rows.
 
         A convenience method. Compares the column names and rows of a D2TXT
@@ -110,7 +113,10 @@ class TestD2TXT(unittest.TestCase):
         d2txt = D2TXT(['column name', 'Column Name', 'COLUMN NAME'])
 
         d2txt.append(['lowercase', 'capital letters', 'uppercase'])
-        self.assertEqual(list(d2txt[0].values()), ['lowercase', 'capital letters', 'uppercase'])
+        self.assertEqual(
+            list(d2txt[0].values()),
+            ['lowercase', 'capital letters', 'uppercase'],
+        )
         with self.assertRaises(KeyError):
             d2txt[0]['column NAME']
 
@@ -147,9 +153,9 @@ class TestD2TXT(unittest.TestCase):
         d2txt[2] = ['1', '2', '3', 'these', 'strings', 'are', 'ignored']
 
         self.assertEqual(len(d2txt), 3)
-        for i in range(len(d2txt)):
+        for i, row in enumerate(d2txt):
             with self.subTest(i=i):
-                self.assertEqual(len(d2txt[i]), 3)
+                self.assertEqual(len(row), 3)
 
         self.assertEqual(list(d2txt[0].values()), [None, None, None])
         self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
@@ -167,9 +173,9 @@ class TestD2TXT(unittest.TestCase):
         d2txt.append(['1', '2', '3', 'these', 'strings', 'are', 'ignored'])
         self.assertEqual(len(d2txt), 3)
 
-        for i in range(len(d2txt)):
+        for i, row in enumerate(d2txt):
             with self.subTest(i=i):
-                self.assertEqual(len(d2txt[i]), 3)
+                self.assertEqual(len(row), 3)
 
         self.assertEqual(list(d2txt[0].values()), [None, None, None])
         self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
@@ -182,12 +188,17 @@ class TestD2TXT(unittest.TestCase):
         # Internally uses D2TXT.append(), which uses D2TXT.insert()
         d2txt.extend([[]])
         self.assertEqual(len(d2txt), 1)
-        d2txt.extend([['foo', 'bar'], ['1', '2', '3', 'these', 'strings', 'are', 'ignored']])
+        d2txt.extend(
+            [
+                ['foo', 'bar'],
+                ['1', '2', '3', 'these', 'strings', 'are', 'ignored'],
+            ]
+        )
         self.assertEqual(len(d2txt), 3)
 
-        for i in range(len(d2txt)):
+        for i, row in enumerate(d2txt):
             with self.subTest(i=i):
-                self.assertEqual(len(d2txt[i]), 3)
+                self.assertEqual(len(row), 3)
 
         self.assertEqual(list(d2txt[0].values()), [None, None, None])
         self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
@@ -204,9 +215,9 @@ class TestD2TXT(unittest.TestCase):
         d2txt.insert(1, ['1', '2', '3', 'these', 'strings', 'are', 'ignored'])
         self.assertEqual(len(d2txt), 3)
 
-        for i in range(len(d2txt)):
+        for i, row in enumerate(d2txt):
             with self.subTest(i=i):
-                self.assertEqual(len(d2txt[i]), 3)
+                self.assertEqual(len(row), 3)
 
         self.assertEqual(list(d2txt[0].values()), ['foo', 'bar', None])
         self.assertEqual(list(d2txt[1].values()), ['1', '2', '3'])
@@ -216,21 +227,29 @@ class TestD2TXT(unittest.TestCase):
         """Tests if D2TXT accepts slice syntax assignment using lists."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
 
-        d2txt[:] = [[], ['foo', 'bar'], ['1', '2', '3', 'these', 'strings', 'are', 'ignored']]
+        d2txt[:] = [
+            [],
+            ['foo', 'bar'],
+            ['1', '2', '3', 'these', 'strings', 'are', 'ignored'],
+        ]
         self.assertEqual(len(d2txt), 3)
-        for i in range(len(d2txt)):
+        for i, row in enumerate(d2txt):
             with self.subTest(i=i):
-                self.assertEqual(len(d2txt[i]), 3)
+                self.assertEqual(len(row), 3)
 
         self.assertEqual(list(d2txt[0].values()), [None, None, None])
         self.assertEqual(list(d2txt[1].values()), ['foo', 'bar', None])
         self.assertEqual(list(d2txt[2].values()), ['1', '2', '3'])
 
-        d2txt[0:2] = [['car', 'bus', 'cow'], ['one', 'two', 'three', 'four'], ['portal']]
+        d2txt[0:2] = [
+            ['car', 'bus', 'cow'],
+            ['one', 'two', 'three', 'four'],
+            ['portal'],
+        ]
         self.assertEqual(len(d2txt), 4)
-        for i in range(len(d2txt)):
+        for i, row in enumerate(d2txt):
             with self.subTest(i=i):
-                self.assertEqual(len(d2txt[i]), 3)
+                self.assertEqual(len(row), 3)
 
         self.assertEqual(list(d2txt[0].values()), ['car', 'bus', 'cow'])
         self.assertEqual(list(d2txt[1].values()), ['one', 'two', 'three'])
@@ -244,14 +263,19 @@ class TestD2TXT(unittest.TestCase):
         d2txt.append({})
         d2txt.extend([
             {'column 1': 'foo', 'column 2': 'bar'},
-            {'column 1': '1', 'column 2': '2', 'column 3': '3', 'column 4': 'ignored'},
+            {
+                'column 1': '1',
+                'column 2': '2',
+                'column 3': '3',
+                'column 4': 'ignored',
+            },
         ])
         d2txt.insert(1, {'column 1': 'a', 'column 2': 'b', 'column 3': 'c'})
 
         self.assertEqual(len(d2txt), 4)
-        for i in range(len(d2txt)):
+        for i, row in enumerate(d2txt):
             with self.subTest(i=i):
-                self.assertEqual(len(d2txt[i]), 3)
+                self.assertEqual(len(row), 3)
 
         self.assertEqual(list(d2txt[0].values()), [None, None, None])
         self.assertEqual(list(d2txt[1].values()), ['a', 'b', 'c'])
@@ -265,16 +289,36 @@ class TestD2TXTLoadFile(TestD2TXTBase):
     def test_load_path(self):
         """Tests if D2TXT can load a file using a file path, and its contents
         are preserved."""
-        FILE_PATH = path.join(path.dirname(path.abspath(__file__)), 'sample.txt')
+        file_path = path.join(
+            path.dirname(path.abspath(__file__)), 'sample.txt'
+        )
         with self.assertWarns(DuplicateColumnNameWarning):
-            d2txt = D2TXT.load_txt(FILE_PATH)
+            d2txt = D2TXT.load_txt(file_path)
 
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt,
-            ['column name', 'duplicate name', 'duplicate name(C)', '', 'COLUMN NAME'],
             [
-                ['lowercase column name', 'next cell is empty', '', 'empty column name', 'UPPERCASE COLUMN NAME'],
-                ['next row is empty', '   leading spaces', 'trailing spaces   ', '    surrounded by spaces  ', '"double quotes"'],
+                'column name',
+                'duplicate name',
+                'duplicate name(C)',
+                '',
+                'COLUMN NAME',
+            ],
+            [
+                [
+                    'lowercase column name',
+                    'next cell is empty',
+                    '',
+                    'empty column name',
+                    'UPPERCASE COLUMN NAME'
+                ],
+                [
+                    'next row is empty',
+                    '   leading spaces',
+                    'trailing spaces   ',
+                    '    surrounded by spaces  ',
+                    '"double quotes"',
+                ],
                 ['', '', '', '', '0'],
                 ['this row and the next has not enough cells', None, None, None, None],
                 [None, None, None, None, None],
@@ -289,7 +333,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
             'foo\tbar\tbaz\r\n',
             newline=''  # Required to make csv.reader work correctly
         ))
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['column 1', 'column 2', 'column 3'],
             [['value 1', 'value 2', 'value 3'], ['foo', 'bar', 'baz']]
         )
@@ -318,7 +362,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
             'lowercase\tCapitalized\tUPPERCASE\r\n',
             newline=''  # Required to make csv.reader work correctly
         ))
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['column name', 'Column Name', 'COLUMN NAME'],
             [['lowercase', 'Capitalized', 'UPPERCASE']]
         )
@@ -331,7 +375,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
             '3 before\t4 after\t2 both\tempty\tspaces only\r\n',
             newline=''  # Required to make csv.reader work correctly
         ))
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['   column 1', 'column 2    ', '  column 3  ', '', '  '],
             [['3 before', '4 after', '2 both', 'empty', 'spaces only']]
         )
@@ -342,7 +386,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
             'column 1\tcolumn 2\tcolumn 3\r\nempty\t\t\r\n\t\t\r\n',
             newline=''  # Required to make csv.reader work correctly
         ))
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['column 1', 'column 2', 'column 3'],
             [['empty', '', ''], ['', '', '']]
         )
@@ -355,7 +399,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
             '  2 leading spaces\t3 trailing spaces   \t     \r\n',
             newline=''  # Required to make csv.reader work correctly
         ))
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['column 1', 'column 2', 'column 3'],
             [['  2 leading spaces', '3 trailing spaces   ', '     ']],
         )
@@ -367,7 +411,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
             '\'single quotes\'\t"double quotes"\t`backticks`\r\n',
             newline=''  # Required to make csv.reader work correctly
         ))
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['\'single quotes\'', '"double quotes"', '`backticks`'],
             [['\'single quotes\'', '"double quotes"', '`backticks`']]
         )
@@ -378,7 +422,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
             'column 1\tcolumn 2\tcolumn 3\r\n1 tab\t\r\nno tabs\r\n\r\n',
             newline=''  # Required to make csv.reader work correctly
         ))
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['column 1', 'column 2', 'column 3'],
             [['1 tab', '', None], ['no tabs', None, None], [None, None, None]]
         )
@@ -402,7 +446,9 @@ class TestD2TXTSaveFile(unittest.TestCase):
     def test_save_to_path(self):
         """Tests if D2TXT can be saved to a file path."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
-        d2txt.extend([['value 1', 'value 2', 'value 3'], ['foo', 'bar', 'baz']])
+        d2txt.extend(
+            [['value 1', 'value 2', 'value 3'], ['foo', 'bar', 'baz']]
+        )
 
         d2txt.to_txt(type(self).save_txt_path)
         # newline='' is required to make csv.writer work correctly
@@ -419,10 +465,12 @@ class TestD2TXTSaveFile(unittest.TestCase):
     def test_save_to_file_object(self):
         """Tests if D2TXT can be saved to a file object."""
         d2txt = D2TXT(['column 1', 'column 2', 'column 3'])
-        d2txt.extend([['value 1', 'value 2', 'value 3'], ['foo', 'bar', 'baz']])
+        d2txt.extend(
+            [['value 1', 'value 2', 'value 3'], ['foo', 'bar', 'baz']]
+        )
 
         # newline='' is required to make csv.writer work correctly
-        txtfile = StringIO(newline = '')
+        txtfile = StringIO(newline='')
         d2txt.to_txt(txtfile)
         self.assertEqual(
             txtfile.getvalue(),
@@ -437,7 +485,7 @@ class TestD2TXTSaveFile(unittest.TestCase):
         d2txt.extend([['lowercase', 'Capitalized', 'UPPERCASE']])
 
         # newline='' is required to make csv.writer work correctly
-        txtfile = StringIO(newline = '')
+        txtfile = StringIO(newline='')
         d2txt.to_txt(txtfile)
         self.assertEqual(
             txtfile.getvalue(),
@@ -447,11 +495,14 @@ class TestD2TXTSaveFile(unittest.TestCase):
 
     def test_column_name_whitespace(self):
         """Tests if whitespace in columns are preserved when saved to a file."""
-        d2txt = D2TXT(['   column 1', 'column 2    ', '  column 3  ', '', '  '])
-        d2txt.extend([['3 before', '4 after', '2 both', 'empty', 'spaces only']])
+        d2txt = D2TXT(
+            ['   column 1', 'column 2    ', '  column 3  ', '', '  ']
+        )
+        d2txt.extend(
+            [['3 before', '4 after', '2 both', 'empty', 'spaces only']])
 
         # newline='' is required to make csv.writer work correctly
-        txtfile = StringIO(newline = '')
+        txtfile = StringIO(newline='')
         d2txt.to_txt(txtfile)
         self.assertEqual(
             txtfile.getvalue(),
@@ -481,7 +532,7 @@ class TestD2TXTSaveFile(unittest.TestCase):
         ])
 
         # newline='' is required to make csv.writer work correctly
-        txtfile = StringIO(newline = '')
+        txtfile = StringIO(newline='')
         d2txt.to_txt(txtfile)
         self.assertEqual(
             txtfile.getvalue(),
@@ -507,7 +558,7 @@ class TestD2TXTSaveFile(unittest.TestCase):
         d2txt.extend([['  2 leading spaces', '3 trailing spaces   ', '     ']])
 
         # newline='' is required to make csv.writer work correctly
-        txtfile = StringIO(newline = '')
+        txtfile = StringIO(newline='')
         d2txt.to_txt(txtfile)
         self.assertEqual(
             txtfile.getvalue(),
@@ -522,7 +573,7 @@ class TestD2TXTSaveFile(unittest.TestCase):
         d2txt.extend([['\'single quotes\'', '"double quotes"', '`backticks`']])
 
         # newline='' is required to make csv.writer work correctly
-        txtfile = StringIO(newline = '')
+        txtfile = StringIO(newline='')
         d2txt.to_txt(txtfile)
         self.assertEqual(
             txtfile.getvalue(),

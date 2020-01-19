@@ -1,15 +1,14 @@
 #!/usr/bin/env python
-
 """Unit test for d2ini.py"""
 
+from io import StringIO
+import os
+from os import path
+from tempfile import NamedTemporaryFile
+import unittest
 
 from d2txt.d2ini import d2txt_to_ini, ini_to_d2txt
 from d2txt.d2txt import D2TXT
-import unittest
-import os
-from os import path
-from io import StringIO
-from tempfile import NamedTemporaryFile
 from tests.test_d2txt import TestD2TXTBase
 
 
@@ -20,22 +19,49 @@ class TestD2TXTLoadIni(TestD2TXTBase):
         """Tests if loading an INI from a file object or a file path produces
         the same results."""
 
-        INI_PATH = path.join(path.dirname(path.abspath(__file__)), 'sample.ini')
-        COLUMN_NAMES_EXPECTED = ['Key Name', 'key name', 'key with spaces', '# Hashed key', 'Key : with colon', 'Not ; commented key']
+        INI_PATH = path.join(
+            path.dirname(path.abspath(__file__)), 'sample.ini'
+        )
+        COLUMN_NAMES_EXPECTED = [
+            'Key Name',
+            'key name',
+            'key with spaces',
+            '# Hashed key',
+            'Key : with colon',
+            'Not ; commented key',
+        ]
         ROWS_EXPECTED = [
-            ['backticks', '`double backticks`', 'value with leading spaces', '  whitespace preserved  ', '`unpaired backtick', 'this value is read'],
+            [
+                'backticks',
+                '`double backticks`',
+                'value with leading spaces',
+                '  whitespace preserved  ',
+                '`unpaired backtick',
+                'this value is read',
+            ],
             [None, None, None, None, None, None],
-            ['keys out of order', '', None, '#hashed value', 'value with: colon', '; value with semicolon'],
+            [
+                'keys out of order',
+                '',
+                None,
+                '#hashed value',
+                'value with: colon',
+                '; value with semicolon',
+            ],
             [None, None, None, None, None, None],
             ['section out of order', None, None, None, None, None],
         ]
 
         d2txt_from_path = ini_to_d2txt(INI_PATH)
-        self.compare_D2TXT(d2txt_from_path, COLUMN_NAMES_EXPECTED, ROWS_EXPECTED)
+        self.compare_d2txt(
+            d2txt_from_path, COLUMN_NAMES_EXPECTED, ROWS_EXPECTED
+        )
 
         with open(INI_PATH) as ini_file:
             d2txt_from_file = ini_to_d2txt(ini_file)
-        self.compare_D2TXT(d2txt_from_file, COLUMN_NAMES_EXPECTED, ROWS_EXPECTED)
+        self.compare_d2txt(
+            d2txt_from_file, COLUMN_NAMES_EXPECTED, ROWS_EXPECTED
+        )
 
     def test_missing_column_name(self):
         """Tests if a key that is not specified in the [Columns] section raises
@@ -80,7 +106,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             '[1]\ncolumn name=lower\nColumn Name=Caps\nCOLUMN NAME=UPPER\n\n'
         ))
 
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['column name', 'Column Name', 'COLUMN NAME'],
             [['lower', 'Caps', 'UPPER']]
         )
@@ -92,7 +118,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             '[1]\n  leading spaces=  1\ntrailing spaces   =2  \n\n'
         ))
 
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['leading spaces', 'trailing spaces'],
             [['1', '2']]
         )
@@ -104,7 +130,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             '[1]\nKey with empty value\nEmpty key=\n\n'
         ))
 
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['Key with empty value', 'Empty key', 'Omitted key'],
             [[None, '', None]]
         )
@@ -128,9 +154,24 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             'in`ter`nal=in`ter`nal\n\n'
         ))
 
-        self.compare_D2TXT(
-            d2txt, ['`backticks`', '``double``', '',  '  whitespace  ', '`unpaired', 'in`ter`nal'],
-            [['`backticks`', '``double``', '',  '  whitespace  ', '`unpaired', 'in`ter`nal']]
+        self.compare_d2txt(
+            d2txt,
+            [
+                '`backticks`',
+                '``double``',
+                '',
+                '  whitespace  ',
+                '`unpaired',
+                'in`ter`nal',
+            ],
+            [[
+                '`backticks`',
+                '``double``',
+                '',
+                '  whitespace  ',
+                '`unpaired',
+                'in`ter`nal',
+            ]]
         )
 
     def test_hash_signs_allowed(self):
@@ -140,7 +181,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             '[1]\n#at key start=#at value start\nin#key#middle=in#value#middle\n\n'
         ))
 
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['#at key start', 'in#key#middle'],
             [['#at value start', 'in#value#middle']]
         )
@@ -152,7 +193,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             '[1]\n:at key start=:at value start\nin:key:middle=in:value:middle\n\n'
         ))
 
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, [':at key start', 'in:key:middle'],
             [[':at value start', 'in:value:middle']]
         )
@@ -171,7 +212,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             '[2]\n;at key start=comment line\n;in;key;middle=comment line\n\n'
         ))
 
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, [';at key start', 'in;key;middle'],
             [[';at value start', 'in;value;middle'], [None, None]]
         )
@@ -193,7 +234,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             'equals${eq}in${eq}middle=not${eq}escaped${eq}\n\n'
         ))
 
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['=leading equals', 'equals=in=middle'],
             [
                 ['=leading equals', 'equals=in=middle'],
@@ -210,7 +251,7 @@ class TestD2TXTLoadIni(TestD2TXTBase):
             '[3]\naurafilter=0x1 | 0x100 | 0x400\n\n'
         ))
 
-        self.compare_D2TXT(
+        self.compare_d2txt(
             d2txt, ['aurafilter'],
             [['33025'], ['33025'], ['1281']]
         )
@@ -303,7 +344,9 @@ class TestD2TXTSaveIni(unittest.TestCase):
         backtickified.
         """
         d2txt = D2TXT(['`backticks`', '``double``', '`unpaired', 'in`ter`nal'])
-        d2txt.extend([['`backticks`', '``double``', '`unpaired', 'in`ter`nal']])
+        d2txt.extend(
+            [['`backticks`', '``double``', '`unpaired', 'in`ter`nal']]
+        )
 
         ini_file = StringIO()
         d2txt_to_ini(d2txt, ini_file)

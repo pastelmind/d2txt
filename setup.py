@@ -1,4 +1,7 @@
+"Setup script for D2TXT"
+
 import setuptools
+
 
 with open('README.md', 'r') as readme_md:
     readme = readme_md.read()

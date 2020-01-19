@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-
 """Provides methods for converting D2TXT objects to and from INI files."""
 
-
-from .d2txt import D2TXT
 from configparser import ConfigParser
 import argparse
+
+from .d2txt import D2TXT
 
 
 def escape_column_name(column_name):
@@ -28,16 +27,17 @@ def escape_column_name(column_name):
         An escaped key string.
     """
     column_name = column_name.replace('=', '${eq}')
-    if ((not column_name)
-        or (column_name[0] == column_name[-1] == '`')
-        or (column_name[0].isspace() or column_name[-1].isspace())
-        or (column_name[0] == ';')
-        ):
+    if (
+            (not column_name)
+            or (column_name[0] == column_name[-1] == '`')
+            or (column_name[0].isspace() or column_name[-1].isspace())
+            or (column_name[0] == ';')
+    ):
         return f'`{column_name}`'
-    else:
-        return column_name
+    return column_name
 
-def escape_cell_value(s):
+
+def escape_cell_value(value):
     """Escapes a D2TXT cell value to a valid INI value.
 
     The given string is escaped (i.e. surrounded by backticks) if it matches any
@@ -47,15 +47,19 @@ def escape_cell_value(s):
     - Has leading/trailing whitespace (includes whitespace-only strings)
 
     Args:
-        s: A cell value string.
+        value: A cell value string.
 
     Returns:
         An escaped value string.
     """
-    if s and (s[0] == s[-1] == '`' or s[0].isspace() or s[-1].isspace()):
-        return f'`{s}`'
-    else:
-        return s
+    if value and (
+            value[0] == value[-1] == '`'
+            or value[0].isspace()
+            or value[-1].isspace()
+    ):
+        return f'`{value}`'
+    return value
+
 
 def unescape_column_name(column_name):
     """Un-escapes an INI key to a valid D2TXT column name.
@@ -66,8 +70,8 @@ def unescape_column_name(column_name):
     column_name = column_name.replace('${eq}', '=')
     if column_name and column_name[0] == column_name[-1] == '`':
         return column_name[1:-1]
-    else:
-        return column_name
+    return column_name
+
 
 def unescape_cell_value(value):
     """Un-escapes an INI key or value to a valid D2TXT column name or value.
@@ -76,8 +80,7 @@ def unescape_cell_value(value):
     """
     if value and value[0] == value[-1] == '`':
         return value[1:-1]
-    else:
-        return value
+    return value
 
 
 # See https://d2mods.info/forum/viewtopic.php?t=43737 for more information
@@ -85,15 +88,17 @@ AURAFILTER_FLAGS = {
     0x00000001: 'FindPlayers',
     0x00000002: 'FindMonsters',
     0x00000004: 'FindOnlyUndead',
-    0x00000008: 'FindMissiles',         # Ignores missiles with explosion=1 in missiles.txt
+    # Ignores missiles with explosion=1 in missiles.txt
+    0x00000008: 'FindMissiles',
     0x00000010: 'FindObjects',
     0x00000020: 'FindItems',
-#   0x00000040: 'Unknown40',
-    0x00000080: 'FindAttackable',       # Target units flagged as IsAtt in monstats2.txt
+    #   0x00000040: 'Unknown40',
+    # Target units flagged as IsAtt in monstats2.txt
+    0x00000080: 'FindAttackable',
     0x00000100: 'NotInsideTowns',
     0x00000200: 'UseLineOfSight',
     0x00000400: 'FindSelectable',       # Checked manually by curse skill functions
-#   0x00000800: 'Unknown800',
+    #   0x00000800: 'Unknown800',
     0x00001000: 'FindCorpses',          # Targets corpses of monsters and players
     0x00002000: 'NotInsideTowns2',
     0x00004000: 'IgnoreBoss',           # Ignores units with SetBoss=1 in MonStats.txt
@@ -120,10 +125,7 @@ def decode_aurafilter(aurafilter):
         if aurafilter & flag:
             af_names.append(AURAFILTER_FLAGS.get(flag, f'{flag:#x}'))
 
-    if af_names:
-        return ' | '.join(af_names)
-    else:
-        return '0'
+    return ' | '.join(af_names) if af_names else '0'
 
 
 def encode_aurafilter(af_str):
@@ -142,7 +144,9 @@ def encode_aurafilter(af_str):
             try:
                 flag = int(flag_name, 0)
             except ValueError:
-                raise ValueError(f'Unknown bit flag for aurafilter: {flag_name!r}') from None
+                raise ValueError(
+                    f'Unknown bit flag for aurafilter: {flag_name!r}'
+                ) from None
         aurafilter |= flag
 
     return str(aurafilter)
@@ -200,9 +204,11 @@ def ini_to_d2txt(inifile):
 
     # Manually dedupe column names to ensure that warnings point to correct
     # lines in the source code
-    d2txt = D2TXT(D2TXT.dedupe_column_names(map(unescape_column_name, ini_keys)))
+    d2txt_file = D2TXT(
+        D2TXT.dedupe_column_names(map(unescape_column_name, ini_keys))
+    )
     # Mapping of INI key => unescaped, deduped column name
-    ini_key_to_column_name = dict(zip(ini_keys, d2txt.column_names()))
+    ini_key_to_column_name = dict(zip(ini_keys, d2txt_file.column_names()))
 
     for section_name, section in ini_parser.items():
         # Use each section name as the row index
@@ -211,31 +217,35 @@ def ini_to_d2txt(inifile):
         except ValueError:
             continue
 
-        while len(d2txt) <= row_index:
-            d2txt.append([])
+        while len(d2txt_file) <= row_index:
+            d2txt_file.append([])
 
         for ini_key, value in section.items():
             if value and '\n' in value:
                 raise ValueError(
-                    f'Multiple lines found in value for key {key!r}, section [{section_name}].\n'
-                    f'Try removing all whitespace characters before {value.splitlines()[1]!r}.'
+                    f'Multiple lines found in value for key {ini_key!r}, '
+                    f'section [{section_name}].\n'
+                    f'Try removing all whitespace characters before '
+                    f'{value.splitlines()[1]!r}.'
                 )
             column_name = ini_key_to_column_name[ini_key]
-            d2txt[row_index][column_name] = ini_value_to_txt(value, column_name)
+            d2txt_file[row_index][column_name] = ini_value_to_txt(
+                value, column_name
+            )
 
-    return d2txt
+    return d2txt_file
 
 
-def d2txt_to_ini(d2txt, inifile):
+def d2txt_to_ini(d2txt_file, inifile):
     """Writes a D2TXT object to an INI file.
 
     Args:
-        d2txt: A D2TXT object
+        d2txt_file: A D2TXT object
         inifile: A path string or writable file object
     """
     if isinstance(inifile, str):
         with open(inifile, mode='w', newline='') as inifile_obj:
-            d2txt_to_ini(d2txt, inifile_obj)
+            d2txt_to_ini(d2txt_file, inifile_obj)
             return
 
     ini_parser = ConfigParser(
@@ -250,9 +260,11 @@ def d2txt_to_ini(d2txt, inifile):
     #       when assigning a dictionary, as well as being generally inefficent.
     #       Hence, escape_column_name() must be called explicitly.
     ini_parser.optionxform = str    # Make column names case-sensitive
-    ini_parser['Columns'] = {escape_column_name(name): None for name in d2txt.column_names()}
+    ini_parser['Columns'] = {
+        escape_column_name(name): None for name in d2txt_file.column_names()
+    }
 
-    for row_index, row in enumerate(d2txt):
+    for row_index, row in enumerate(d2txt_file):
         section = {}
         for column_name, value in row.items():
             if value:
@@ -267,21 +279,25 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_subparsers = arg_parser.add_subparsers(dest='command', required=True)
 
-    arg_parser_compile = arg_subparsers.add_parser('compile', help='Compile an INI file to a tabbed TXT file')
+    arg_parser_compile = arg_subparsers.add_parser(
+        'compile', help='Compile an INI file to a tabbed TXT file'
+    )
     arg_parser_compile.add_argument('inifile')
     arg_parser_compile.add_argument('txtfile')
 
-    arg_parser_decompile = arg_subparsers.add_parser('decompile', help='Decompile a tabbed TXT file to an INI file')
+    arg_parser_decompile = arg_subparsers.add_parser(
+        'decompile', help='Decompile a tabbed TXT file to an INI file'
+    )
     arg_parser_decompile.add_argument('txtfile')
     arg_parser_decompile.add_argument('inifile')
 
     args = arg_parser.parse_args()
 
     if args.command == 'compile':
-        d2txt = ini_to_d2txt(args.inifile)
-        d2txt.to_txt(args.txtfile)
+        d2txt_file = ini_to_d2txt(args.inifile)
+        d2txt_file.to_txt(args.txtfile)
     elif args.command == 'decompile':
-        d2txt = D2TXT.load_txt(args.txtfile)
-        d2txt_to_ini(d2txt, args.inifile)
+        d2txt_file = D2TXT.load_txt(args.txtfile)
+        d2txt_to_ini(d2txt_file, args.inifile)
     else:
         print(f'Unknown command: {args.command}')

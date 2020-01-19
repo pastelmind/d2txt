@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-
 """Provides the D2TXT class for loading and saving Diablo 2 TXT files."""
 
-
-import csv
 import collections.abc
+import csv
 from itertools import islice
 from warnings import warn
 
@@ -12,7 +10,6 @@ from warnings import warn
 class DuplicateColumnNameWarning(Warning):
     """A warning issued when a duplicate column name is encountered and has been
     renamed."""
-    pass
 
 
 def _column_index_to_symbol(column_index):
@@ -99,7 +96,9 @@ class D2TXT(collections.abc.MutableSequence):
                 names are automatically renamed.
         """
         self._column_names = self.__class__.dedupe_column_names(column_names)
-        self._column_indices = {name: index for index, name in enumerate(self._column_names)}
+        self._column_indices = {
+            name: index for index, name in enumerate(self._column_names)
+        }
         self._rows = []
 
     # def col(self, column_name):
@@ -129,7 +128,6 @@ class D2TXT(collections.abc.MutableSequence):
     def insert(self, index, value):
         self._rows.insert(index, D2TXTRow(self, value))
 
-
     def column_names(self):
         """Returns a read-only view of the list of column names."""
         return D2TXTColumnNameView(self._column_names)
@@ -143,7 +141,6 @@ class D2TXT(collections.abc.MutableSequence):
         """
         return self._column_indices[column_name]
 
-
     @classmethod
     def load_txt(cls, txtfile):
         """Creates a D2TXT object from a tabbed TXT file.
@@ -155,15 +152,15 @@ class D2TXT(collections.abc.MutableSequence):
             with open(txtfile) as txtfile_obj:
                 return cls.load_txt(txtfile_obj)
 
-        txt_reader = csv.reader(txtfile, dialect='excel-tab',
-            quoting=csv.QUOTE_NONE, quotechar=None)
+        txt_reader = csv.reader(
+            txtfile, dialect='excel-tab', quoting=csv.QUOTE_NONE, quotechar=None
+        )
 
         # Manually dedupe column names to ensure that warnings point to correct
         # lines in the source code
         d2txt = cls(cls.dedupe_column_names(next(txt_reader)))
         d2txt.extend(txt_reader)
         return d2txt
-
 
     def to_txt(self, txtfile):
         """Writes the contents of this object to a TXT file.
@@ -176,11 +173,11 @@ class D2TXT(collections.abc.MutableSequence):
                 self.to_txt(txtfile_obj)
                 return
 
-        txt_writer = csv.writer(txtfile, dialect='excel-tab',
-            quoting=csv.QUOTE_NONE, quotechar=None)
+        txt_writer = csv.writer(
+            txtfile, dialect='excel-tab', quoting=csv.QUOTE_NONE, quotechar=None
+        )
         txt_writer.writerow(self._column_names)
         txt_writer.writerows(row.values() for row in self._rows)
-
 
     @staticmethod
     def dedupe_column_names(column_names):
@@ -202,8 +199,10 @@ class D2TXT(collections.abc.MutableSequence):
                 new_name = f'{name}({_column_index_to_symbol(column_index)})'
                 while new_name in column_names_seen:
                     new_name += f'({_column_index_to_symbol(column_index)})'
-                warn(f'Column name {name!r} replaced with {new_name!r}',
-                    DuplicateColumnNameWarning, stacklevel=3)
+                warn(
+                    f'Column name {name!r} replaced with {new_name!r}',
+                    DuplicateColumnNameWarning, stacklevel=3
+                )
                 name = new_name
             column_names_seen.add(name)
             deduped_column_names.append(name)
