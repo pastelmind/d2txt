@@ -4,7 +4,12 @@
 import collections.abc
 import csv
 from itertools import islice
+from typing import Any
+from typing import Union
 from warnings import warn
+
+import qtoml
+import toml
 
 
 class DuplicateColumnNameWarning(Warning):
@@ -208,3 +213,76 @@ class D2TXT(collections.abc.MutableSequence):
             deduped_column_names.append(name)
 
         return deduped_column_names
+
+
+def _int_or_str(value: str) -> Union[str, int]:
+    """Attempts to convert a string to integer.
+
+    Args:
+        value: String to convert.
+
+    Returns:
+        Integer if the conversion is successful. On failure, returns the
+        original string.
+    """
+    try:
+        return int(value)
+    except ValueError:
+        return value
+
+
+def d2txt_to_toml(d2txt: D2TXT) -> str:
+    """Converts a D2TXT object to TOML markup.
+
+    Args:
+        d2txt: D2TXT object to convert.
+
+    Returns:
+        String containing TOML markup.
+    """
+    # Use qtoml.dumps(), because toml does not properly escape backslashes.
+    # Possibly related issues:
+    #   https://github.com/uiri/toml/issues/261
+    #   https://github.com/uiri/toml/issues/201
+    toml_rows = qtoml.dumps(
+        {
+            'rows': [
+                {
+                    key: _int_or_str(value)
+                    for key, value in row.items()
+                    if not (value is None or value == '')
+                }
+                for row in d2txt
+            ],
+        }
+    )
+    toml_encoder = qtoml.encoder.TOMLEncoder()
+    toml_columns = (
+        'columns = [\n'
+        + ''.join(
+            f'  {toml_encoder.dump_value(key)},\n'
+            for key in d2txt.column_names()
+        )
+        + ']\n\n'
+    )
+    return toml_columns + toml_rows
+
+
+def toml_to_d2txt(toml_data: str) -> D2TXT:
+    """Loads a D2TXT file from TOML markup.
+
+    Args:
+        toml_data: String containing TOML markup.
+
+    Returns:
+        D2TXT object loaded from `toml_data`.
+    """
+    # Use toml.loads() because it's ~50% faster than qtoml.loads()
+    toml_data = toml.loads(toml_data)
+    d2txt_data = D2TXT(D2TXT.dedupe_column_names(toml_data['columns']))
+    for row in toml_data['rows']:
+        d2txt_data.append([])
+        d2txt_row = d2txt_data[-1]
+        for key, value in row.items():
+            d2txt_row[key] = value
+    return d2txt_data
