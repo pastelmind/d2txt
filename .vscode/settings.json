@@ -1,4 +1,5 @@
 {
+    "python.formatting.provider": "black",
     "python.pythonPath": "venv\\Scripts\\python",
     "python.testing.nosetestsEnabled": false,
     "python.testing.pytestEnabled": false,
