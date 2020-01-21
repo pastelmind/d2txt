@@ -19,10 +19,7 @@ class TestD2TXTLoadToml(TestD2TXTBase):
         """Tests if a key that is not specified in the [Columns] section raises
         an exception."""
 
-        toml_source = (
-            "columns=['column1']\n\n"
-            '[[rows]]\ncolumn1=1\ncolumn2=2\n\n'
-        )
+        toml_source = "columns=['column1']\n\n" "[[rows]]\ncolumn1=1\ncolumn2=2\n\n"
 
         with self.assertRaises(KeyError):
             toml_to_d2txt(toml_source)
@@ -33,7 +30,7 @@ class TestD2TXTLoadToml(TestD2TXTBase):
         with self.assertRaises(ValueError):
             toml_to_d2txt(
                 "columns=['''column1\nmultiline''', 'column2']\n\n"
-                "[[rows]]\'''column1\nmultiline'''=1\ncolumn2=2\n\n"
+                "[[rows]]'''column1\nmultiline'''=1\ncolumn2=2\n\n"
             )
 
     def test_key_case_preserved(self):
@@ -44,8 +41,7 @@ class TestD2TXTLoadToml(TestD2TXTBase):
         )
 
         self.compare_d2txt(
-            d2txt, ['column', 'Column', 'COLUMN'],
-            [['lower', 'Caps', 'UPPER']]
+            d2txt, ["column", "Column", "COLUMN"], [["lower", "Caps", "UPPER"]]
         )
 
     def test_bitfield_encode(self):
@@ -57,10 +53,7 @@ class TestD2TXTLoadToml(TestD2TXTBase):
             "[[rows]]\naurafilter=[[], [0x501]]\n\n"
         )
 
-        self.compare_d2txt(
-            d2txt, ['aurafilter'],
-            [[33025], [33025], [1281]]
-        )
+        self.compare_d2txt(d2txt, ["aurafilter"], [[33025], [33025], [1281]])
 
     def test_invalid_bitfield(self):
         """Tests if an invalid bitfield string raises an exception."""
@@ -85,19 +78,19 @@ class TestD2TXTSaveToml(unittest.TestCase):
 
     def test_none_or_empty_string_ignored(self):
         """Tests if None or '' is ignored, but other falsy values are not."""
-        d2txt = D2TXT(['int 0', 'float 0.0', 'False', 'None', 'empty'])
-        d2txt.extend([[0, 0.0, False, None, '']])
+        d2txt = D2TXT(["int 0", "float 0.0", "False", "None", "empty"])
+        d2txt.extend([[0, 0.0, False, None, ""]])
 
         self.assertEqual(
             d2txt_to_toml(d2txt),
             "columns = [\n  'int 0',\n  'float 0.0',\n  'False',\n  'None',\n  'empty',\n]\n\n"
-            "[[rows]]\n'int 0' = 0\n'float 0.0' = 0.0\nFalse = false\n\n"
+            "[[rows]]\n'int 0' = 0\n'float 0.0' = 0.0\nFalse = false\n\n",
         )
 
     def test_bitfield_decode(self):
         """Tests if bitfields are corrected decoded when saved to TOML file."""
-        d2txt = D2TXT(['aurafilter'])
-        d2txt.extend([['33025'], ['0'], ['65535'], ['4294901760']])
+        d2txt = D2TXT(["aurafilter"])
+        d2txt.extend([["33025"], ["0"], ["65535"], ["4294901760"]])
 
         self.maxDiff = None
         self.assertEqual(
@@ -106,5 +99,5 @@ class TestD2TXTSaveToml(unittest.TestCase):
             "[[rows]]\naurafilter = [['FindPlayers', 'NotInsideTowns', 'IgnoreAllies']]\n\n"
             "[[rows]]\naurafilter = [[]]\n\n"
             "[[rows]]\naurafilter = [['FindPlayers', 'FindMonsters', 'FindOnlyUndead', 'FindMissiles', 'FindObjects', 'FindItems', 'FindAttackable', 'NotInsideTowns', 'UseLineOfSight', 'FindSelectable', 'FindCorpses', 'NotInsideTowns2', 'IgnoreBoss', 'IgnoreAllies'], [0x840]]\n\n"
-            "[[rows]]\naurafilter = [['IgnoreNPC', 'IgnorePrimeEvil', 'IgnoreJustHitUnits'], [0xFFF20000]]\n\n"
+            "[[rows]]\naurafilter = [['IgnoreNPC', 'IgnorePrimeEvil', 'IgnoreJustHitUnits'], [0xFFF20000]]\n\n",
         )

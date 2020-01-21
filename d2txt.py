@@ -23,10 +23,10 @@ class DuplicateColumnNameWarning(Warning):
 def _column_index_to_symbol(column_index):
     """Converts a 0-indexed column index to an Excel-style column symbol string
     (A, B, ..., Z, AA, AB, ...)."""
-    column_symbol = ''
+    column_symbol = ""
     while column_index >= 0:
         modulo = column_index % 26
-        column_symbol = chr(modulo + ord('A')) + column_symbol
+        column_symbol = chr(modulo + ord("A")) + column_symbol
         column_index = (column_index - modulo) // 26 - 1
     return column_symbol
 
@@ -88,7 +88,7 @@ class D2TXTColumnNameView(collections.abc.Sequence):
         return len(self._column_names)
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {self._column_names!r}>'
+        return f"<{self.__class__.__name__}: {self._column_names!r}>"
 
 
 class D2TXT(collections.abc.MutableSequence):
@@ -157,7 +157,7 @@ class D2TXT(collections.abc.MutableSequence):
             txtfile: A path string or readable file object
         """
         try:
-            txtfile_fd = open(txtfile, encoding='cp437')
+            txtfile_fd = open(txtfile, encoding="cp437")
         except TypeError:
             txtfile_fd = None
         if txtfile_fd:
@@ -165,7 +165,7 @@ class D2TXT(collections.abc.MutableSequence):
                 return cls.load_txt(txtfile_fd)
 
         txt_reader = csv.reader(
-            txtfile, dialect='excel-tab', quoting=csv.QUOTE_NONE, quotechar=None
+            txtfile, dialect="excel-tab", quoting=csv.QUOTE_NONE, quotechar=None
         )
 
         # Manually dedupe column names to ensure that warnings point to correct
@@ -181,7 +181,7 @@ class D2TXT(collections.abc.MutableSequence):
             txtfile: A path string or writable file object
         """
         try:
-            txtfile_fd = open(txtfile, mode='w', newline='', encoding='cp437')
+            txtfile_fd = open(txtfile, mode="w", newline="", encoding="cp437")
         except TypeError:
             txtfile_fd = None
         if txtfile_fd:
@@ -190,7 +190,7 @@ class D2TXT(collections.abc.MutableSequence):
                 return
 
         txt_writer = csv.writer(
-            txtfile, dialect='excel-tab', quoting=csv.QUOTE_NONE, quotechar=None
+            txtfile, dialect="excel-tab", quoting=csv.QUOTE_NONE, quotechar=None
         )
         txt_writer.writerow(self._column_names)
         txt_writer.writerows(row.values() for row in self._rows)
@@ -212,12 +212,13 @@ class D2TXT(collections.abc.MutableSequence):
 
         for column_index, name in enumerate(column_names):
             if name in column_names_seen:
-                new_name = f'{name}({_column_index_to_symbol(column_index)})'
+                new_name = f"{name}({_column_index_to_symbol(column_index)})"
                 while new_name in column_names_seen:
-                    new_name += f'({_column_index_to_symbol(column_index)})'
+                    new_name += f"({_column_index_to_symbol(column_index)})"
                 warn(
-                    f'Column name {name!r} replaced with {new_name!r}',
-                    DuplicateColumnNameWarning, stacklevel=3
+                    f"Column name {name!r} replaced with {new_name!r}",
+                    DuplicateColumnNameWarning,
+                    stacklevel=3,
                 )
                 name = new_name
             column_names_seen.add(name)
@@ -227,36 +228,38 @@ class D2TXT(collections.abc.MutableSequence):
 
 
 # See https://d2mods.info/forum/viewtopic.php?t=43737 for more information
+# fmt: off
 AURAFILTER_FLAGS = {
-    'FindPlayers': 0x00000001,
-    'FindMonsters': 0x00000002,
-    'FindOnlyUndead': 0x00000004,
+    "FindPlayers":          0x00000001,
+    "FindMonsters":         0x00000002,
+    "FindOnlyUndead":       0x00000004,
     # Ignores missiles with explosion=1 in missiles.txt
-    'FindMissiles': 0x00000008,
-    'FindObjects': 0x00000010,
-    'FindItems': 0x00000020,
-    # 'Unknown40': 0x00000040,
+    "FindMissiles":         0x00000008,
+    "FindObjects":          0x00000010,
+    "FindItems":            0x00000020,
+    # "Unknown40":          0x00000040,
     # Target units flagged as IsAtt in monstats2.txt
-    'FindAttackable': 0x00000080,
-    'NotInsideTowns': 0x00000100,
-    'UseLineOfSight': 0x00000200,
+    "FindAttackable":       0x00000080,
+    "NotInsideTowns":       0x00000100,
+    "UseLineOfSight":       0x00000200,
     # Checked manually by curse skill functions
-    'FindSelectable': 0x00000400,
-    # 'Unknown800': 0x00000800,
+    "FindSelectable":       0x00000400,
+    # "Unknown800":         0x00000800,
     # Targets corpses of monsters and players
-    'FindCorpses': 0x00001000,
-    'NotInsideTowns2': 0x00002000,
+    "FindCorpses":          0x00001000,
+    "NotInsideTowns2":      0x00002000,
     # Ignores units with SetBoss=1 in MonStats.txt
-    'IgnoreBoss': 0x00004000,
-    'IgnoreAllies': 0x00008000,
+    "IgnoreBoss":           0x00004000,
+    "IgnoreAllies":         0x00008000,
     # Ignores units with npc=1 in MonStats.txt
-    'IgnoreNPC': 0x00010000,
-    # 'Unknown20000': 0x00020000,
+    "IgnoreNPC":            0x00010000,
+    # "Unknown20000":       0x00020000,
     # Ignores units with primeevil=1 in MonStats.txt
-    'IgnorePrimeEvil': 0x00040000,
-    'IgnoreJustHitUnits': 0x00080000,   # Used by chainlightning
+    "IgnorePrimeEvil":      0x00040000,
+    "IgnoreJustHitUnits":   0x00080000,  # Used by chainlightning
     # Rest are unknown
 }
+# fmt: on
 
 
 class _Hex(int):
@@ -268,7 +271,7 @@ class _Hex(int):
 
     def __str__(self) -> str:
         """Returns a hexadecimal representation of this value."""
-        return f'0x{self:X}'
+        return f"0x{self:X}"
 
 
 def decode_aurafilter(aurafilter: int) -> Tuple[List[str], _Hex]:
@@ -311,9 +314,7 @@ def encode_aurafilter(flags: List[str]) -> int:
         try:
             aurafilter |= AURAFILTER_FLAGS[name]
         except KeyError:
-            raise ValueError(
-                f'Unknown AuraFilter flag name: {name!r}'
-            ) from None
+            raise ValueError(f"Unknown AuraFilter flag name: {name!r}") from None
     return aurafilter
 
 
@@ -335,7 +336,7 @@ def decode_txt_value(column_name: str, value: Union[int, str]) -> Any:
         except ValueError:
             pass
 
-    if column_name.casefold() == 'aurafilter':
+    if column_name.casefold() == "aurafilter":
         try:
             af_flags, unknown_bits = decode_aurafilter(value)
         except TypeError:
@@ -358,7 +359,7 @@ def encode_txt_value(column_name: str, value: Any) -> Union[int, str]:
     Returns:
         Decoded value suitable for passing to D2TXT.
     """
-    if column_name.casefold() == 'aurafilter':
+    if column_name.casefold() == "aurafilter":
         try:
             aurafilter = encode_aurafilter(value[0])
         except TypeError:
@@ -387,11 +388,11 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
     #   https://github.com/uiri/toml/issues/201
     toml_rows = qtoml.dumps(
         {
-            'rows': [
+            "rows": [
                 {
                     key: decode_txt_value(key, value)
                     for key, value in row.items()
-                    if not (value is None or value == '')
+                    if not (value is None or value == "")
                 }
                 for row in d2txt
             ],
@@ -399,12 +400,11 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
     )
     toml_encoder = qtoml.encoder.TOMLEncoder()
     toml_columns = (
-        'columns = [\n'
-        + ''.join(
-            f'  {toml_encoder.dump_value(key)},\n'
-            for key in d2txt.column_names()
+        "columns = [\n"
+        + "".join(
+            f"  {toml_encoder.dump_value(key)},\n" for key in d2txt.column_names()
         )
-        + ']\n\n'
+        + "]\n\n"
     )
     return toml_columns + toml_rows
 
@@ -420,8 +420,8 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
     """
     # Use toml.loads() because it's ~50% faster than qtoml.loads()
     toml_data = toml.loads(toml_data)
-    d2txt_data = D2TXT(D2TXT.dedupe_column_names(toml_data['columns']))
-    for row in toml_data['rows']:
+    d2txt_data = D2TXT(D2TXT.dedupe_column_names(toml_data["columns"]))
+    for row in toml_data["rows"]:
         d2txt_data.append([])
         d2txt_row = d2txt_data[-1]
         for key, value in row.items():
@@ -429,33 +429,34 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
     return d2txt_data
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     arg_parser = ArgumentParser()
-    arg_subparsers = arg_parser.add_subparsers(dest='command')
+    arg_subparsers = arg_parser.add_subparsers(dest="command")
 
     arg_parser_compile = arg_subparsers.add_parser(
-        'compile', help='Compile a TOML file to a tabbed TXT file'
+        "compile", help="Compile a TOML file to a tabbed TXT file"
     )
-    arg_parser_compile.add_argument('tomlfile', help='TOML file to read from')
-    arg_parser_compile.add_argument('txtfile', help='TXT file to write to')
+    arg_parser_compile.add_argument("tomlfile", help="TOML file to read from")
+    arg_parser_compile.add_argument("txtfile", help="TXT file to write to")
 
     arg_parser_decompile = arg_subparsers.add_parser(
-        'decompile', help='Decompile a tabbed TXT file to a TOML file'
+        "decompile", help="Decompile a tabbed TXT file to a TOML file"
     )
-    arg_parser_decompile.add_argument('txtfile', help='TXT file to read from')
-    arg_parser_decompile.add_argument('tomlfile', help='TOML file to write to')
+    arg_parser_decompile.add_argument("txtfile", help="TXT file to read from")
+    arg_parser_decompile.add_argument("tomlfile", help="TOML file to write to")
 
     args = arg_parser.parse_args()
 
     if args.command is None:
         arg_parser.print_help()
-    elif args.command == 'compile':
-        with open(args.tomlfile, encoding='utf-8') as toml_file:
+    elif args.command == "compile":
+        with open(args.tomlfile, encoding="utf-8") as toml_file:
             d2txt_data = toml_to_d2txt(toml_file.read())
         d2txt_data.to_txt(args.txtfile)
-    elif args.command == 'decompile':
+    elif args.command == "decompile":
         d2txt_file = D2TXT.load_txt(args.txtfile)
-        with open(args.tomlfile, mode='w', encoding='utf-8') as toml_file:
+        with open(args.tomlfile, mode="w", encoding="utf-8") as toml_file:
             toml_file.write(d2txt_to_toml(d2txt_file))
     else:
-        raise RuntimeError(f'Unexpected command: {args.command!r}')
+        raise RuntimeError(f"Unexpected command: {args.command!r}")
+

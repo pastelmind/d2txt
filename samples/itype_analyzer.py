@@ -6,7 +6,8 @@
 import colorama
 import sys
 from os import path
-sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), '..')))
+
+sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), "..")))
 
 from d2txt import D2TXT
 
@@ -41,18 +42,18 @@ def parse_itypes(item_types_txt):
     parent_codes = {}
 
     for item_type in item_types_txt:
-        code = item_type['Code']
+        code = item_type["Code"]
         if not code:
             continue
         if code in itype_nodes:
-            raise KeyError(f'Duplicate itype code \'{code}\' found')
+            raise KeyError(f"Duplicate itype code '{code}' found")
 
         node = itype_nodes[code] = ITypeNode(code)
         parent_code_list = parent_codes[code] = []
-        if item_type['Equiv1']:
-            parent_code_list.append(item_type['Equiv1'])
-        if item_type['Equiv2']:
-            parent_code_list.append(item_type['Equiv2'])
+        if item_type["Equiv1"]:
+            parent_code_list.append(item_type["Equiv1"])
+        if item_type["Equiv2"]:
+            parent_code_list.append(item_type["Equiv2"])
 
     # Link parents and children
     for code, node in itype_nodes.items():
@@ -82,20 +83,20 @@ def classify_itypes_by_hand(itype_nodes, weapons_txt):
     two_handers = set()
 
     for weapon in weapons_txt:
-        code = weapon['code']
+        code = weapon["code"]
         if not code:
             continue
 
-        if weapon['2handed']:
+        if weapon["2handed"]:
             target_group = two_handers
         else:
             target_group = one_handers
 
         itype_codes = []
-        if weapon['type']:
-            itype_codes += itype_nodes[weapon['type']].ancestor_codes()
-        if weapon['type2']:
-            itype_codes += itype_nodes[weapon['type2']].ancestor_codes()
+        if weapon["type"]:
+            itype_codes += itype_nodes[weapon["type"]].ancestor_codes()
+        if weapon["type2"]:
+            itype_codes += itype_nodes[weapon["type2"]].ancestor_codes()
 
         target_group.update(itype_codes)
 
@@ -115,12 +116,12 @@ def print_itype_tree(node, one_handers=None, two_handers=None, current_depth=0):
     if not node:
         return
 
-    output_str = ' ' * (4 * current_depth) + node.code
+    output_str = " " * (4 * current_depth) + node.code
 
     if one_handers and node.code in one_handers:
-        output_str = Fore.GREEN + output_str + ' <-- 1h' + Fore.RESET
+        output_str = Fore.GREEN + output_str + " <-- 1h" + Fore.RESET
     elif two_handers and node.code in two_handers:
-        output_str = Fore.CYAN + output_str + ' <-- 2h' + Fore.RESET
+        output_str = Fore.CYAN + output_str + " <-- 2h" + Fore.RESET
 
     print(output_str)
 
@@ -128,12 +129,12 @@ def print_itype_tree(node, one_handers=None, two_handers=None, current_depth=0):
         print_itype_tree(child, one_handers, two_handers, current_depth + 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
 
     arg_parser = argparse.ArgumentParser(__doc__)
-    arg_parser.add_argument('itemtypes_txt', help='Path to ItemTypes.txt')
-    arg_parser.add_argument('weapons_txt', help='Path to Weapons.txt')
+    arg_parser.add_argument("itemtypes_txt", help="Path to ItemTypes.txt")
+    arg_parser.add_argument("weapons_txt", help="Path to Weapons.txt")
 
     args = arg_parser.parse_args()
 
@@ -142,11 +143,13 @@ if __name__ == '__main__':
 
     itype_nodes = parse_itypes(item_types_txt)
 
-    one_handers, two_handers, mixed_types = classify_itypes_by_hand(itype_nodes, weapons_txt)
-    print('One-handers: ' + ', '.join(one_handers))
-    print('Two-handers: ' + ', '.join(two_handers))
-    print('Mixed bags : ' + ', '.join(mixed_types))
-    print('-' * 80)
+    one_handers, two_handers, mixed_types = classify_itypes_by_hand(
+        itype_nodes, weapons_txt
+    )
+    print("One-handers: " + ", ".join(one_handers))
+    print("Two-handers: " + ", ".join(two_handers))
+    print("Mixed bags : " + ", ".join(mixed_types))
+    print("-" * 80)
 
     for node in itype_nodes.values():
         if not node.parents:

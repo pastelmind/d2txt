@@ -14,7 +14,8 @@ Note: This script modifies TreasureClassEx.txt.
 
 import sys
 from os import path
-sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), '..')))
+
+sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), "..")))
 
 from d2txt import D2TXT
 import re
@@ -28,14 +29,14 @@ def make_tc_dict(tcex_txt):
     """Returns a dictionary of rows in TreasureClassEx.txt keyed by name."""
     tc_dict = {}
     for tc in tcex_txt:
-        name = tc['Treasure Class']
+        name = tc["Treasure Class"]
         if name in tc_dict:
             raise DuplicateKeyError(name)
         tc_dict[name] = tc
     return tc_dict
 
 
-TC_PROB_COLUMNS = {f'Item{i}': f'Prob{i}' for i in range(1, 11)}
+TC_PROB_COLUMNS = {f"Item{i}": f"Prob{i}" for i in range(1, 11)}
 
 
 def sum_probs(tc):
@@ -53,15 +54,17 @@ def match_in_patterns(text, patterns):
     return any(pattern.search(text) for pattern in patterns)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
 
     arg_parser = argparse.ArgumentParser(description=__doc__)
-    arg_parser.add_argument('tcex_txt', help='Path to TreasureClassEx.txt')
-    arg_parser.add_argument('pattern', nargs='+',
-                            help='Regex for names of treasureclasses to rebalance')
-    arg_parser.add_argument('-i', '--ignore-case', action='store_true',
-                            help='Use case-insensitive matching')
+    arg_parser.add_argument("tcex_txt", help="Path to TreasureClassEx.txt")
+    arg_parser.add_argument(
+        "pattern", nargs="+", help="Regex for names of treasureclasses to rebalance"
+    )
+    arg_parser.add_argument(
+        "-i", "--ignore-case", action="store_true", help="Use case-insensitive matching"
+    )
 
     args = arg_parser.parse_args()
 
@@ -74,13 +77,13 @@ if __name__ == '__main__':
 
     tc_patterns = []
     for pattern_index, pattern_str in enumerate(args.pattern):
-        print(f'Pattern {pattern_index + 1}: {repr(pattern_str)}')
+        print(f"Pattern {pattern_index + 1}: {repr(pattern_str)}")
         tc_patterns.append(re.compile(pattern_str, flags=re_flags))
 
     num_matched_tcs = 0
     num_rebalanced_tcs = 0
     for tc in tcex_txt:
-        name = tc['Treasure Class']
+        name = tc["Treasure Class"]
         if not match_in_patterns(name, tc_patterns):
             continue
 
@@ -98,6 +101,7 @@ if __name__ == '__main__':
                 num_rebalanced_tcs += 1
 
     tcex_txt.to_txt(args.tcex_txt)
-    print(f'{num_matched_tcs} treasureclass(es) matched, {num_rebalanced_tcs} treasureclass(es) rebalanced.')
-
+    print(
+        f"{num_matched_tcs} treasureclass(es) matched, {num_rebalanced_tcs} treasureclass(es) rebalanced."
+    )
 
