@@ -4,7 +4,7 @@ import setuptools
 
 
 with open("README.md", "r") as readme_md:
-    readme = readme_md.read()
+    readme = readme_md.read()  # pylint: disable=invalid-name
 
 setuptools.setup(
     name="d2txt",

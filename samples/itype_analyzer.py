@@ -2,18 +2,16 @@
 
 """Reads ItemTypes.txt, Weapons.txt and prints graphs of the item type hierarchy."""
 
+import argparse
+import sys
 
 import colorama
-import sys
-from os import path
-
-sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), "..")))
+from colorama import Fore
 
 from d2txt import D2TXT
 
 
 colorama.init()
-Fore = colorama.Fore
 
 
 class ITypeNode:
@@ -129,14 +127,13 @@ def print_itype_tree(node, one_handers=None, two_handers=None, current_depth=0):
         print_itype_tree(child, one_handers, two_handers, current_depth + 1)
 
 
-if __name__ == "__main__":
-    import argparse
-
+def main(argv):
+    """Entrypoint of the command line script."""
     arg_parser = argparse.ArgumentParser(__doc__)
     arg_parser.add_argument("itemtypes_txt", help="Path to ItemTypes.txt")
     arg_parser.add_argument("weapons_txt", help="Path to Weapons.txt")
 
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args(argv)
 
     item_types_txt = D2TXT.load_txt(args.itemtypes_txt)
     weapons_txt = D2TXT.load_txt(args.weapons_txt)
@@ -154,3 +151,7 @@ if __name__ == "__main__":
     for node in itype_nodes.values():
         if not node.parents:
             print_itype_tree(node, one_handers=one_handers, two_handers=two_handers)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

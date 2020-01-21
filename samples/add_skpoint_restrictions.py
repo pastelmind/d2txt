@@ -10,11 +10,8 @@ feature and may destroy all skill points!
 Note: This script modifies Skills.txt.
 """
 
-
+import argparse
 import sys
-from os import path
-
-sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), "..")))
 
 from d2txt import D2TXT
 
@@ -64,9 +61,8 @@ def combine_skpoints_check_formula(formulas):
     return f"({formulas}) ? 1 : 999"
 
 
-if __name__ == "__main__":
-    import argparse
-
+def main(argv):
+    """Entrypoint of the command line script."""
     arg_parser = argparse.ArgumentParser(description=__doc__)
     arg_parser.add_argument("skills_txt", help="Path to Skills.txt")
     arg_parser.add_argument(
@@ -85,7 +81,7 @@ if __name__ == "__main__":
         help="If provided, specifies minimum blvl of all reqskills as a requirement",
     )
 
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args(argv)
 
     skills_txt = D2TXT.load_txt(args.skills_txt)
     num_skills_updated = 0
@@ -114,3 +110,6 @@ if __name__ == "__main__":
     skills_txt.to_txt(args.skills_txt)
     print(f"{num_skills_updated} skill(s) updated in {args.skills_txt}")
 
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

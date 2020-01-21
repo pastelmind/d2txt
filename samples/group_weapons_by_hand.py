@@ -6,11 +6,8 @@ Assigns item codes to `type2` of all weapons based on the number of hands requir
 Note: This script modifies Weapons.txt.
 """
 
-
+import argparse
 import sys
-from os import path
-
-sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), "..")))
 
 from d2txt import D2TXT
 
@@ -35,9 +32,8 @@ def check_item_code(item_code):
     return item_code
 
 
-if __name__ == "__main__":
-    import argparse
-
+def main(argv):
+    """Entrypoint of the command line script."""
     arg_parser = argparse.ArgumentParser(description=__doc__)
 
     arg_parser.add_argument("weapons_txt", help="Path to Weapons.txt")
@@ -57,7 +53,7 @@ if __name__ == "__main__":
         help="If provided, item code to assign to 1-or-2-hand weapons",
     )
 
-    args = vars(arg_parser.parse_args())
+    args = vars(arg_parser.parse_args(argv))
 
     weapons_txt = D2TXT.load_txt(args["weapons_txt"])
 
@@ -69,7 +65,8 @@ if __name__ == "__main__":
 
         if weapon["type2"]:
             print(
-                f'Warning: Row {row_index + 1} is skipped -- {weapon["name"]} already has \'type2\' assigned.'
+                f"Warning: Row {row_index + 1} is skipped -- "
+                f'{weapon["name"]} already has \'type2\' assigned.'
             )
             continue
 
@@ -97,3 +94,6 @@ if __name__ == "__main__":
             f'\'{args["both"]}\' has been assigned to {num_both} 1-or-2-hand weapon(s)'
         )
 
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

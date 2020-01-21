@@ -2,7 +2,6 @@
 """Unit test for conversion to and from TOML."""
 
 import os
-from os import path
 from tempfile import NamedTemporaryFile
 import unittest
 
@@ -92,12 +91,17 @@ class TestD2TXTSaveToml(unittest.TestCase):
         d2txt = D2TXT(["aurafilter"])
         d2txt.extend([["33025"], ["0"], ["65535"], ["4294901760"]])
 
-        self.maxDiff = None
+        self.maxDiff = None  # pylint: disable=invalid-name
         self.assertEqual(
             d2txt_to_toml(d2txt),
             "columns = [\n  'aurafilter',\n]\n\n"
             "[[rows]]\naurafilter = [['FindPlayers', 'NotInsideTowns', 'IgnoreAllies']]\n\n"
             "[[rows]]\naurafilter = [[]]\n\n"
-            "[[rows]]\naurafilter = [['FindPlayers', 'FindMonsters', 'FindOnlyUndead', 'FindMissiles', 'FindObjects', 'FindItems', 'FindAttackable', 'NotInsideTowns', 'UseLineOfSight', 'FindSelectable', 'FindCorpses', 'NotInsideTowns2', 'IgnoreBoss', 'IgnoreAllies'], [0x840]]\n\n"
-            "[[rows]]\naurafilter = [['IgnoreNPC', 'IgnorePrimeEvil', 'IgnoreJustHitUnits'], [0xFFF20000]]\n\n",
+            "[[rows]]\naurafilter = "
+            "[['FindPlayers', 'FindMonsters', 'FindOnlyUndead', 'FindMissiles', "
+            "'FindObjects', 'FindItems', 'FindAttackable', 'NotInsideTowns', "
+            "'UseLineOfSight', 'FindSelectable', 'FindCorpses', 'NotInsideTowns2', "
+            "'IgnoreBoss', 'IgnoreAllies'], [0x840]]\n\n"
+            "[[rows]]\naurafilter = "
+            "[['IgnoreNPC', 'IgnorePrimeEvil', 'IgnoreJustHitUnits'], [0xFFF20000]]\n\n",
         )

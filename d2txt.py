@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 import collections.abc
 import csv
 from itertools import islice
+import sys
 from typing import Any
 from typing import List
 from typing import Tuple
@@ -429,7 +430,8 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
     return d2txt_data
 
 
-if __name__ == "__main__":
+def main(argv: List[str]) -> None:
+    """Entrypoint of the command line script."""
     arg_parser = ArgumentParser()
     arg_subparsers = arg_parser.add_subparsers(dest="command")
 
@@ -445,7 +447,7 @@ if __name__ == "__main__":
     arg_parser_decompile.add_argument("txtfile", help="TXT file to read from")
     arg_parser_decompile.add_argument("tomlfile", help="TOML file to write to")
 
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args(argv)
 
     if args.command is None:
         arg_parser.print_help()
@@ -460,3 +462,6 @@ if __name__ == "__main__":
     else:
         raise RuntimeError(f"Unexpected command: {args.command!r}")
 
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

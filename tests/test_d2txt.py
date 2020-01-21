@@ -47,7 +47,7 @@ class TestD2TXT(unittest.TestCase):
         d2txt = D2TXT([])
         self.assertEqual(len(d2txt), 0)
         with self.assertRaises(IndexError):
-            d2txt[0]
+            d2txt[0]  # pylint:disable=pointless-statement
         with self.assertRaises(IndexError):
             d2txt[0] = []
 
@@ -93,15 +93,15 @@ class TestD2TXT(unittest.TestCase):
         d2txt.append(["one", "two", "six"])
 
         with self.assertRaises(IndexError):
-            d2txt[99]
+            d2txt[99]  # pylint:disable=pointless-statement
         with self.assertRaises(IndexError):
             d2txt[99] = ["mangy", "dog", "cow"]
         with self.assertRaises(IndexError):
-            d2txt[99]["column 1"]
+            d2txt[99]["column 1"]  # pylint:disable=pointless-statement
         with self.assertRaises(IndexError):
             d2txt[99]["column 1"] = "cat"
         with self.assertRaises(KeyError):
-            d2txt[0]["column 99"]
+            d2txt[0]["column 99"]  # pylint:disable=pointless-statement
         with self.assertRaises(KeyError):
             d2txt[0]["column 99"] = "bird"
 
@@ -114,7 +114,7 @@ class TestD2TXT(unittest.TestCase):
             list(d2txt[0].values()), ["lowercase", "capital letters", "uppercase"],
         )
         with self.assertRaises(KeyError):
-            d2txt[0]["column NAME"]
+            d2txt[0]["column NAME"]  # pylint:disable=pointless-statement
 
         d2txt[0]["COLUMN NAME"] = "c"
         d2txt[0]["Column Name"] = "b"
@@ -589,4 +589,3 @@ class TestD2TXTSaveFile(unittest.TestCase):
             "'single quotes'\t\"double quotes\"\t`backticks`\r\n"
             "'single quotes'\t\"double quotes\"\t`backticks`\r\n",
         )
-

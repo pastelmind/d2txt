@@ -11,41 +11,38 @@ weight as those in TC 1.
 Note: This script modifies TreasureClassEx.txt.
 """
 
-
+import argparse
+import re
 import sys
-from os import path
-
-sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), "..")))
 
 from d2txt import D2TXT
-import re
 
 
 class DuplicateKeyError(Exception):
-    pass
+    "Error raised when a duplicate key is found."
 
 
 def make_tc_dict(tcex_txt):
     """Returns a dictionary of rows in TreasureClassEx.txt keyed by name."""
     tc_dict = {}
-    for tc in tcex_txt:
-        name = tc["Treasure Class"]
+    for tc_entry in tcex_txt:
+        name = tc_entry["Treasure Class"]
         if name in tc_dict:
             raise DuplicateKeyError(name)
-        tc_dict[name] = tc
+        tc_dict[name] = tc_entry
     return tc_dict
 
 
 TC_PROB_COLUMNS = {f"Item{i}": f"Prob{i}" for i in range(1, 11)}
 
 
-def sum_probs(tc):
+def sum_probs(tc_entry):
     """Returns the sum of all `ProbN` fields in the given treasureclass row."""
     total_probs = 0
     for item_col, prob_col in TC_PROB_COLUMNS.items():
-        if not tc[item_col]:
+        if not tc_entry[item_col]:
             continue
-        total_probs += int(tc[prob_col])
+        total_probs += int(tc_entry[prob_col])
     return total_probs
 
 
@@ -54,9 +51,8 @@ def match_in_patterns(text, patterns):
     return any(pattern.search(text) for pattern in patterns)
 
 
-if __name__ == "__main__":
-    import argparse
-
+def main(argv):
+    """Entrypoint of the command line script."""
     arg_parser = argparse.ArgumentParser(description=__doc__)
     arg_parser.add_argument("tcex_txt", help="Path to TreasureClassEx.txt")
     arg_parser.add_argument(
@@ -66,7 +62,7 @@ if __name__ == "__main__":
         "-i", "--ignore-case", action="store_true", help="Use case-insensitive matching"
     )
 
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args(argv)
 
     tcex_txt = D2TXT.load_txt(args.tcex_txt)
     tc_dict = make_tc_dict(tcex_txt)
@@ -82,8 +78,8 @@ if __name__ == "__main__":
 
     num_matched_tcs = 0
     num_rebalanced_tcs = 0
-    for tc in tcex_txt:
-        name = tc["Treasure Class"]
+    for tc_entry in tcex_txt:
+        name = tc_entry["Treasure Class"]
         if not match_in_patterns(name, tc_patterns):
             continue
 
@@ -93,15 +89,19 @@ if __name__ == "__main__":
         # can only refer to other TCs above its row, we assume that all previous
         # TCs have already been rebalanced.
         for item_col, prob_col in TC_PROB_COLUMNS.items():
-            item_name = tc[item_col]
+            item_name = tc_entry[item_col]
             if not item_name:
                 continue
             if item_name in tc_dict and match_in_patterns(item_name, tc_patterns):
-                tc[prob_col] = sum_probs(tc_dict[item_name])
+                tc_entry[prob_col] = sum_probs(tc_dict[item_name])
                 num_rebalanced_tcs += 1
 
     tcex_txt.to_txt(args.tcex_txt)
     print(
-        f"{num_matched_tcs} treasureclass(es) matched, {num_rebalanced_tcs} treasureclass(es) rebalanced."
+        f"{num_matched_tcs} treasureclass(es) matched, "
+        f"{num_rebalanced_tcs} treasureclass(es) rebalanced."
     )
 
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
