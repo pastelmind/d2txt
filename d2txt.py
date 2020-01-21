@@ -110,9 +110,6 @@ class D2TXT(collections.abc.MutableSequence):
         }
         self._rows = []
 
-    # def col(self, column_name):
-    #     pass
-
     def __getitem__(self, index):
         """Returns a row at the given index, or a `list` of rows if slice syntax
         is used."""
