@@ -1,4 +1,7 @@
 {
+    "[python]": {
+        "editor.formatOnSave": true,
+    },
     "python.formatting.provider": "black",
     "python.pythonPath": "venv\\Scripts\\python",
     "python.testing.nosetestsEnabled": false,
