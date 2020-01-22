@@ -187,7 +187,7 @@ class D2TXT(collections.abc.MutableSequence):
             DuplicateColumnNameError: If a duplicate column name is found.
         """
         try:
-            txtfile_fd = open(txtfile, encoding="cp437")
+            txtfile_fd = open(txtfile, encoding="cp949")
         except TypeError:
             pass
         else:
@@ -214,7 +214,7 @@ class D2TXT(collections.abc.MutableSequence):
             txtfile: A path string or writable text file object.
         """
         try:
-            txtfile_fd = open(txtfile, mode="w", newline="", encoding="cp437")
+            txtfile_fd = open(txtfile, mode="w", newline="", encoding="cp949")
         except TypeError:
             pass
         else:
