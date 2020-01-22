@@ -1,4 +1,4 @@
-column name	duplicate name	duplicate name		COLUMN NAME
+column name	column 2	column 3		COLUMN NAME
 lowercase column name	next cell is empty		empty column name	UPPERCASE COLUMN NAME
 next row is empty	   leading spaces	trailing spaces   	    surrounded by spaces  	"double quotes"
 				0

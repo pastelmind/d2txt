@@ -12,19 +12,35 @@ from typing import Iterable
 from typing import Iterator
 from typing import List
 from typing import Mapping
+from typing import Optional
 from typing import Sequence
 from typing import TextIO
 from typing import Tuple
 from typing import Union
-from warnings import warn
 
 import qtoml
 import toml
 
 
-class DuplicateColumnNameWarning(Warning):
-    """A warning issued when a duplicate column name is encountered and has been
-    renamed."""
+class DuplicateColumnNameError(Exception):
+    """Raised when a duplicate column name is found in a TXT file.
+
+    Column names are considered duplicates when they are exactly the same.
+    Column names that differ only in casing (e.g. `mycolumn` and `MyColumn`) do
+    not cause this exception.
+
+    Attributes:
+        name: Duplicate column name.
+        index: Index of the duplicate column. This *should* be the greater of
+            the two indices of the duplicate columns (though not guaranteed).
+        filename: Name of the TXT file, if available.
+    """
+
+    def __init__(self, name: str, index: int, filename: Optional[str] = None) -> None:
+        super().__init__(name, index, filename)
+        self.name = name
+        self.index = index
+        self.filename = filename
 
 
 def _column_index_to_symbol(column_index: int) -> str:
@@ -118,10 +134,13 @@ class D2TXT(collections.abc.MutableSequence):
         """Create a D2TXT object.
 
         Args:
-            column_names: An iterable of column name strings. Duplicate column
-                names are automatically renamed.
+            column_names: Iterable of unique strings. Column names are
+                case-sensitive.
+
+        Raises:
+            DuplicateColumnNameError: If a duplicate column name is found.
         """
-        self._column_names = self.__class__.dedupe_column_names(column_names)
+        self._column_names = self.__class__._make_column_names(column_names)
         self._column_indices = {
             name: index for index, name in enumerate(self._column_names)
         }
@@ -182,6 +201,9 @@ class D2TXT(collections.abc.MutableSequence):
 
         Returns:
             The loaded D2TXT object.
+
+        Raises:
+            DuplicateColumnNameError: If a duplicate column name is found.
         """
         try:
             txtfile_fd = open(txtfile, encoding="cp437")
@@ -195,9 +217,12 @@ class D2TXT(collections.abc.MutableSequence):
             txtfile, dialect="excel-tab", quoting=csv.QUOTE_NONE, quotechar=None
         )
 
-        # Manually dedupe column names to ensure that warnings point to correct
-        # lines in the source code
-        d2txt = cls(cls.dedupe_column_names(next(txt_reader)))
+        try:
+            d2txt = cls(next(txt_reader))
+        except DuplicateColumnNameError as err:
+            raise DuplicateColumnNameError(
+                name=err.name, index=err.index, filename=getattr(txtfile, "name", None)
+            ) from None
         d2txt.extend(txt_reader)
         return d2txt
 
@@ -223,14 +248,16 @@ class D2TXT(collections.abc.MutableSequence):
         txt_writer.writerows(row.values() for row in self._rows)
 
     @staticmethod
-    def dedupe_column_names(column_names: Iterable[str]) -> List[str]:
-        """Returns a list of de-duplicated names taken from `column_names`.
-
-        Returns a list of names in `column_names`. If a duplicate name is found,
-        issues a DuplicateColumnNameWarning and renames it to a unique name.
+    def _make_column_names(column_names: Iterable[str]) -> List[str]:
+        """Extracts a list of strings taken from `column_names`.
 
         Args:
-            column_names: Iterable of column name strings.
+            column_names: Iterable of unique strings. Column names are
+                case-sensitive.
+
+        Raises:
+            DuplicateColumnNameError: If a duplicate column name is found.
+                The `name` and `index` attributes are set, but `filename` is not.
         """
         # Build a list rather than yielding each name, as using a generator can
         # obfuscate the warning message when nested inside another generator.
@@ -239,15 +266,7 @@ class D2TXT(collections.abc.MutableSequence):
 
         for column_index, name in enumerate(column_names):
             if name in column_names_seen:
-                new_name = f"{name}({_column_index_to_symbol(column_index)})"
-                while new_name in column_names_seen:
-                    new_name += f"({_column_index_to_symbol(column_index)})"
-                warn(
-                    f"Column name {name!r} replaced with {new_name!r}",
-                    DuplicateColumnNameWarning,
-                    stacklevel=3,
-                )
-                name = new_name
+                raise DuplicateColumnNameError(name=name, index=column_index)
             column_names_seen.add(name)
             deduped_column_names.append(name)
 
@@ -447,7 +466,7 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
     """
     # Use toml.loads() because it's ~50% faster than qtoml.loads()
     toml_data = toml.loads(toml_data)
-    d2txt_data = D2TXT(D2TXT.dedupe_column_names(toml_data["columns"]))
+    d2txt_data = D2TXT(toml_data["columns"])
     for row in toml_data["rows"]:
         d2txt_data.append([])
         d2txt_row = d2txt_data[-1]

@@ -8,7 +8,8 @@ from tempfile import NamedTemporaryFile
 from typing import Iterable, Sequence
 import unittest
 
-from d2txt import D2TXT, DuplicateColumnNameWarning
+from d2txt import D2TXT
+from d2txt import DuplicateColumnNameError
 
 
 class TestD2TXTBase(unittest.TestCase):
@@ -123,21 +124,10 @@ class TestD2TXT(unittest.TestCase):
         with self.assertRaises(KeyError):
             d2txt[0]["column NAME"] = 1
 
-    def test_duplicate_column_renaming(self):
-        """Tests if duplicate column names are renamed correctly."""
-        with self.assertWarns(DuplicateColumnNameWarning):
-            d2txt = D2TXT(["column name"] * 60)
-
-        column_names = list(d2txt.column_names())
-        self.assertEqual(column_names[1], "column name(B)")
-        self.assertEqual(column_names[2], "column name(C)")
-        self.assertEqual(column_names[24], "column name(Y)")
-        self.assertEqual(column_names[25], "column name(Z)")
-        self.assertEqual(column_names[26], "column name(AA)")
-        self.assertEqual(column_names[27], "column name(AB)")
-        self.assertEqual(column_names[51], "column name(AZ)")
-        self.assertEqual(column_names[52], "column name(BA)")
-        self.assertEqual(column_names[53], "column name(BB)")
+    def test_duplicate_column_names(self):
+        """Tests if duplicate column names cause an error."""
+        with self.assertRaises(DuplicateColumnNameError):
+            D2TXT(["column name"] * 60)
 
     def test_assign_list(self):
         """Tests if D2TXT accepts direct assignment using lists."""
@@ -285,12 +275,11 @@ class TestD2TXTLoadFile(TestD2TXTBase):
         """Tests if D2TXT can load a file using a file path, and its contents
         are preserved."""
         file_path = path.join(path.dirname(path.abspath(__file__)), "sample.txt")
-        with self.assertWarns(DuplicateColumnNameWarning):
-            d2txt = D2TXT.load_txt(file_path)
+        d2txt = D2TXT.load_txt(file_path)
 
         self.compare_d2txt(
             d2txt,
-            ["column name", "duplicate name", "duplicate name(C)", "", "COLUMN NAME",],
+            ["column name", "column 2", "column 3", "", "COLUMN NAME",],
             [
                 [
                     "lowercase column name",
@@ -329,10 +318,10 @@ class TestD2TXTLoadFile(TestD2TXTBase):
         )
 
     def test_duplicate_column_names(self):
-        """Tests if duplicate column names are renamed when loading a TXT file.
+        """Tests if duplicate column names raise an error loading a TXT file.
         """
-        with self.assertWarns(DuplicateColumnNameWarning):
-            d2txt = D2TXT.load_txt(
+        with self.assertRaises(DuplicateColumnNameError):
+            D2TXT.load_txt(
                 StringIO(
                     "column name\tcolumn name 2\tcolumn name 2\t"
                     "column name\tcolumn name\tcolumn name 2\r\n"
@@ -340,16 +329,6 @@ class TestD2TXTLoadFile(TestD2TXTBase):
                     newline="",  # Required to make csv.reader work correctly
                 )
             )
-
-        expected_column_names = [
-            "column name",
-            "column name 2",
-            "column name 2(C)",
-            "column name(D)",
-            "column name(E)",
-            "column name 2(F)",
-        ]
-        self.assertEqual(list(d2txt.column_names()), expected_column_names)
 
     def test_column_name_case_preserving(self):
         """Tests if column names are case-preserved when loading a TXT file."""
