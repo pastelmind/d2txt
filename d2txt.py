@@ -431,7 +431,7 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
 
 if __name__ == '__main__':
     arg_parser = ArgumentParser()
-    arg_subparsers = arg_parser.add_subparsers(dest='command', required=True)
+    arg_subparsers = arg_parser.add_subparsers(dest='command')
 
     arg_parser_compile = arg_subparsers.add_parser(
         'compile', help='Compile a TOML file to a tabbed TXT file'
