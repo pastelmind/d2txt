@@ -186,8 +186,8 @@ class D2TXT(collections.abc.MutableSequence):
         try:
             txtfile_fd = open(txtfile, encoding="cp437")
         except TypeError:
-            txtfile_fd = None
-        if txtfile_fd:
+            pass
+        else:
             with txtfile_fd:
                 return cls.load_txt(txtfile_fd)
 
@@ -210,8 +210,8 @@ class D2TXT(collections.abc.MutableSequence):
         try:
             txtfile_fd = open(txtfile, mode="w", newline="", encoding="cp437")
         except TypeError:
-            txtfile_fd = None
-        if txtfile_fd:
+            pass
+        else:
             with txtfile_fd:
                 self.to_txt(txtfile_fd)
                 return
