@@ -5,9 +5,15 @@ from argparse import ArgumentParser
 import collections.abc
 import csv
 from itertools import islice
+from os import PathLike
 import sys
 from typing import Any
+from typing import Iterable
+from typing import Iterator
 from typing import List
+from typing import Mapping
+from typing import Sequence
+from typing import TextIO
 from typing import Tuple
 from typing import Union
 from warnings import warn
@@ -21,9 +27,17 @@ class DuplicateColumnNameWarning(Warning):
     renamed."""
 
 
-def _column_index_to_symbol(column_index):
-    """Converts a 0-indexed column index to an Excel-style column symbol string
-    (A, B, ..., Z, AA, AB, ...)."""
+def _column_index_to_symbol(column_index: int) -> str:
+    """Converts a column index to Excel-style column symbol.
+
+    Args:
+        column_index: Column index, first column starts at 0.
+
+    Returns:
+        Excel-syle column symbols in uppercase. Example:
+            0 -> "A", 1 -> "B", ..., 25 -> "Z", 26 -> "AA", 27 -> "AB", ...
+        If `column_index` is less than 0, returns an empty string.
+    """
     column_symbol = ""
     while column_index >= 0:
         modulo = column_index % 26
@@ -32,12 +46,15 @@ def _column_index_to_symbol(column_index):
     return column_symbol
 
 
+_RowPrototype = Union[Mapping[str, Any], Sequence[Any]]
+
+
 class D2TXTRow(collections.abc.Mapping):
     """
     Represents a single row in a tabbed txt file.
     """
 
-    def __init__(self, d2txt, row):
+    def __init__(self, d2txt: "D2TXT", row: _RowPrototype) -> None:
         """Creates a row object for D2TXT.
 
         If `row` is a mapping, each key-value pair is copied to the new row.
@@ -63,32 +80,32 @@ class D2TXTRow(collections.abc.Mapping):
             self._row = list(islice(row, num_columns))
             self._row += [None] * (num_columns - len(self._row))
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return self._row[self._d2txt.column_index(key)]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         return iter(self._d2txt.column_names())
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._row)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Any) -> None:
         self._row[self._d2txt.column_index(key)] = value
 
 
 class D2TXTColumnNameView(collections.abc.Sequence):
     """A read-only view of the list of column names in a D2TXT object."""
 
-    def __init__(self, column_names):
+    def __init__(self, column_names: Sequence[str]) -> None:
         self._column_names = column_names
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> str:
         return self._column_names[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._column_names)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__}: {self._column_names!r}>"
 
 
@@ -97,7 +114,7 @@ class D2TXT(collections.abc.MutableSequence):
     Represents a tab-separated TXT file used in Diablo 2.
     """
 
-    def __init__(self, column_names):
+    def __init__(self, column_names: Iterable[str]) -> None:
         """Create a D2TXT object.
 
         Args:
@@ -110,15 +127,19 @@ class D2TXT(collections.abc.MutableSequence):
         }
         self._rows = []
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: Union[int, slice]) -> Union[D2TXTRow, List[D2TXTRow]]:
         """Returns a row at the given index, or a `list` of rows if slice syntax
         is used."""
         return self._rows[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._rows)
 
-    def __setitem__(self, index, value):
+    def __setitem__(
+        self,
+        index: Union[int, slice],
+        value: Union[_RowPrototype, Iterable[_RowPrototype]],
+    ) -> None:
         """Sets a row at the given index to `value`. If slice syntax is used,
         replaces the rows with each item in `value`."""
         if isinstance(index, slice):
@@ -126,33 +147,41 @@ class D2TXT(collections.abc.MutableSequence):
         else:
             self._rows[index] = D2TXTRow(self, value)
 
-    def __delitem__(self, index):
+    def __delitem__(self, index: int) -> None:
         """Deletes a row at the given index, or multiple rows if slice syntax
         is used."""
         del self._rows[index]
 
-    def insert(self, index, value):
+    def insert(self, index: int, value: _RowPrototype) -> None:
         self._rows.insert(index, D2TXTRow(self, value))
 
-    def column_names(self):
+    def column_names(self) -> D2TXTColumnNameView:
         """Returns a read-only view of the list of column names."""
         return D2TXTColumnNameView(self._column_names)
 
-    def column_index(self, column_name):
-        """Returns the index of the column with the given name. Raises KeyError
-        if no match is found.
+    def column_index(self, column_name: str) -> int:
+        """Returns the index of a column.
 
         Args:
-            column_name: Column name string.
+            column_name: Column to search for. Column names are case-sensitive.
+
+        Returns:
+            0-based index of the column name.
+
+        Raises:
+            KeyError: If the column name does not exist.
         """
         return self._column_indices[column_name]
 
     @classmethod
-    def load_txt(cls, txtfile):
+    def load_txt(cls, txtfile: Union[str, PathLike, TextIO]) -> "D2TXT":
         """Creates a D2TXT object from a tabbed TXT file.
 
         Args:
-            txtfile: A path string or readable file object
+            txtfile: A path string or readable text file object.
+
+        Returns:
+            The loaded D2TXT object.
         """
         try:
             txtfile_fd = open(txtfile, encoding="cp437")
@@ -172,11 +201,11 @@ class D2TXT(collections.abc.MutableSequence):
         d2txt.extend(txt_reader)
         return d2txt
 
-    def to_txt(self, txtfile):
+    def to_txt(self, txtfile: Union[str, PathLike, TextIO]) -> None:
         """Writes the contents of this object to a TXT file.
 
         Args:
-            txtfile: A path string or writable file object
+            txtfile: A path string or writable text file object.
         """
         try:
             txtfile_fd = open(txtfile, mode="w", newline="", encoding="cp437")
@@ -194,7 +223,7 @@ class D2TXT(collections.abc.MutableSequence):
         txt_writer.writerows(row.values() for row in self._rows)
 
     @staticmethod
-    def dedupe_column_names(column_names):
+    def dedupe_column_names(column_names: Iterable[str]) -> List[str]:
         """Returns a list of de-duplicated names taken from `column_names`.
 
         Returns a list of names in `column_names`. If a duplicate name is found,
