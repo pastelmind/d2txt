@@ -431,7 +431,7 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
 
 if __name__ == '__main__':
     arg_parser = ArgumentParser()
-    arg_subparsers = arg_parser.add_subparsers(dest='command', required=True)
+    arg_subparsers = arg_parser.add_subparsers(dest='command')
 
     arg_parser_compile = arg_subparsers.add_parser(
         'compile', help='Compile a TOML file to a tabbed TXT file'
@@ -447,7 +447,9 @@ if __name__ == '__main__':
 
     args = arg_parser.parse_args()
 
-    if args.command == 'compile':
+    if args.command is None:
+        arg_parser.print_help()
+    elif args.command == 'compile':
         with open(args.tomlfile, encoding='utf-8') as toml_file:
             d2txt_data = toml_to_d2txt(toml_file.read())
         d2txt_data.to_txt(args.txtfile)
@@ -456,4 +458,4 @@ if __name__ == '__main__':
         with open(args.tomlfile, mode='w', encoding='utf-8') as toml_file:
             toml_file.write(d2txt_to_toml(d2txt_file))
     else:
-        assert RuntimeError(f'Unexpected command: {args.command!r}')
+        raise RuntimeError(f'Unexpected command: {args.command!r}')
