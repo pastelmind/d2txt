@@ -43,25 +43,6 @@ class DuplicateColumnNameError(Exception):
         self.filename = filename
 
 
-def _column_index_to_symbol(column_index: int) -> str:
-    """Converts a column index to Excel-style column symbol.
-
-    Args:
-        column_index: Column index, first column starts at 0.
-
-    Returns:
-        Excel-syle column symbols in uppercase. Example:
-            0 -> "A", 1 -> "B", ..., 25 -> "Z", 26 -> "AA", 27 -> "AB", ...
-        If `column_index` is less than 0, returns an empty string.
-    """
-    column_symbol = ""
-    while column_index >= 0:
-        modulo = column_index % 26
-        column_symbol = chr(modulo + ord("A")) + column_symbol
-        column_index = (column_index - modulo) // 26 - 1
-    return column_symbol
-
-
 _RowPrototype = Union[Mapping[str, Any], Sequence[Any]]
 
 
