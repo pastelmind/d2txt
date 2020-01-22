@@ -456,4 +456,4 @@ if __name__ == '__main__':
         with open(args.tomlfile, mode='w', encoding='utf-8') as toml_file:
             toml_file.write(d2txt_to_toml(d2txt_file))
     else:
-        assert RuntimeError(f'Unexpected command: {args.command!r}')
+        raise RuntimeError(f'Unexpected command: {args.command!r}')
