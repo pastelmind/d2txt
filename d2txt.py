@@ -8,6 +8,7 @@ from itertools import islice
 from os import PathLike
 import sys
 from typing import Any
+from typing import Dict
 from typing import Iterable
 from typing import Iterator
 from typing import List
@@ -343,6 +344,153 @@ def encode_aurafilter(flags: List[str]) -> int:
         except KeyError:
             raise ValueError(f"Unknown AuraFilter flag name: {name!r}") from None
     return aurafilter
+
+
+def range_1(stop: int) -> range:
+    """Returns a range that starts at 1 and ends at `stop`, inclusive."""
+    return range(1, stop + 1)
+
+
+def make_colgroup(
+    seq: Iterable[Union[int, str]], colgroup: str, columns: Iterable[str]
+) -> Dict[str, List[str]]:
+    """Generates a parametrized column group using a sequence of values."""
+    return {
+        colgroup.format(param): [col.format(param) for col in columns] for param in seq
+    }
+
+
+# Vendor names used in column names of Armor.txt, Misc.txt, Weapons.txt
+_VENDORS = [
+    "Akara",
+    "Alkor",
+    "Asheara",
+    "Cain",
+    "Charsi",
+    "Drehya",
+    "Drognan",
+    "Elzix",
+    "Fara",
+    "Gheed",
+    "Halbu",
+    "Hralti",
+    "Jamella",
+    "Larzuk",
+    "Lysander",
+    "Malah",
+    "Ormus",
+]
+
+# Columns with one variation per difficulty in MonStats.txt
+_DIFFICULTY_BASED_COLUMNS = [
+    "Level",
+    "AIDel",
+    "AIDist",
+    "aip1",
+    "aip2",
+    "aip3",
+    "aip4",
+    "aip5",
+    "aip6",
+    "aip7",
+    "aip8",
+    "Drain",
+    "ColdEffect",
+    "ResDm",
+    "ResMa",
+    "ResFi",
+    "ResLi",
+    "ResCo",
+    "ResPo",
+    "ToBlock",
+    "AC",
+    "Exp",
+    "A1MinD",
+    "A1MaxD",
+    "A1TH",
+    "A2MinD",
+    "A2MaxD",
+    "A2TH",
+    "S1MinD",
+    "S1MaxD",
+    "S1TH",
+    "El1Pct",
+    "El1MinD",
+    "El1MaxD",
+    "El1Dur",
+    "El2Pct",
+    "El2MinD",
+    "El2MaxD",
+    "El2Dur",
+    "El3Pct",
+    "El3MinD",
+    "El3MaxD",
+    "El3Dur",
+    "MinHP",
+    "MaxHP",
+]
+
+# Mapping of group alias => list of column names
+# pylint: disable=line-too-long
+# fmt: off
+COLUMN_GROUPS = {
+    # Armor.txt, Misc.txt, Weapons.txt
+    **make_colgroup(range_1(3), "--StatAndCalc{}", ["stat{}", "calc{}"]),
+    "--MinMaxDam": ["MinDam", "MaxDam"],
+    "--2HandMinMaxDam": ["2HandMinDam", "2HandMaxDam"],
+    "--MinMaxMisDam": ["MinMisDam", "MaxMisDam"],
+    "--MinMaxStack": ["MinStack", "MaxStack"],
+    **make_colgroup(_VENDORS, "--{}MinMax", ["{}Min", "{}Max"]),
+    **make_colgroup(_VENDORS, "--{}MagicMinMax", ["{}MagicMin", "{}MagicMax"]),
+    "--NormUberUltraCode": ["NormCode", "UberCode", "UltraCode"],
+    "--wClass1And2Handed": ["wClass", "2HandedWClass"],
+    "--InvWidthHeight": ["InvWidth", "InvHeight"],
+    "--NightmareAndHellUpgrades": ["NightmareUpgrade", "HellUpgrade"],
+    # AutoMagic.txt, MagicPrefix.txt, MagicSuffix.txt
+    **make_colgroup(range_1(3), "--Mod{}MinMax", ["Mod{}Min", "Mod{}Max"]),
+    # Missiles.txt
+    "--pSrvCltDoFunc": ["pSrvDoFunc", "pCltDoFunc"],
+    "--pSrvCltHitFunc": ["pSrvHitFunc", "pCltHitFunc"],
+    **make_colgroup(range_1(3), "--SrvCltSubMissile{}", ["SubMissile{}", "CltSubMissile{}"]),
+    **make_colgroup(range_1(4), "--SrvCltHitSubMissile{}", ["HitSubMissile{}", "CltHitSubMissile{}"]),
+    **make_colgroup(range_1(5), "--ParamAndDesc{}", ["Param{}", "*param{} desc"]),
+    **make_colgroup(range_1(5), "--CltParamAndDesc{}", ["CltParam{}", "*client param{} desc"]),
+    **make_colgroup(range_1(3), "--sHitParAndDesc{}", ["sHitPar{}", "*server hit param{} desc"]),
+    **make_colgroup(range_1(3), "--cHitParAndDesc{}", ["cHitPar{}", "*client hit param{} desc"]),
+    **make_colgroup(range_1(2), "--dParamAndDesc{}", ["dParam{}", "*damage param{} desc"]),
+    "--MinDamage0-5": ["MinDamage", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5"],
+    "--MaxDamage0-5": ["MaxDamage", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"],
+    "--MinE0-5": ["EMin", "MinELev1", "MinELev2", "MinELev3", "MinELev4", "MinELev5"],
+    "--MaxE0-5": ["EMax", "MaxELev1", "MaxELev2", "MaxELev3", "MaxELev4", "MaxELev5"],
+    "--ELen0-3": ["ELen", "ELevLen1", "ELevLen2", "ELevLen3"],
+    "--RedGreenBlue": ["Red", "Green", "Blue"],
+    # MonStats.txt
+    "--MinMaxGrp": ["MinGrp", "MaxGrp"],
+    **make_colgroup(_DIFFICULTY_BASED_COLUMNS, "--{}-RNH", ["{}", "{}(N)", "{}(H)"]),
+    # Skills.txt
+    "--SrvCltStFunc": ["SrvStFunc", "CltStFunc"],
+    "--SrvCltDoFunc": ["SrvDoFunc", "CltDoFunc"],
+    "--SrvCltMissile": ["SrvMissile", "CltMissile"],
+    **make_colgroup(["", "A", "B", "C"], "--SrvCltMissile{}", ["SrvMissile{}", "CltMissile{}"]),
+    **make_colgroup(range_1(6), "--AuraStatAndCalc{}", ["AuraStat{}", "AuraStatCalc{}"]),
+    **make_colgroup(range_1(6), "--PassiveStatAndCalc{}", ["PassiveStat{}", "PassiveCalc{}"]),
+    **make_colgroup(range_1(3), "--AuraEventAndFunc{}", ["AuraEvent{}", "AuraEventFunc{}"]),
+    "--AuraTgtEventAndFunc": ["AuraTgtEvent", "AuraTgtEventFunc"],
+    "--PassiveEventAndFunc": ["PassiveEvent", "PassiveEventFunc"],
+    **make_colgroup(range_1(8), "--ParamAndDescription{}", ["Param{}", "*Param{} Description"]),
+    "--MinDam0-5": ["MinDamage", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5"],
+    "--MaxDam0-5": ["MaxDamage", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"],
+    "--EMin0-5": ["EMin", "EMinLev1", "EMinLev2", "EMinLev3", "EMinLev4", "EMinLev5"],
+    "--EMax0-5": ["EMax", "EMaxLev1", "EMaxLev2", "EMaxLev3", "EMaxLev4", "EMaxLev5"],
+    # "--ELen0-3": ["ELen", "ELevLen1", "ELevLen2", "ELevLen3"],  # Also in Skills.txt
+    "--CostMultAdd": ["cost mult", "cost add"],
+    # SkillDesc.txt
+    "--SkillPageRowColumn": ["SkillPage", "SkillRow", "SkillColumn"],
+    # TreasureClassEx.txt
+    **make_colgroup(range_1(10), "ProbAndItem{}", ["Prob{}", "Item{}"]),
+}
+# fmt: on
+# pylint: enable=line-too-long
 
 
 def decode_txt_value(column_name: str, value: Union[int, str]) -> Any:
