@@ -724,11 +724,22 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
     # Use toml.loads() because it's ~50% faster than qtoml.loads()
     toml_data = toml.loads(toml_data)
     d2txt_data = D2TXT(toml_data["columns"])
+    column_groups = toml_data.get("column_groups", {})
+
     for row in toml_data["rows"]:
         d2txt_data.append([])
         d2txt_row = d2txt_data[-1]
+
         for key, value in row.items():
-            d2txt_row[key] = encode_txt_value(key, value)
+            try:
+                member_columns = column_groups[key]
+            except KeyError:
+                d2txt_row[key] = encode_txt_value(key, value)
+            else:
+                # Unpack column groups
+                for index, name in enumerate(member_columns):
+                    d2txt_row[name] = encode_txt_value(name, value[index])
+
     return d2txt_data
 
 
