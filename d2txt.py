@@ -157,7 +157,7 @@ class D2TXT(collections.abc.MutableSequence):
             txtfile: A path string or readable file object
         """
         try:
-            txtfile_fd = open(txtfile)
+            txtfile_fd = open(txtfile, encoding='cp437')
         except TypeError:
             txtfile_fd = None
         if txtfile_fd:
@@ -181,7 +181,7 @@ class D2TXT(collections.abc.MutableSequence):
             txtfile: A path string or writable file object
         """
         try:
-            txtfile_fd = open(txtfile, mode='w', newline='')
+            txtfile_fd = open(txtfile, mode='w', newline='', encoding='cp437')
         except TypeError:
             txtfile_fd = None
         if txtfile_fd:
