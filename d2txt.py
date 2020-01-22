@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 import collections.abc
 import csv
 from itertools import islice
+from itertools import zip_longest
 from os import PathLike
 import sys
 from typing import Any
@@ -828,6 +829,19 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
     return d2txt_data
 
 
+# pylint: disable=invalid-name
+def grouper(iterable: Iterable, n: int, fillvalue: Any = None) -> Iterator[tuple]:
+    """Collect data into fixed-length chunks or blocks.
+
+    Based on the `grouper()` recipe at
+        https://docs.python.org/3/library/itertools.html#itertools-recipes
+    """
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+# pylint: enable=invalid-name
+
+
 def main(argv: List[str]) -> None:
     """Entrypoint of the command line script."""
     arg_parser = ArgumentParser()
@@ -836,27 +850,45 @@ def main(argv: List[str]) -> None:
     arg_parser_compile = arg_subparsers.add_parser(
         "compile", help="Compile a TOML file to a tabbed TXT file"
     )
-    arg_parser_compile.add_argument("tomlfile", help="TOML file to read from")
-    arg_parser_compile.add_argument("txtfile", help="TXT file to write to")
+    arg_parser_compile.add_argument(
+        "source_target",
+        help="Pair of source file (TOML) and target file (TXT)",
+        metavar="source target",
+        nargs="+",
+    )
 
     arg_parser_decompile = arg_subparsers.add_parser(
         "decompile", help="Decompile a tabbed TXT file to a TOML file"
     )
-    arg_parser_decompile.add_argument("txtfile", help="TXT file to read from")
-    arg_parser_decompile.add_argument("tomlfile", help="TOML file to write to")
+    arg_parser_decompile.add_argument(
+        "source_target",
+        help="Pair of source file (TXT) and target file (TOML)",
+        metavar="source target",
+        nargs="+",
+    )
 
     args = arg_parser.parse_args(argv)
 
     if args.command is None:
         arg_parser.print_help()
     elif args.command == "compile":
-        with open(args.tomlfile, encoding="utf-8") as toml_file:
-            d2txt_data = toml_to_d2txt(toml_file.read())
-        d2txt_data.to_txt(args.txtfile)
+        for source, target in grouper(args.source_target, 2):
+            if not source:
+                raise ValueError(f"Invalid source file {source!r}")
+            if not target:
+                raise ValueError(f"Missing target for source {source!r}")
+            with open(source, encoding="utf-8") as toml_file:
+                d2txt_data = toml_to_d2txt(toml_file.read())
+            d2txt_data.to_txt(target)
     elif args.command == "decompile":
-        d2txt_file = D2TXT.load_txt(args.txtfile)
-        with open(args.tomlfile, mode="w", encoding="utf-8") as toml_file:
-            toml_file.write(d2txt_to_toml(d2txt_file))
+        for source, target in grouper(args.source_target, 2):
+            if not source:
+                raise ValueError(f"Invalid source file {source!r}")
+            if not target:
+                raise ValueError(f"Missing target for source {source!r}")
+            d2txt_file = D2TXT.load_txt(source)
+            with open(target, mode="w", encoding="utf-8") as toml_file:
+                toml_file.write(d2txt_to_toml(d2txt_file))
     else:
         raise ValueError(f"Unexpected command: {args.command!r}")
 
