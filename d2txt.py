@@ -360,6 +360,24 @@ def make_colgroup(
     }
 
 
+def sort_by_longest_value(
+    seq_dict: Mapping[Any, Sequence[Any]]
+) -> Dict[Any, Sequence[Any]]:
+    """Returns a copy of `seq_dict` reverse-sorted by the length of values.
+
+    Args:
+        seq_dict: Mapping whose values are sequences.
+
+    Returns:
+        A dictionary copied from `seq_dict`, sorted such that the first key
+        points to the longest sequence.
+    """
+    return {
+        name: seq_dict[name]
+        for name in sorted(seq_dict, key=lambda k: len(seq_dict[k]), reverse=True)
+    }
+
+
 # Vendor names used in column names of Armor.txt, Misc.txt, Weapons.txt
 _VENDORS = [
     "Akara",
@@ -433,7 +451,7 @@ _DIFFICULTY_BASED_COLUMNS = [
 # Mapping of group alias => list of column names
 # pylint: disable=line-too-long
 # fmt: off
-COLUMN_GROUPS = {
+COLUMN_GROUPS = sort_by_longest_value({
     # Armor.txt, Misc.txt, Weapons.txt
     **make_colgroup(range_1(3), "--StatAndCalc{}", ["stat{}", "calc{}"]),
     "--MinMaxDam": ["MinDam", "MaxDam"],
@@ -478,8 +496,8 @@ COLUMN_GROUPS = {
     "--AuraTgtEventAndFunc": ["AuraTgtEvent", "AuraTgtEventFunc"],
     "--PassiveEventAndFunc": ["PassiveEvent", "PassiveEventFunc"],
     **make_colgroup(range_1(8), "--ParamAndDescription{}", ["Param{}", "*Param{} Description"]),
-    "--MinDam0-5": ["MinDamage", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5"],
-    "--MaxDam0-5": ["MaxDamage", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"],
+    "--MinDam0-5": ["MinDam", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5"],
+    "--MaxDam0-5": ["MaxDam", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"],
     "--EMin0-5": ["EMin", "EMinLev1", "EMinLev2", "EMinLev3", "EMinLev4", "EMinLev5"],
     "--EMax0-5": ["EMax", "EMaxLev1", "EMaxLev2", "EMaxLev3", "EMaxLev4", "EMaxLev5"],
     # "--ELen0-3": ["ELen", "ELevLen1", "ELevLen2", "ELevLen3"],  # Also in Skills.txt
@@ -488,7 +506,7 @@ COLUMN_GROUPS = {
     "--SkillPageRowColumn": ["SkillPage", "SkillRow", "SkillColumn"],
     # TreasureClassEx.txt
     **make_colgroup(range_1(10), "ProbAndItem{}", ["Prob{}", "Item{}"]),
-}
+})
 # fmt: on
 # pylint: enable=line-too-long
 
@@ -548,6 +566,113 @@ def encode_txt_value(column_name: str, value: Any) -> Union[int, str]:
     return value
 
 
+def get_available_colgroups(column_names: Iterable[str]) -> Dict[str, Sequence[str]]:
+    """Given a list of column names, find out which of them can be grouped.
+
+    Args:
+        Iterable of column name strings to compare with column group definitions
+        in `COLUMN_GROUPS`. Column names are compared case-insensitively.
+
+    Returns:
+        Dictionary mapping each applicable column group alias to its member
+        column names. Member columns are taken from `column_names`, to ensure
+        that that they are cased correctly.
+    """
+    casefold_to_normal = {name.casefold(): name for name in column_names}
+    all_columns_cf = set(casefold_to_normal)
+    colgroups = {}
+    for alias, member_columns in COLUMN_GROUPS.items():
+        member_columns_cf = tuple(map(str.casefold, member_columns))
+        if all_columns_cf.issuperset(member_columns_cf):
+            colgroups[alias] = tuple(map(casefold_to_normal.get, member_columns_cf))
+            # Remove matched member columns in order to avoid overlapping groups.
+            # Example: --MinMaxDam and --MinDam0-5
+            all_columns_cf.difference_update(member_columns_cf)
+    return colgroups
+
+
+def get_sorted_columns_and_groups(
+    columns: Sequence[str], colgroups: Mapping[str, Sequence[str]]
+) -> List[str]:
+    """Returns a sorted list of column names and colgroups.
+
+    Args:
+        columns: Sequence of column names.
+        colgroups: Mapping of column group aliases to names of member columns.
+
+    Returns:
+        Sorted list containing column names and colgroups.
+    """
+    column_to_index = {name: index for index, name in enumerate(columns)}
+    # Build a list of tuples of (index, column name or group alias).
+    # Each group alias is given the same index as its firstmost member column.
+    # Place colgroups before normal columns to take advantage of stable sort,
+    # which ensures that a column group always comes before any of its members.
+    combined = [
+        (min(map(column_to_index.get, member_columns)), alias)
+        for alias, member_columns in colgroups.items()
+    ]
+    combined += enumerate(columns)
+    return [t[1] for t in sorted(combined, key=lambda t: t[0])]
+
+
+def pack_member_values(
+    member_values: Iterable[Union[int, str, None]]
+) -> Union[List[int], List[str], None]:
+    """Tries to pack a list of member column values into a single list.
+
+    Args:
+        member_values: Values taken from member column fields in a column group.
+
+    Returns:
+        On success, returns a list of integers, or a list of strings.
+        On failure, returns None.
+    """
+    member_values = tuple(member_values)
+    if all(value is None for value in member_values):
+        return None
+    if all(isinstance(value, int) for value in member_values):
+        return member_values
+    if sum(1 for value in member_values if value is not None) > 1:
+        # Currently, TOML does not support arrays of mixed types. Therefore
+        # convert all values to strings.
+        return ["" if value is None else str(value) for value in member_values]
+    return None
+
+
+def make_toml_row(
+    txt_row: Mapping[str, Any],
+    colgroups: Mapping[str, Sequence[str]],
+    columns_with_colgroups: Iterable[str],
+) -> Dict[str, Any]:
+    """Convert a D2TXT row object to a mapping that can be converted to TOML."""
+    # Black magic to avoid creating more than one dictionary per row
+    toml_row = {}
+
+    # Fill the row dict with colgroups, as well as columns that have value.
+    for name in columns_with_colgroups:
+        if name in colgroups:
+            # Column groups are pre-assigned in their correct positions
+            # Rely on preservation of insertion order of dicts Python 3.6+
+            toml_row[name] = None
+        else:
+            value = txt_row[name]
+            if not (value is None or value == ""):
+                toml_row[name] = decode_txt_value(name, value)
+
+    # Replace member columns if they can be packed into column groups
+    for alias, member_columns in colgroups.items():
+        packed_values = pack_member_values(map(toml_row.get, member_columns))
+        if packed_values is None:
+            del toml_row[alias]
+        else:
+            toml_row[alias] = packed_values
+            for name in member_columns:
+                toml_row.pop(name, None)
+
+    return toml_row
+
+
 def d2txt_to_toml(d2txt: D2TXT) -> str:
     """Converts a D2TXT object to TOML markup.
 
@@ -557,31 +682,34 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
     Returns:
         String containing TOML markup.
     """
+    columns = d2txt.column_names()
+    colgroups = get_available_colgroups(columns)
+    columns_with_colgroups = get_sorted_columns_and_groups(columns, colgroups)
+
+    toml_rows = [make_toml_row(row, colgroups, columns_with_colgroups) for row in d2txt]
+
     # Use qtoml.dumps(), because toml does not properly escape backslashes.
     # Possibly related issues:
     #   https://github.com/uiri/toml/issues/261
     #   https://github.com/uiri/toml/issues/201
-    toml_rows = qtoml.dumps(
-        {
-            "rows": [
-                {
-                    key: decode_txt_value(key, value)
-                    for key, value in row.items()
-                    if not (value is None or value == "")
-                }
-                for row in d2txt
-            ],
-        }
-    )
     toml_encoder = qtoml.encoder.TOMLEncoder()
-    toml_columns = (
+    toml_header = (
         "columns = [\n"
-        + "".join(
-            f"  {toml_encoder.dump_value(key)},\n" for key in d2txt.column_names()
-        )
+        + "".join(f"  {toml_encoder.dump_value(key)},\n" for key in columns)
         + "]\n\n"
     )
-    return toml_columns + toml_rows
+
+    toml_body_data = {}
+    if colgroups:
+        toml_body_data["column_groups"] = {
+            alias: colgroups[alias]
+            for alias in columns_with_colgroups
+            if alias in colgroups
+        }
+    toml_body_data["rows"] = toml_rows
+
+    toml_body = qtoml.dumps(toml_body_data)
+    return toml_header + toml_body
 
 
 def toml_to_d2txt(toml_data: str) -> D2TXT:
