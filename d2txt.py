@@ -447,7 +447,9 @@ if __name__ == '__main__':
 
     args = arg_parser.parse_args()
 
-    if args.command == 'compile':
+    if args.command is None:
+        arg_parser.print_help()
+    elif args.command == 'compile':
         with open(args.tomlfile, encoding='utf-8') as toml_file:
             d2txt_data = toml_to_d2txt(toml_file.read())
         d2txt_data.to_txt(args.txtfile)
