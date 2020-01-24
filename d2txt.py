@@ -8,6 +8,7 @@ from itertools import islice
 from os import PathLike
 import sys
 from typing import Any
+from typing import Dict
 from typing import Iterable
 from typing import Iterator
 from typing import List
@@ -187,7 +188,7 @@ class D2TXT(collections.abc.MutableSequence):
             DuplicateColumnNameError: If a duplicate column name is found.
         """
         try:
-            txtfile_fd = open(txtfile, encoding="cp437")
+            txtfile_fd = open(txtfile, encoding="cp949")
         except TypeError:
             pass
         else:
@@ -214,7 +215,7 @@ class D2TXT(collections.abc.MutableSequence):
             txtfile: A path string or writable text file object.
         """
         try:
-            txtfile_fd = open(txtfile, mode="w", newline="", encoding="cp437")
+            txtfile_fd = open(txtfile, mode="w", newline="", encoding="cp949")
         except TypeError:
             pass
         else:
@@ -345,6 +346,256 @@ def encode_aurafilter(flags: List[str]) -> int:
     return aurafilter
 
 
+def range_1(stop: int) -> range:
+    """Returns a range that starts at 1 and ends at `stop`, inclusive."""
+    return range(1, stop + 1)
+
+
+def make_colgroup(
+    seq: Iterable[Union[int, str]], colgroup: str, columns: Iterable[str]
+) -> Dict[str, List[str]]:
+    """Generates a parametrized column group using a sequence of values."""
+    return {
+        colgroup.format(param): [col.format(param) for col in columns] for param in seq
+    }
+
+
+def sort_by_longest_value(
+    seq_dict: Mapping[Any, Sequence[Any]]
+) -> Dict[Any, Sequence[Any]]:
+    """Returns a copy of `seq_dict` reverse-sorted by the length of values.
+
+    Args:
+        seq_dict: Mapping whose values are sequences.
+
+    Returns:
+        A dictionary copied from `seq_dict`, sorted such that the first key
+        points to the longest sequence.
+    """
+    return {
+        name: seq_dict[name]
+        for name in sorted(seq_dict, key=lambda k: len(seq_dict[k]), reverse=True)
+    }
+
+
+# Vendor names used in column names of Armor.txt, Misc.txt, Weapons.txt
+_VENDORS = [
+    "Akara",
+    "Alkor",
+    "Asheara",
+    "Cain",
+    "Charsi",
+    "Drehya",
+    "Drognan",
+    "Elzix",
+    "Fara",
+    "Gheed",
+    "Halbu",
+    "Hralti",
+    "Jamella",
+    "Larzuk",
+    "Lysander",
+    "Malah",
+    "Ormus",
+]
+
+# Columns with one variation per difficulty in MonStats.txt
+_DIFFICULTY_BASED_COLUMNS = [
+    "Level",
+    "AIDel",
+    "AIDist",
+    "aip1",
+    "aip2",
+    "aip3",
+    "aip4",
+    "aip5",
+    "aip6",
+    "aip7",
+    "aip8",
+    "Drain",
+    "ColdEffect",
+    "ResDm",
+    "ResMa",
+    "ResFi",
+    "ResLi",
+    "ResCo",
+    "ResPo",
+    "ToBlock",
+    "AC",
+    "Exp",
+    "A1MinD",
+    "A1MaxD",
+    "A1TH",
+    "A2MinD",
+    "A2MaxD",
+    "A2TH",
+    "S1MinD",
+    "S1MaxD",
+    "S1TH",
+    "El1Pct",
+    "El1MinD",
+    "El1MaxD",
+    "El1Dur",
+    "El2Pct",
+    "El2MinD",
+    "El2MaxD",
+    "El2Dur",
+    "El3Pct",
+    "El3MinD",
+    "El3MaxD",
+    "El3Dur",
+    "MinHP",
+    "MaxHP",
+]
+
+# Mapping of group alias => list of column names
+# pylint: disable=line-too-long
+# fmt: off
+COLUMN_GROUPS = sort_by_longest_value({
+    # Armor.txt, Misc.txt, Weapons.txt
+    "--MinMaxAC": ["MinAC", "MaxAC"],
+    **make_colgroup(range_1(3), "--StatAndCalc{}", ["stat{}", "calc{}"]),
+    "--MinMaxDam": ["MinDam", "MaxDam"],
+    "--2HandMinMaxDam": ["2HandMinDam", "2HandMaxDam"],
+    "--MinMaxMisDam": ["MinMisDam", "MaxMisDam"],
+    "--MinMaxStack": ["MinStack", "MaxStack"],
+    **make_colgroup(_VENDORS, "--{}MinMax", ["{}Min", "{}Max"]),
+    **make_colgroup(_VENDORS, "--{}MagicMinMax", ["{}MagicMin", "{}MagicMax"]),
+    "--NormUberUltraCode": ["NormCode", "UberCode", "UltraCode"],
+    "--wClass1And2Handed": ["wClass", "2HandedWClass"],
+    "--InvWidthHeight": ["InvWidth", "InvHeight"],
+    "--NightmareAndHellUpgrades": ["NightmareUpgrade", "HellUpgrade"],
+    # AutoMagic.txt, MagicPrefix.txt, MagicSuffix.txt
+    **make_colgroup(range_1(3), "--Mod{}MinMax", ["Mod{}Min", "Mod{}Max"]),
+    "--IType1-7": [f"IType{i}" for i in range_1(7)],
+    "--EType1-3": [f"EType{i}" for i in range_1(3)],
+    "--EType1-5": [f"EType{i}" for i in range_1(5)],  # For MagicPrefix.txt
+    "--DivideMultiplyAdd": ["Divide", "Multiply", "Add"],
+    # CharStats.txt
+    **make_colgroup(range_1(10), "--ItemLocCount{}", ["Item{}", "Item{}Loc", "Item{}Count"]),
+    # CubeMain.txt
+    **make_colgroup(range_1(5), "--Mod-{}-MinMax", ["mod {} min", "mod {} max"]),
+    **make_colgroup(range_1(5), "--B-Mod-{}-MinMax", ["b mod {} min", "b mod {} max"]),
+    **make_colgroup(range_1(5), "--C-Mod-{}-MinMax", ["c mod {} min", "c mod {} max"]),
+    # Gems.txt
+    **make_colgroup(range_1(3), "--WeaponMod{}MinMax", ["WeaponMod{}Min", "WeaponMod{}Max"]),
+    **make_colgroup(range_1(3), "--HelmMod{}MinMax", ["HelmMod{}Min", "HelmMod{}Max"]),
+    **make_colgroup(range_1(3), "--ShieldMod{}MinMax", ["ShieldMod{}Min", "ShieldMod{}Max"]),
+    # Hireling.txt
+    "--NameFirstAndLast": ["NameFirst", "NameLast"],
+    **make_colgroup(["HP", "Str", "Dex", "AR", "Resist"], "--{}-/Lvl", ["{}", "{}/Lvl"]),
+    "--Defense-/Lvl": ["Defense", "Def/Lvl"],
+    "--Dmg-MinMax-/Lvl": ["Dmg-Min", "Dmg-Max", "Dmg/Lvl"],
+    **make_colgroup(range_1(6), "--Chance{}-PerLvl", ["Chance{}", "ChancePerLvl{}"]),
+    **make_colgroup(range_1(6), "--Level{}-PerLvl", ["Level{}", "LvlPerLvl{}"]),
+    # Inventory.txt
+    **make_colgroup(["Inv", "Grid", "rArm", "Torso"], "--{}LeftRightTopBottom", ["{}Left", "{}Right", "{}Top", "{}Bottom"]),
+    "--GridXY": ["GridX", "GridY"],
+    "--GridBoxWidthHeight": ["GridBoxWidth", "GridBoxHeight"],
+    **make_colgroup(
+        ["rArm", "Torso", "lArm", "Head", "Neck", "rHand", "lHand", "Belt", "Feet", "Gloves"],
+        "--{}LeftRightTopBottomWidthHeight",
+        ["{}Left", "{}Right", "{}Top", "{}Bottom", "{}Width", "{}Height"]
+    ),
+    # ItemTypes.txt
+    "--BodyLoc1-2": ["BodyLoc1", "BodyLoc2"],
+    "--MaxSock1-25-40": ["MaxSock1", "MaxSock25", "MaxSock40"],
+    # Levels.txt
+    **make_colgroup(["", "(N)", "(H)"], "--SizeXY{}", ["SizeX{}", "SizeY{}"]),
+    "--OffsetXY": ["OffsetX", "OffsetY"],
+    **make_colgroup(range(8), "--VizAndWarp{}", ["Vis{}", "Warp{}"]),
+    "--MonLvl-123": ["MonLvl1", "MonLvl2", "MonLvl3"],
+    "--MonLvlEx-123": ["MonLvl1Ex", "MonLvl2Ex", "MonLvl3Ex"],
+    "--MonDen-RNH": ["MonDen", "MonDen(N)", "MonDen(H)"],
+    **make_colgroup(["", "(N)", "(H)"], "--MonUMinMax{}", ["MonUMin{}", "MonUMax{}"]),
+    **make_colgroup(range(8), "--ObjGrpAndPrb{}", ["ObjGrp{}", "ObjPrb{}"]),
+    # LvlMaze.txt
+    "--Rooms-RNH": ["Rooms", "Rooms(N)", "Rooms(H)"],
+    # "--SizeXY": ["SizeX", "SizeY"],  # Also in Levels.txt
+    # LvlPrest.txt
+    # "--SizeXY": ["SizeX", "SizeY"],  # Also in Levels.txt
+    # Missiles.txt
+    "--pSrvCltDoFunc": ["pSrvDoFunc", "pCltDoFunc"],
+    "--pSrvCltHitFunc": ["pSrvHitFunc", "pCltHitFunc"],
+    **make_colgroup(range_1(3), "--SrvCltSubMissile{}", ["SubMissile{}", "CltSubMissile{}"]),
+    **make_colgroup(range_1(4), "--SrvCltHitSubMissile{}", ["HitSubMissile{}", "CltHitSubMissile{}"]),
+    **make_colgroup(range_1(5), "--ParamAndDesc{}", ["Param{}", "*param{} desc"]),
+    **make_colgroup(range_1(5), "--CltParamAndDesc{}", ["CltParam{}", "*client param{} desc"]),
+    **make_colgroup(range_1(3), "--sHitParAndDesc{}", ["sHitPar{}", "*server hit param{} desc"]),
+    **make_colgroup(range_1(3), "--cHitParAndDesc{}", ["cHitPar{}", "*client hit param{} desc"]),
+    **make_colgroup(range_1(2), "--dParamAndDesc{}", ["dParam{}", "*damage param{} desc"]),
+    "--MinDamage0-5": ["MinDamage", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5"],
+    "--MaxDamage0-5": ["MaxDamage", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"],
+    "--MinE0-5": ["EMin", "MinELev1", "MinELev2", "MinELev3", "MinELev4", "MinELev5"],
+    "--MaxE0-5": ["EMax", "MaxELev1", "MaxELev2", "MaxELev3", "MaxELev4", "MaxELev5"],
+    "--ELen0-3": ["ELen", "ELevLen1", "ELevLen2", "ELevLen3"],
+    "--RedGreenBlue": ["Red", "Green", "Blue"],
+    # MonProp.txt
+    **make_colgroup(range_1(6), "--MinMax{}", ["Min{}", "Max{}"]),
+    **make_colgroup(range_1(6), "--MinMax{} (N)", ["Min{} (N)", "Max{} (N)"]),
+    **make_colgroup(range_1(6), "--MinMax{} (H)", ["Min{} (H)", "Max{} (H)"]),
+    # MonStats.txt
+    "--MinMaxGrp": ["MinGrp", "MaxGrp"],
+    **make_colgroup(_DIFFICULTY_BASED_COLUMNS, "--{}-RNH", ["{}", "{}(N)", "{}(H)"]),
+    # MonStats2.txt
+    # "--SizeXY": ["SizeX", "SizeY"],  # Also in Levels.txt
+    "--Light-RGB": ["Light-R", "Light-G", "Light-B"],
+    "--uTrans-RNH": ["uTrans", "uTrans(N)", "uTrans(H)"],
+    "--htTopLeftWidthHeight": ["htTop", "htLeft", "htWidth", "htHeight"],
+    # Objects.txt
+    **make_colgroup(["Size", "nTgtF", "nTgtB"], "--{}XY", ["{}X", "{}Y"]),
+    **make_colgroup(["Offset", "Space"], "--XY{}", ["X{}", "Y{}"]),
+    "--LeftTopWidthHeight": ["Left", "Top", "Width", "Height"],
+    # Overlay.txt
+    # "--XYOffset": ["xOffset", "yOffset"],  # Also in Objects.txt
+    # "--RedGreenBlue": ["Red", "Green", "Blue"],  # Also in Missiles.txt
+    # Runes.txt
+    "--IType1-6": [f"IType{i}" for i in range_1(6)],
+    # "--EType1-3": [f"IType{i}" for i in range_1(3)],  # Also in AutoMagic.txt
+    "--Rune1-6": [f"Rune{i}" for i in range_1(6)],
+    **make_colgroup(range_1(6), "--T1MinMax{}", ["T1Min{}", "T1Max{}"]),
+    # Sets.txt
+    **make_colgroup(range(1, 6), "--pMinMax{}A", ["pMin{}A", "pMax{}A"]),
+    **make_colgroup(range(1, 6), "--pMinMax{}B", ["pMin{}B", "pMax{}B"]),
+    **make_colgroup(range_1(8), "--fMinMax{}", ["fMin{}", "fMax{}"]),
+    # SetItems.txt
+    **make_colgroup(range_1(9), "--MinMax{}", ["Min{}", "Max{}"]),
+    **make_colgroup(range_1(5), "--aMinMaxA{}", ["aMin{}A", "aMax{}A"]),
+    **make_colgroup(range_1(5), "--aMinMaxB{}", ["aMin{}A", "aMax{}B"]),
+    # Skills.txt
+    "--SrvCltStFunc": ["SrvStFunc", "CltStFunc"],
+    "--SrvCltDoFunc": ["SrvDoFunc", "CltDoFunc"],
+    "--SrvCltMissile": ["SrvMissile", "CltMissile"],
+    **make_colgroup(["", "A", "B", "C"], "--SrvCltMissile{}", ["SrvMissile{}", "CltMissile{}"]),
+    **make_colgroup(range_1(6), "--AuraStatAndCalc{}", ["AuraStat{}", "AuraStatCalc{}"]),
+    **make_colgroup(range_1(6), "--PassiveStatAndCalc{}", ["PassiveStat{}", "PassiveCalc{}"]),
+    **make_colgroup(range_1(3), "--AuraEventAndFunc{}", ["AuraEvent{}", "AuraEventFunc{}"]),
+    "--AuraTgtEventAndFunc": ["AuraTgtEvent", "AuraTgtEventFunc"],
+    "--PassiveEventAndFunc": ["PassiveEvent", "PassiveEventFunc"],
+    **make_colgroup(range_1(8), "--ParamAndDescription{}", ["Param{}", "*Param{} Description"]),
+    "--MinDam0-5": ["MinDam", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5"],
+    "--MaxDam0-5": ["MaxDam", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"],
+    "--EMin0-5": ["EMin", "EMinLev1", "EMinLev2", "EMinLev3", "EMinLev4", "EMinLev5"],
+    "--EMax0-5": ["EMax", "EMaxLev1", "EMaxLev2", "EMaxLev3", "EMaxLev4", "EMaxLev5"],
+    # "--ELen0-3": ["ELen", "ELevLen1", "ELevLen2", "ELevLen3"],  # Also in Skills.txt
+    "--CostMultAdd": ["cost mult", "cost add"],
+    # SkillDesc.txt
+    "--SkillPageRowColumn": ["SkillPage", "SkillRow", "SkillColumn"],
+    # States.txt
+    # "--Light-RGB": ["Light-R", "Light-G", "Light-B"],  # Also in MonStats2.txt
+    # SuperUniques.txt
+    # "--MinMaxGrp": ["MinGrp", "MaxGrp"],  # Also in MonStats.txt
+    # "--uTrans-RNH": ["uTrans", "uTrans(N)", "uTrans(H)"],  # Also in MonStats2.txt
+    # TreasureClassEx.txt
+    **make_colgroup(range_1(10), "ProbAndItem{}", ["Prob{}", "Item{}"]),
+    # UniqueItems.txt
+    **make_colgroup(range_1(12), "--MinMax{}", ["Min{}", "Max{}"]),
+    # "--CostMultAdd": ["cost mult", "cost add"],  # Also in Skills.txt
+})
+# fmt: on
+# pylint: enable=line-too-long
+
+
 def decode_txt_value(column_name: str, value: Union[int, str]) -> Any:
     """Decodes a value from a TXT cell so that it can be converted to TOML.
 
@@ -400,6 +651,113 @@ def encode_txt_value(column_name: str, value: Any) -> Union[int, str]:
     return value
 
 
+def get_available_colgroups(column_names: Iterable[str]) -> Dict[str, Sequence[str]]:
+    """Given a list of column names, find out which of them can be grouped.
+
+    Args:
+        Iterable of column name strings to compare with column group definitions
+        in `COLUMN_GROUPS`. Column names are compared case-insensitively.
+
+    Returns:
+        Dictionary mapping each applicable column group alias to its member
+        column names. Member columns are taken from `column_names`, to ensure
+        that that they are cased correctly.
+    """
+    casefold_to_normal = {name.casefold(): name for name in column_names}
+    all_columns_cf = set(casefold_to_normal)
+    colgroups = {}
+    for alias, member_columns in COLUMN_GROUPS.items():
+        member_columns_cf = tuple(map(str.casefold, member_columns))
+        if all_columns_cf.issuperset(member_columns_cf):
+            colgroups[alias] = tuple(map(casefold_to_normal.get, member_columns_cf))
+            # Remove matched member columns in order to avoid overlapping groups.
+            # Example: --MinMaxDam and --MinDam0-5
+            all_columns_cf.difference_update(member_columns_cf)
+    return colgroups
+
+
+def get_sorted_columns_and_groups(
+    columns: Sequence[str], colgroups: Mapping[str, Sequence[str]]
+) -> List[str]:
+    """Returns a sorted list of column names and colgroups.
+
+    Args:
+        columns: Sequence of column names.
+        colgroups: Mapping of column group aliases to names of member columns.
+
+    Returns:
+        Sorted list containing column names and colgroups.
+    """
+    column_to_index = {name: index for index, name in enumerate(columns)}
+    # Build a list of tuples of (index, column name or group alias).
+    # Each group alias is given the same index as its firstmost member column.
+    # Place colgroups before normal columns to take advantage of stable sort,
+    # which ensures that a column group always comes before any of its members.
+    combined = [
+        (min(map(column_to_index.get, member_columns)), alias)
+        for alias, member_columns in colgroups.items()
+    ]
+    combined += enumerate(columns)
+    return [t[1] for t in sorted(combined, key=lambda t: t[0])]
+
+
+def pack_member_values(
+    member_values: Iterable[Union[int, str, None]]
+) -> Union[List[int], List[str], None]:
+    """Tries to pack a list of member column values into a single list.
+
+    Args:
+        member_values: Values taken from member column fields in a column group.
+
+    Returns:
+        On success, returns a list of integers, or a list of strings.
+        On failure, returns None.
+    """
+    member_values = tuple(member_values)
+    if all(value is None for value in member_values):
+        return None
+    if all(isinstance(value, int) for value in member_values):
+        return member_values
+    if sum(1 for value in member_values if value is not None) > 1:
+        # Currently, TOML does not support arrays of mixed types. Therefore
+        # convert all values to strings.
+        return ["" if value is None else str(value) for value in member_values]
+    return None
+
+
+def make_toml_row(
+    txt_row: Mapping[str, Any],
+    colgroups: Mapping[str, Sequence[str]],
+    columns_with_colgroups: Iterable[str],
+) -> Dict[str, Any]:
+    """Convert a D2TXT row object to a mapping that can be converted to TOML."""
+    # Black magic to avoid creating more than one dictionary per row
+    toml_row = {}
+
+    # Fill the row dict with colgroups, as well as columns that have value.
+    for name in columns_with_colgroups:
+        if name in colgroups:
+            # Column groups are pre-assigned in their correct positions
+            # Rely on preservation of insertion order of dicts Python 3.6+
+            toml_row[name] = None
+        else:
+            value = txt_row[name]
+            if not (value is None or value == ""):
+                toml_row[name] = decode_txt_value(name, value)
+
+    # Replace member columns if they can be packed into column groups
+    for alias, member_columns in colgroups.items():
+        packed_values = pack_member_values(map(toml_row.get, member_columns))
+        if packed_values is None:
+            del toml_row[alias]
+        else:
+            toml_row[alias] = packed_values
+            for name in member_columns:
+                toml_row.pop(name, None)
+
+    return toml_row
+
+
 def d2txt_to_toml(d2txt: D2TXT) -> str:
     """Converts a D2TXT object to TOML markup.
 
@@ -409,31 +767,34 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
     Returns:
         String containing TOML markup.
     """
+    columns = d2txt.column_names()
+    colgroups = get_available_colgroups(columns)
+    columns_with_colgroups = get_sorted_columns_and_groups(columns, colgroups)
+
+    toml_rows = [make_toml_row(row, colgroups, columns_with_colgroups) for row in d2txt]
+
     # Use qtoml.dumps(), because toml does not properly escape backslashes.
     # Possibly related issues:
     #   https://github.com/uiri/toml/issues/261
     #   https://github.com/uiri/toml/issues/201
-    toml_rows = qtoml.dumps(
-        {
-            "rows": [
-                {
-                    key: decode_txt_value(key, value)
-                    for key, value in row.items()
-                    if not (value is None or value == "")
-                }
-                for row in d2txt
-            ],
-        }
-    )
     toml_encoder = qtoml.encoder.TOMLEncoder()
-    toml_columns = (
+    toml_header = (
         "columns = [\n"
-        + "".join(
-            f"  {toml_encoder.dump_value(key)},\n" for key in d2txt.column_names()
-        )
+        + "".join(f"  {toml_encoder.dump_value(key)},\n" for key in columns)
         + "]\n\n"
     )
-    return toml_columns + toml_rows
+
+    toml_body_data = {}
+    if colgroups:
+        toml_body_data["column_groups"] = {
+            alias: colgroups[alias]
+            for alias in columns_with_colgroups
+            if alias in colgroups
+        }
+    toml_body_data["rows"] = toml_rows
+
+    toml_body = qtoml.dumps(toml_body_data)
+    return toml_header + toml_body
 
 
 def toml_to_d2txt(toml_data: str) -> D2TXT:
@@ -448,11 +809,22 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
     # Use toml.loads() because it's ~50% faster than qtoml.loads()
     toml_data = toml.loads(toml_data)
     d2txt_data = D2TXT(toml_data["columns"])
+    column_groups = toml_data.get("column_groups", {})
+
     for row in toml_data["rows"]:
         d2txt_data.append([])
         d2txt_row = d2txt_data[-1]
+
         for key, value in row.items():
-            d2txt_row[key] = encode_txt_value(key, value)
+            try:
+                member_columns = column_groups[key]
+            except KeyError:
+                d2txt_row[key] = encode_txt_value(key, value)
+            else:
+                # Unpack column groups
+                for index, name in enumerate(member_columns):
+                    d2txt_row[name] = encode_txt_value(name, value[index])
+
     return d2txt_data
 
 
