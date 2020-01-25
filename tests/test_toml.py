@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Unit test for conversion to and from TOML."""
 
+from collections import Counter
 import os
 from tempfile import NamedTemporaryFile
 import unittest
@@ -136,3 +137,10 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
                 f"Column group {group1!r} appears before {group2!r}.",
             )
             group2 = group1
+
+    def test_column_group_unique(self):
+        """Tests if column group entries are unique."""
+        group_counter = Counter(COLUMN_GROUPS)
+        group_counter.subtract(set(COLUMN_GROUPS))
+        duplicates = list(group_counter.elements())
+        self.assertEqual(len(duplicates), 0, f"Duplicates are {duplicates!r}")
