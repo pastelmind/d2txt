@@ -113,26 +113,26 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
 
     def test_alias_format(self):
         """Tests if column group aliases have consistent names."""
-        for alias, _ in COLUMN_GROUPS:
-            self.assertRegex(alias, r"^--\w")
+        for group in COLUMN_GROUPS:
+            self.assertRegex(group.alias, r"^--\w")
 
     def test_column_group_non_empty(self):
         """Tests if column groups have at least two member columns."""
-        for alias, members in COLUMN_GROUPS:
+        for group in COLUMN_GROUPS:
             self.assertGreaterEqual(
-                len(members),
+                len(group.members),
                 2,
-                f"Column group {alias!r} does not have enough member columns",
+                f"Column group {group!r} does not have enough member columns",
             )
 
     def test_column_group_sorted(self):
         """Tests if column groups are properly sorted by # of member columns."""
-        aliases = iter(COLUMN_GROUPS)
-        alias1, members1 = next(aliases)
-        for alias2, members2 in aliases:
+        groups = iter(COLUMN_GROUPS)
+        group1 = next(groups)
+        for group2 in groups:
             self.assertGreaterEqual(
-                len(members1),
-                len(members2),
-                f"Column group {alias1!r} appears before {alias2!r}.",
+                len(group1.members),
+                len(group2.members),
+                f"Column group {group1!r} appears before {group2!r}.",
             )
-            alias1, members1 = alias2, members2
+            group2 = group1

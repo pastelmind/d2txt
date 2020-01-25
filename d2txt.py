@@ -14,6 +14,7 @@ from typing import Iterable
 from typing import Iterator
 from typing import List
 from typing import Mapping
+from typing import NamedTuple
 from typing import Optional
 from typing import Sequence
 from typing import TextIO
@@ -352,6 +353,13 @@ def range_1(stop: int) -> range:
     return range(1, stop + 1)
 
 
+class ColumnGroupDefinition(NamedTuple):
+    """Defines a column group."""
+
+    alias: str
+    members: Tuple[str, ...]
+
+
 def make_colgroup(
     params: Iterable[Union[int, str]], colgroup: str, columns: Iterable[str]
 ) -> List[Tuple[str, Tuple[str, ...]]]:
@@ -364,20 +372,22 @@ def make_colgroup(
 
 def initialize_column_groups(
     *colgroups: Sequence[Tuple[str, Sequence[str]]]
-) -> List[Tuple[str, Tuple[str, ...]]]:
+) -> List[ColumnGroupDefinition]:
     """Initializes the list of column groups.
 
     Args:
         colgroups: Tuples of the form (group alias, sequence of member columns).
 
     Returns:
-        List of tuples containing column groups. Each tuple is of the form
-        (group alias, (tuple of member columns)).
+        List of column group definitions.
         The list is sorted by # of member columns, from greatest to least.
     """
     return sorted(
-        ((alias, tuple(members)) for alias, members in colgroups),
-        key=lambda colgroup: len(colgroup[1]),
+        (
+            ColumnGroupDefinition(alias=alias, members=tuple(members))
+            for alias, members in colgroups
+        ),
+        key=lambda colgroup: len(colgroup.members),
         reverse=True,
     )
 
@@ -670,10 +680,12 @@ def get_available_colgroups(column_names: Iterable[str]) -> Dict[str, Sequence[s
     casefold_to_normal = {name.casefold(): name for name in column_names}
     all_columns_cf = set(casefold_to_normal)
     colgroups = {}
-    for alias, member_columns in COLUMN_GROUPS:
-        member_columns_cf = tuple(map(str.casefold, member_columns))
+    for group in COLUMN_GROUPS:
+        member_columns_cf = tuple(map(str.casefold, group.members))
         if all_columns_cf.issuperset(member_columns_cf):
-            colgroups[alias] = tuple(map(casefold_to_normal.get, member_columns_cf))
+            colgroups[group.alias] = tuple(
+                map(casefold_to_normal.get, member_columns_cf)
+            )
             # Remove matched member columns in order to avoid overlapping groups.
             # Example: --MinMaxDam and --MinDam0-5
             all_columns_cf.difference_update(member_columns_cf)
