@@ -5,6 +5,7 @@ import os
 from tempfile import NamedTemporaryFile
 import unittest
 
+from d2txt import COLUMN_GROUPS
 from d2txt import D2TXT
 from d2txt import d2txt_to_toml
 from d2txt import toml_to_d2txt
@@ -105,3 +106,33 @@ class TestD2TXTSaveToml(unittest.TestCase):
             "[[rows]]\naurafilter = "
             "[['IgnoreNPC', 'IgnorePrimeEvil', 'IgnoreJustHitUnits'], [0xFFF20000]]\n\n",
         )
+
+
+class TestD2TXTColumnGroups(TestD2TXTBase):
+    """Contains tests for packing & unpacking column groups."""
+
+    def test_alias_format(self):
+        """Tests if column group aliases have consistent names."""
+        for alias in COLUMN_GROUPS:
+            self.assertRegex(alias, r"^--\w")
+
+    def test_column_group_non_empty(self):
+        """Tests if column groups have at least two member columns."""
+        for alias, members in COLUMN_GROUPS.items():
+            self.assertGreaterEqual(
+                len(members),
+                2,
+                f'Column group {alias!r} does not have enough member columns'
+            )
+
+    def test_column_group_sorted(self):
+        """Tests if column groups are properly sorted by # of member columns."""
+        aliases = iter(COLUMN_GROUPS.items())
+        alias1, members1 = next(aliases)
+        for alias2, members2 in aliases:
+            self.assertGreaterEqual(
+                len(members1),
+                len(members2),
+                f'Column group {alias1!r} appears before {alias2!r}.'
+            )
+            alias1, members1 = alias2, members2

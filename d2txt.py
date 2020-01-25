@@ -588,7 +588,7 @@ COLUMN_GROUPS = sort_by_longest_value({
     # "--MinMaxGrp": ["MinGrp", "MaxGrp"],  # Also in MonStats.txt
     # "--uTrans-RNH": ["uTrans", "uTrans(N)", "uTrans(H)"],  # Also in MonStats2.txt
     # TreasureClassEx.txt
-    **make_colgroup(range_1(10), "ProbAndItem{}", ["Prob{}", "Item{}"]),
+    **make_colgroup(range_1(10), "--ProbAndItem{}", ["Prob{}", "Item{}"]),
     # UniqueItems.txt
     **make_colgroup(range_1(12), "--MinMax{}", ["Min{}", "Max{}"]),
     # "--CostMultAdd": ["cost mult", "cost add"],  # Also in Skills.txt
