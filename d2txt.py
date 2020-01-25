@@ -361,22 +361,24 @@ def make_colgroup(
     }
 
 
-def sort_by_longest_value(
-    seq_dict: Mapping[Any, Sequence[Any]]
-) -> Dict[Any, Sequence[Any]]:
-    """Returns a copy of `seq_dict` reverse-sorted by the length of values.
+def initialize_column_groups(
+    colgroups: Mapping[str, Sequence[str]]
+) -> List[Tuple[str, Tuple[str, ...]]]:
+    """Initializes the list of column groups.
 
     Args:
-        seq_dict: Mapping whose values are sequences.
+        colgroups: Maps each column group alias to its member columns.
 
     Returns:
-        A dictionary copied from `seq_dict`, sorted such that the first key
-        points to the longest sequence.
+        List of tuples containing column groups. Each tuple is of the form
+        (group alias, (tuple of member columns)).
+        The list is sorted by # of member columns, from greatest to least.
     """
-    return {
-        name: seq_dict[name]
-        for name in sorted(seq_dict, key=lambda k: len(seq_dict[k]), reverse=True)
-    }
+    return sorted(
+        ((alias, tuple(members)) for alias, members in colgroups.items()),
+        key=lambda colgroup: len(colgroup[1]),
+        reverse=True,
+    )
 
 
 # Vendor names used in column names of Armor.txt, Misc.txt, Weapons.txt
@@ -452,7 +454,7 @@ _DIFFICULTY_BASED_COLUMNS = [
 # Mapping of group alias => list of column names
 # pylint: disable=line-too-long
 # fmt: off
-COLUMN_GROUPS = sort_by_longest_value({
+COLUMN_GROUPS = initialize_column_groups({
     # Armor.txt, Misc.txt, Weapons.txt
     "--MinMaxAC": ["MinAC", "MaxAC"],
     **make_colgroup(range_1(3), "--StatAndCalc{}", ["stat{}", "calc{}"]),
@@ -667,7 +669,7 @@ def get_available_colgroups(column_names: Iterable[str]) -> Dict[str, Sequence[s
     casefold_to_normal = {name.casefold(): name for name in column_names}
     all_columns_cf = set(casefold_to_normal)
     colgroups = {}
-    for alias, member_columns in COLUMN_GROUPS.items():
+    for alias, member_columns in COLUMN_GROUPS:
         member_columns_cf = tuple(map(str.casefold, member_columns))
         if all_columns_cf.issuperset(member_columns_cf):
             colgroups[alias] = tuple(map(casefold_to_normal.get, member_columns_cf))
