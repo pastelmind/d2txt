@@ -2,6 +2,7 @@
 """Provides the D2TXT class for loading and saving Diablo 2 TXT files."""
 
 from argparse import ArgumentParser
+from collections import UserDict
 import collections.abc
 import csv
 import enum
@@ -766,19 +767,20 @@ def get_sorted_columns_and_groups(
     return [t[1] for t in sorted(combined, key=lambda t: t[0])]
 
 
-def pack_member_values(
-    member_values: Iterable[Union[int, str, None]]
+def pack_colgroup_array(
+    toml_row: Mapping[str, Union[int, str, None]], column_group: ColumnGroupDefinition
 ) -> Union[List[int], List[str], None]:
-    """Tries to pack a list of member column values into a single list.
+    """Tries to pack member column values for `column_group` into a list.
 
     Args:
-        member_values: Values taken from member column fields in a column group.
+        toml_row: Mapping to read the column values from.
+        column_group: Column group to pack the data for. Must be an array type.
 
     Returns:
         On success, returns a list of integers, or a list of strings.
         On failure, returns None.
     """
-    member_values = tuple(member_values)
+    member_values = tuple(map(toml_row.get, column_group.member_names()))
     if all(value is None for value in member_values):
         return None
     if all(isinstance(value, int) for value in member_values):
@@ -790,34 +792,62 @@ def pack_member_values(
     return None
 
 
+def pack_colgroup_table(
+    toml_row: Mapping[str, Union[int, str, None]], column_group: ColumnGroupDefinition
+) -> Union[UserDict, None]:
+    """Tries to pack member column values for `column_group` into a UserDict.
+
+    Args:
+        toml_row: Mapping to read the column values from.
+        column_group: Column group to pack the data for. Must be an array type.
+
+    Returns:
+        On success, returns a UserDict that maps member aliases to values.
+        On failure, returns None.
+    """
+    member_values = UserDict()
+    for member_alias, column_name in column_group.members:
+        value = toml_row.get(column_name)
+        if value is not None:
+            member_values[member_alias] = value
+    return member_values if len(member_values) > 1 else None
+
+
 def make_toml_row(
     txt_row: Mapping[str, Any],
-    colgroups: Mapping[str, Sequence[str]],
-    columns_with_colgroups: Iterable[str],
+    colgroups: Iterable[ColumnGroupDefinition],
+    columns_with_colgroups: Iterable[Union[ColumnGroupDefinition, str]],
 ) -> Dict[str, Any]:
     """Convert a D2TXT row object to a mapping that can be converted to TOML."""
     # Black magic to avoid creating more than one dictionary per row
     toml_row = {}
 
     # Fill the row dict with colgroups, as well as columns that have value.
-    for name in columns_with_colgroups:
-        if name in colgroups:
+    for name_or_colgroup in columns_with_colgroups:
+        if isinstance(name_or_colgroup, ColumnGroupDefinition):
             # Column groups are pre-assigned in their correct positions
             # Rely on preservation of insertion order of dicts Python 3.6+
-            toml_row[name] = None
+            toml_row[name_or_colgroup.alias] = None
         else:
-            value = txt_row[name]
+            value = txt_row[name_or_colgroup]
             if not (value is None or value == ""):
-                toml_row[name] = decode_txt_value(name, value)
+                toml_row[name_or_colgroup] = decode_txt_value(name_or_colgroup, value)
 
     # Replace member columns if they can be packed into column groups
-    for alias, member_columns in colgroups.items():
-        packed_values = pack_member_values(map(toml_row.get, member_columns))
-        if packed_values is None:
-            del toml_row[alias]
+    for column_group in colgroups:
+        if column_group.type == ColumnGroupType.ARRAY:
+            packed_values = pack_colgroup_array(toml_row, column_group)
+        elif column_group.type == ColumnGroupType.TABLE:
+            packed_values = pack_colgroup_table(toml_row, column_group)
         else:
-            toml_row[alias] = packed_values
-            for name in member_columns:
+            # Should be unreachable
+            raise ValueError(f"Invalid column group definition {column_group}")
+
+        if packed_values is None:
+            del toml_row[column_group.alias]
+        else:
+            toml_row[column_group.alias] = packed_values
+            for name in column_group.member_names():
                 toml_row.pop(name, None)
 
     return toml_row
