@@ -903,6 +903,27 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
     return toml_header + toml_body
 
 
+def decode_toml_row(
+    d2txt_row: D2TXTRow,
+    toml_row: Mapping[str, Any],
+    column_groups: Mapping[str, Union[Mapping[str, str], Sequence[str]]],
+) -> Dict[str, Union[int, str]]:
+    """Decodes a TOML row to a normal dictionary."""
+    for key, value in toml_row.items():
+        try:
+            members = column_groups[key]
+        except KeyError:
+            d2txt_row[key] = encode_txt_value(key, value)
+        else:
+            # Unpack column groups
+            if isinstance(members, collections.abc.Mapping):
+                for m_alias, name in members.items():
+                    d2txt_row[name] = value[m_alias]
+            else:
+                for index, name in enumerate(members):
+                    d2txt_row[name] = value[index]
+
+
 def toml_to_d2txt(toml_data: str) -> D2TXT:
     """Loads a D2TXT file from TOML markup.
 
@@ -919,17 +940,7 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
 
     for row in toml_data["rows"]:
         d2txt_data.append([])
-        d2txt_row = d2txt_data[-1]
-
-        for key, value in row.items():
-            try:
-                member_columns = column_groups[key]
-            except KeyError:
-                d2txt_row[key] = encode_txt_value(key, value)
-            else:
-                # Unpack column groups
-                for index, name in enumerate(member_columns):
-                    d2txt_row[name] = encode_txt_value(name, value[index])
+        decode_toml_row(d2txt_data[-1], row, column_groups)
 
     return d2txt_data
 
