@@ -687,31 +687,49 @@ def encode_txt_value(column_name: str, value: Any) -> Union[int, str]:
     return value
 
 
-def get_available_colgroups(column_names: Iterable[str]) -> Dict[str, Sequence[str]]:
-    """Given a list of column names, find out which of them can be grouped.
+def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupDefinition]:
+    """Return a list of column groups that match the given column names.
 
     Args:
         Iterable of column name strings to compare with column group definitions
         in `COLUMN_GROUPS`. Column names are compared case-insensitively.
 
     Returns:
-        Dictionary mapping each applicable column group alias to its member
-        column names. Member columns are taken from `column_names`, to ensure
-        that that they are cased correctly.
+        List of applicable column group definitions. Each definition's member
+        column names are cased correctly to match those in `column_names`
+        without calling str.casefold().
     """
     casefold_to_normal = {name.casefold(): name for name in column_names}
-    all_columns_cf = set(casefold_to_normal)
-    colgroups = {}
+    matched_colgroups = []
+
     for group in COLUMN_GROUPS:
-        member_columns_cf = tuple(map(str.casefold, group.members))
-        if all_columns_cf.issuperset(member_columns_cf):
-            colgroups[group.alias] = tuple(
-                map(casefold_to_normal.get, member_columns_cf)
+        if group.type == ColumnGroupType.ARRAY:
+            names_cf = tuple(map(str.casefold, group.members))
+            new_members = (casefold_to_normal[name_cf] for name_cf in names_cf)
+        elif group.type == ColumnGroupType.TABLE:
+            members_alias_cf = tuple(
+                (member_alias, name.casefold()) for member_alias, name in group.members
             )
-            # Remove matched member columns in order to avoid overlapping groups.
-            # Example: --MinMaxDam and --MinDam0-5
-            all_columns_cf.difference_update(member_columns_cf)
-    return colgroups
+            names_cf = (name_cf for _, name_cf in members_alias_cf)
+            new_members = (
+                (member_alias, casefold_to_normal[name_cf])
+                for member_alias, name_cf in members_alias_cf
+            )
+        else:
+            raise ValueError(f"Invalid column group definition {group}")
+
+        # Precondition: new_members is a generator, names_cf is a usable iterable
+        try:
+            new_members = tuple(new_members)
+        except KeyError:
+            continue
+        matched_colgroups.append(group._replace(members=new_members))
+        # Remove matched member columns in order to avoid overlapping groups.
+        # Example: --MinMaxDam and --MinDam0-5
+        for name_cf in names_cf:
+            del casefold_to_normal[name_cf]
+
+    return matched_colgroups
 
 
 def get_sorted_columns_and_groups(
@@ -806,7 +824,7 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
         String containing TOML markup.
     """
     columns = d2txt.column_names()
-    colgroups = get_available_colgroups(columns)
+    colgroups = get_matched_colgroups(columns)
     columns_with_colgroups = get_sorted_columns_and_groups(columns, colgroups)
 
     toml_rows = [make_toml_row(row, colgroups, columns_with_colgroups) for row in d2txt]
