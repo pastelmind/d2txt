@@ -3,7 +3,7 @@
 d2txt is a Python script that can be used to make [mods][mod] for [Diablo 2].
 It consists of a single module: `d2txt.py`.
 
-D2TXT requires Python 3.6 or higher.
+d2txt requires Python 3.6 or higher.
 
 The latest version of d2txt is 0.0.3. To install, run:
 
@@ -23,9 +23,12 @@ more readable diffs, and play nice with version control systems like Git.
 Call the script using the command line:
 
 ```
-d2txt.py decompile <txt_path> <toml_path>
-d2txt.py compile <toml_path> <txt_path>
+d2txt.py decompile <txt_path> <toml_path> [<txt_path> <toml_path>...]
+d2txt.py compile <toml_path> <txt_path> [<txt_path> <toml_path>...]
 ```
+
+You can specify multiple files as arguments to (de)compile all of them at once.
+This is significantly faster than calling the script for each file.
 
 Diff logs for TXT files are horrendous. See example:
 
@@ -55,13 +58,34 @@ TOML files make your diff logs readable:
  Param2 = 10
 ```
 
+### Column Groups
+
+When decompiling TXT files, d2txt groups related columns into **column groups**.
+For example, the columns named `MinDam`, `MinLevDam1`, `MinLevDam2`,
+`MinLevDam3`, `MinLevDam4`, and `MinLevDam5` in Skills.txt are joined into a
+single key named `--MinDam0-5`:
+
+```toml
+--MinDam0-5 = [100, 10, 15, 20, 25, 30]
+# Equivalent to:
+MinDam = 100
+MinLevDam1 = 10
+MinLevDam2 = 15
+MinLevDam3 = 20
+MinLevDam4 = 25
+MinLevDam5 = 30
+```
+
 ### Notes
 
-- The list named `columns` at the top of decompiled TOML files store the order
-  and casing of column names. Don't touch it, or you might be unable to restore
-  your TXT file from the TOML file.
-- If you have empty or duplicate column names in your TXT file, they will be
-  automatically renamed to ensure that the script works correctly.
+- Each decompiled TOML file contains a list named `columns`, as well as a table
+  named `column_groups` at the top of the file. Do not touch these, as they are
+  used by `d2txt.py` to compile the TOML back to a TXT file.
+- d2txt a TXT file with duplicate column names (e.g. the unused `mindam` and
+  `maxdam` columns in **`Armor.txt`**). You must remove or rename such columns.
+- While Diablo 2 treats column names in a case-insensitive manner, d2txt treats
+  them case-sensitively. Since this is how Python and TOML handles strings,
+  there are no plans to fix them.
 
 ## API Usage
 
@@ -125,7 +149,13 @@ D2TXT.to_txt('./data/global/excel/Skills.txt')
 
 For more examples, check out the scripts in the `/samples/` directory.
 
+### Notes
+
+- You cannot add, rename, or remove columns with D2TXT. This is an intentional
+  design choice that makes D2TXT faster than [`csv.DictReader`].
+
 [TOML]: https://github.com/toml-lang/toml
+[`csv.DictReader`]: https://docs.python.org/3/library/csv.html#csv.DictReader
 [mod]: https://en.wikipedia.org/wiki/Mod_(video_gaming)
 [Diablo 2]: http://blizzard.com/diablo2/
 [sequence]: https://docs.python.org/3/glossary.html#term-sequence
