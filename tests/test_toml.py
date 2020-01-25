@@ -6,6 +6,7 @@ import os
 from tempfile import NamedTemporaryFile
 import unittest
 
+from d2txt import ColumnGroupType
 from d2txt import COLUMN_GROUPS
 from d2txt import D2TXT
 from d2txt import d2txt_to_toml
@@ -137,6 +138,32 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
                 f"Column group {group1!r} appears before {group2!r}.",
             )
             group2 = group1
+
+    def test_column_group_unique_columns(self):
+        """Tests if column groups do not have duplicate member columns."""
+        for colgroup in COLUMN_GROUPS:
+            with self.subTest(colgroup=colgroup):
+                group_type, _, members = colgroup
+
+                if group_type == ColumnGroupType.ARRAY:
+                    self.assertEqual(
+                        len(members),
+                        len(set(members)),
+                        "Array member columns must be unique",
+                    )
+                elif group_type == ColumnGroupType.TABLE:
+                    self.assertEqual(
+                        len(members),
+                        len(set(m[0] for m in members)),
+                        "Table member aliases must be unique",
+                    )
+                    self.assertEqual(
+                        len(members),
+                        len(set(m[1] for m in members)),
+                        "Table member columns must be unique",
+                    )
+                else:
+                    self.fail(f"Unexpected group type {group_type!r}")
 
     def test_column_group_unique(self):
         """Tests if column group entries are unique."""
