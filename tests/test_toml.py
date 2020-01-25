@@ -116,7 +116,12 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
     def test_alias_format(self):
         """Tests if column group aliases have consistent names."""
         for group in COLUMN_GROUPS:
-            self.assertRegex(group.alias, r"^--\w")
+            if group.type == ColumnGroupType.ARRAY:
+                self.assertRegex(group.alias, r"^--\w")
+            elif group.type == ColumnGroupType.TABLE:
+                self.assertRegex(group.alias, r"^__\w")
+            else:
+                self.fail(f"Unexpected group type {group.type!r}")
 
     def test_column_group_non_empty(self):
         """Tests if column groups have at least two member columns."""
