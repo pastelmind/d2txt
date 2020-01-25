@@ -4,6 +4,7 @@
 from argparse import ArgumentParser
 import collections.abc
 import csv
+import enum
 from itertools import islice
 from itertools import zip_longest
 from os import PathLike
@@ -348,6 +349,14 @@ def encode_aurafilter(flags: List[str]) -> int:
     return aurafilter
 
 
+@enum.unique
+class ColumnGroupType(enum.Enum):
+    """Represents how the column group should be represented in TOML."""
+
+    ARRAY = enum.auto()
+    TABLE = enum.auto()
+
+
 def range_1(stop: int) -> range:
     """Returns a range that starts at 1 and ends at `stop`, inclusive."""
     return range(1, stop + 1)
@@ -356,6 +365,7 @@ def range_1(stop: int) -> range:
 class ColumnGroupDefinition(NamedTuple):
     """Defines a column group."""
 
+    type: ColumnGroupType
     alias: str
     members: Tuple[str, ...]
 
@@ -386,7 +396,9 @@ def initialize_column_groups(
         # Rely on preservation of insertion order of dicts Python 3.6+ to ensure
         # that column groups with equal member count maintain the same order.
         dict.fromkeys(
-            ColumnGroupDefinition(alias=alias, members=tuple(members))
+            ColumnGroupDefinition(
+                type=ColumnGroupType.ARRAY, alias=alias, members=tuple(members)
+            )
             for alias, members in colgroups
         ),
         key=lambda colgroup: len(colgroup.members),
