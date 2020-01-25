@@ -6,6 +6,7 @@ import collections.abc
 import csv
 from itertools import islice
 from itertools import zip_longest
+from multiprocessing import Pool
 from os import PathLike
 import sys
 from typing import Any
@@ -842,6 +843,18 @@ def grouper(iterable: Iterable, n: int, fillvalue: Any = None) -> Iterator[tuple
 # pylint: enable=invalid-name
 
 
+def toml_to_d2txt_mp(source, target):
+    with open(source, encoding="utf-8") as toml_file:
+        d2txt_data = toml_to_d2txt(toml_file.read())
+    d2txt_data.to_txt(target)
+
+
+def d2txt_to_toml_mp(source, target):
+    d2txt_file = D2TXT.load_txt(source)
+    with open(target, mode="w", encoding="utf-8") as toml_file:
+        toml_file.write(d2txt_to_toml(d2txt_file))
+
+
 def main(argv: List[str]) -> None:
     """Entrypoint of the command line script."""
     arg_parser = ArgumentParser()
@@ -872,23 +885,27 @@ def main(argv: List[str]) -> None:
     if args.command is None:
         arg_parser.print_help()
     elif args.command == "compile":
+        files = []
         for source, target in grouper(args.source_target, 2):
             if not source:
                 raise ValueError(f"Invalid source file {source!r}")
             if not target:
                 raise ValueError(f"Missing target for source {source!r}")
-            with open(source, encoding="utf-8") as toml_file:
-                d2txt_data = toml_to_d2txt(toml_file.read())
-            d2txt_data.to_txt(target)
+            files.append((source, target))
+
+        with Pool(2) as pool:
+            pool.starmap(toml_to_d2txt_mp, files)
     elif args.command == "decompile":
+        files = []
         for source, target in grouper(args.source_target, 2):
             if not source:
                 raise ValueError(f"Invalid source file {source!r}")
             if not target:
                 raise ValueError(f"Missing target for source {source!r}")
-            d2txt_file = D2TXT.load_txt(source)
-            with open(target, mode="w", encoding="utf-8") as toml_file:
-                toml_file.write(d2txt_to_toml(d2txt_file))
+            files.append((source, target))
+
+        with Pool(2) as pool:
+            pool.starmap(d2txt_to_toml_mp, files)
     else:
         raise ValueError(f"Unexpected command: {args.command!r}")
 
