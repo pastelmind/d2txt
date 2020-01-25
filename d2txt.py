@@ -367,7 +367,7 @@ class ColumnGroupDefinition(NamedTuple):
 
     type: ColumnGroupType
     alias: str
-    members: Tuple[str, ...]
+    members: Union[Tuple[str, ...], Tuple[Tuple[str, str], ...]]
 
 
 def make_colgroup(
@@ -381,22 +381,30 @@ def make_colgroup(
 
 
 def initialize_column_groups(
-    *colgroups: Sequence[Tuple[str, Sequence[str]]]
+    *colgroups: Sequence[Tuple[str, Union[Mapping[str, str], Sequence[str]]]]
 ) -> List[ColumnGroupDefinition]:
     """Initializes the list of column groups.
 
     Args:
-        colgroups: Tuples of the form (group alias, sequence of member columns).
+        colgroups: Tuples of the form
+            (group alias, mapping or sequence of member columns).
 
     Returns:
         List of unique column group definitions.
+        The type of collection holding the member columns is used to deduce the
+        group type and generate the `members` field accordingly.
         The list is sorted by # of member columns, from greatest to least.
     """
     return sorted(
         # Rely on preservation of insertion order of dicts Python 3.6+ to ensure
         # that column groups with equal member count maintain the same order.
         dict.fromkeys(
+            # Convert mappings to tuples to make them hashable
             ColumnGroupDefinition(
+                type=ColumnGroupType.TABLE, alias=alias, members=tuple(members.items())
+            )
+            if isinstance(members, collections.abc.Mapping)
+            else ColumnGroupDefinition(
                 type=ColumnGroupType.ARRAY, alias=alias, members=tuple(members)
             )
             for alias, members in colgroups
