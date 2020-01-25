@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 import collections.abc
 import csv
 import enum
+from itertools import chain
 from itertools import islice
 from itertools import zip_longest
 from os import PathLike
@@ -368,6 +369,14 @@ class ColumnGroupDefinition(NamedTuple):
     type: ColumnGroupType
     alias: str
     members: Union[Tuple[str, ...], Tuple[Tuple[str, str], ...]]
+
+    def member_names(self) -> Iterable[str]:
+        """Returns an iterator of member column names."""
+        if self.type == ColumnGroupType.ARRAY:
+            return self.members
+        if self.type == ColumnGroupType.TABLE:
+            return (member_name for member_alias, member_name in self.members)
+        raise ValueError(f"Invalid column group definition {self}")
 
 
 def make_colgroup(
@@ -733,27 +742,27 @@ def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupDefini
 
 
 def get_sorted_columns_and_groups(
-    columns: Sequence[str], colgroups: Mapping[str, Sequence[str]]
-) -> List[str]:
-    """Returns a sorted list of column names and colgroups.
+    columns: Sequence[str], colgroups: Iterable[ColumnGroupDefinition]
+) -> List[Union[ColumnGroupDefinition, str]]:
+    """Builds a sorted list of column names and column groups.
 
     Args:
         columns: Sequence of column names.
-        colgroups: Mapping of column group aliases to names of member columns.
+        colgroups: Iterable of usable column group definitions.
 
     Returns:
-        Sorted list containing column names and colgroups.
+        Sorted list containing column names and column group definitions.
     """
     column_to_index = {name: index for index, name in enumerate(columns)}
-    # Build a list of tuples of (index, column name or group alias).
-    # Each group alias is given the same index as its firstmost member column.
+    # Build an iterable of tuples of (index, column name or colgroup).
+    # Each colgroup is given the same index as its firstmost member column.
+    indices_and_colgroups = (
+        (min(column_to_index[name] for name in group.member_names()), group)
+        for group in colgroups
+    )
     # Place colgroups before normal columns to take advantage of stable sort,
     # which ensures that a column group always comes before any of its members.
-    combined = [
-        (min(map(column_to_index.get, member_columns)), alias)
-        for alias, member_columns in colgroups.items()
-    ]
-    combined += enumerate(columns)
+    combined = chain(indices_and_colgroups, enumerate(columns))
     return [t[1] for t in sorted(combined, key=lambda t: t[0])]
 
 
