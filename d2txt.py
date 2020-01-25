@@ -873,6 +873,10 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
     #   https://github.com/uiri/toml/issues/261
     #   https://github.com/uiri/toml/issues/201
     toml_encoder = qtoml.encoder.TOMLEncoder()
+    # UserDict trick described in https://github.com/pastelmind/d2txt/issues/15
+    # This forces qtoml to encode UserDict as inline tables
+    toml_encoder.st[UserDict] = toml_encoder.dump_itable
+
     toml_header = (
         "columns = [\n"
         + "".join(f"  {toml_encoder.dump_value(key)},\n" for key in columns)
@@ -881,14 +885,21 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
 
     toml_body_data = {}
     if colgroups:
-        toml_body_data["column_groups"] = {
-            alias: colgroups[alias]
-            for alias in columns_with_colgroups
-            if alias in colgroups
-        }
+        toml_body_data["column_groups"] = toml_column_groups = {}
+        for column_group in columns_with_colgroups:
+            if not isinstance(column_group, ColumnGroupDefinition):
+                continue
+            elif column_group.type == ColumnGroupType.ARRAY:
+                column_group_value = column_group.members
+            elif column_group.type == ColumnGroupType.TABLE:
+                column_group_value = UserDict(column_group.members)
+            else:
+                # Should be unreachable
+                raise ValueError(f"Invalid column group definition {column_group}")
+            toml_column_groups[column_group.alias] = column_group_value
     toml_body_data["rows"] = toml_rows
 
-    toml_body = qtoml.dumps(toml_body_data)
+    toml_body = toml_encoder.dump_sections(toml_body_data, [], False)
     return toml_header + toml_body
 
 
