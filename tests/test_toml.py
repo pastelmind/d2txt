@@ -122,7 +122,7 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
             self.assertGreaterEqual(
                 len(members),
                 2,
-                f'Column group {alias!r} does not have enough member columns'
+                f"Column group {alias!r} does not have enough member columns",
             )
 
     def test_column_group_sorted(self):
@@ -133,6 +133,6 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
             self.assertGreaterEqual(
                 len(members1),
                 len(members2),
-                f'Column group {alias1!r} appears before {alias2!r}.'
+                f"Column group {alias1!r} appears before {alias2!r}.",
             )
             alias1, members1 = alias2, members2
