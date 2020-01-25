@@ -829,7 +829,6 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
     return d2txt_data
 
 
-# pylint: disable=invalid-name
 def grouper(iterable: Iterable, n: int, fillvalue: Any = None) -> Iterator[tuple]:
     """Collect data into fixed-length chunks or blocks.
 
@@ -837,9 +836,10 @@ def grouper(iterable: Iterable, n: int, fillvalue: Any = None) -> Iterator[tuple
         https://docs.python.org/3/library/itertools.html#itertools-recipes
     """
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    # pylint: disable=invalid-name
     args = [iter(iterable)] * n
+    # pylint: enable=invalid-name
     return zip_longest(*args, fillvalue=fillvalue)
-# pylint: enable=invalid-name
 
 
 def main(argv: List[str]) -> None:
