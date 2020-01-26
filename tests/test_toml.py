@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 """Unit test for conversion to and from TOML."""
 
+from collections import Counter
 import os
 from tempfile import NamedTemporaryFile
 import unittest
 
+from d2txt import ColumnGroupType
 from d2txt import COLUMN_GROUPS
 from d2txt import D2TXT
 from d2txt import d2txt_to_toml
@@ -113,26 +115,67 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
 
     def test_alias_format(self):
         """Tests if column group aliases have consistent names."""
-        for alias in COLUMN_GROUPS:
-            self.assertRegex(alias, r"^--\w")
+        for group in COLUMN_GROUPS:
+            if group.type == ColumnGroupType.ARRAY:
+                self.assertRegex(group.alias, r"^--\w")
+            elif group.type == ColumnGroupType.TABLE:
+                self.assertRegex(group.alias, r"^__\w")
+            else:
+                self.fail(f"Unexpected group type {group.type!r}")
 
     def test_column_group_non_empty(self):
         """Tests if column groups have at least two member columns."""
-        for alias, members in COLUMN_GROUPS.items():
+        for group in COLUMN_GROUPS:
+            # Make an exception for CltMissileD in Skills.txt
+            if group.alias == "__MissileD":
+                continue
             self.assertGreaterEqual(
-                len(members),
+                len(group.members),
                 2,
-                f"Column group {alias!r} does not have enough member columns",
+                f"Column group {group!r} does not have enough member columns",
             )
 
     def test_column_group_sorted(self):
         """Tests if column groups are properly sorted by # of member columns."""
-        aliases = iter(COLUMN_GROUPS.items())
-        alias1, members1 = next(aliases)
-        for alias2, members2 in aliases:
+        groups = iter(COLUMN_GROUPS)
+        group1 = next(groups)
+        for group2 in groups:
             self.assertGreaterEqual(
-                len(members1),
-                len(members2),
-                f"Column group {alias1!r} appears before {alias2!r}.",
+                len(group1.members),
+                len(group2.members),
+                f"Column group {group1!r} appears before {group2!r}.",
             )
-            alias1, members1 = alias2, members2
+            group2 = group1
+
+    def test_column_group_unique_columns(self):
+        """Tests if column groups do not have duplicate member columns."""
+        for colgroup in COLUMN_GROUPS:
+            with self.subTest(colgroup=colgroup):
+                group_type, _, members = colgroup
+
+                if group_type == ColumnGroupType.ARRAY:
+                    self.assertEqual(
+                        len(members),
+                        len(set(members)),
+                        "Array member columns must be unique",
+                    )
+                elif group_type == ColumnGroupType.TABLE:
+                    self.assertEqual(
+                        len(members),
+                        len(set(m[0] for m in members)),
+                        "Table member aliases must be unique",
+                    )
+                    self.assertEqual(
+                        len(members),
+                        len(set(m[1] for m in members)),
+                        "Table member columns must be unique",
+                    )
+                else:
+                    self.fail(f"Unexpected group type {group_type!r}")
+
+    def test_column_group_unique(self):
+        """Tests if column group entries are unique."""
+        group_counter = Counter(COLUMN_GROUPS)
+        group_counter.subtract(set(COLUMN_GROUPS))
+        duplicates = list(group_counter.elements())
+        self.assertEqual(len(duplicates), 0, f"Duplicates are {duplicates!r}")
