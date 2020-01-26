@@ -5,10 +5,10 @@ It consists of a single module: `d2txt.py`.
 
 d2txt requires Python 3.6 or higher.
 
-The latest version of d2txt is 0.0.3. To install, run:
+The latest version of d2txt is 0.1.0. To install, run:
 
 ```
-pip install git+https://github.com/pastelmind/d2txt.git@v0.0.3
+pip install git+https://github.com/pastelmind/d2txt.git@v0.1.0
 ```
 
 If you're feeling adventurous, remove `@` and everything after it to install

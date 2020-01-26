@@ -8,7 +8,7 @@ with open("README.md", "r") as readme_md:
 
 setuptools.setup(
     name="d2txt",
-    version="0.0.3",
+    version="0.1.0",
     author="Yehyoung Kang",
     author_email="keepyourhonor@gmail.com",
     description="Parses Diablo II's TXT files and converts them to INI files",
