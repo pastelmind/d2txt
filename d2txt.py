@@ -381,13 +381,19 @@ class ColumnGroupDefinition(NamedTuple):
 
 
 def make_colgroup(
-    params: Iterable[Union[int, str]], colgroup: str, columns: Iterable[str]
-) -> List[Tuple[str, Tuple[str, ...]]]:
+    params: Iterable[Union[int, str]],
+    colgroup: str,
+    columns: Union[Iterable[str], Mapping[str, str]],
+) -> Iterator[Tuple[str, Union[Tuple[str, ...], Dict[str, str]]]]:
     """Generates column groups by using formatting parameters."""
-    return [
-        (colgroup.format(param), tuple(col.format(param) for col in columns))
-        for param in params
-    ]
+    if isinstance(columns, collections.abc.Mapping):
+        return (
+            (colgroup.format(p), {k.format(p): v.format(p) for k, v in columns.items()})
+            for p in params
+        )
+    return (
+        (colgroup.format(p), tuple(col.format(p) for col in columns)) for p in params
+    )
 
 
 def initialize_column_groups(
