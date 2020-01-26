@@ -126,6 +126,9 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
     def test_column_group_non_empty(self):
         """Tests if column groups have at least two member columns."""
         for group in COLUMN_GROUPS:
+            # Make an exception for CltMissileD in Skills.txt
+            if group.alias == "__MissileD":
+                continue
             self.assertGreaterEqual(
                 len(group.members),
                 2,
