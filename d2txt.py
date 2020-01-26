@@ -811,7 +811,7 @@ def pack_colgroup_table(
         value = toml_row.get(column_name)
         if value is not None:
             member_values[member_alias] = value
-    return member_values if len(member_values) > 1 else None
+    return member_values if member_values else None
 
 
 def make_toml_row(
