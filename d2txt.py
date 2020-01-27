@@ -506,11 +506,6 @@ COLUMN_GROUPS = initialize_column_groups(
         "__{}",
         {"left": "{}Left", "right": "{}Right", "top": "{}Top", "bottom": "{}Bottom", "width": "{}Width", "height": "{}Height"},
     ),
-    *make_colgroup(
-        ["rArm", "Torso", "lArm", "Head", "Neck", "rHand", "lHand", "Belt", "Feet", "Gloves"],
-        "--{}LeftRightTopBottomWidthHeight",
-        ["{}Left", "{}Right", "{}Top", "{}Bottom", "{}Width", "{}Height"]
-    ),
     # ItemTypes.txt
     ("--BodyLoc1-2", ("BodyLoc1", "BodyLoc2")),
     ("--MaxSock1-25-40", ("MaxSock1", "MaxSock25", "MaxSock40")),
@@ -581,7 +576,7 @@ COLUMN_GROUPS = initialize_column_groups(
     *make_colgroup(("DT", "NU", "WL", "GH", "BL", "DD", "KB", "SQ", "RN"), "__{}", {"m": "m{}", "d": "d{}"}),
     *make_colgroup(("A1", "A2", "SC", "S3", "S4"), "__{}", {"m": "m{}", "d": "d{}", "mv": "{}mv"}),
     *make_colgroup(("S1", "S2"), "__{}", {"on": "{}", "v": "{}v", "m": "m{}", "d": "d{}", "mv": "{}mv"}),
-    ("__ht", {"left": "Left", "top": "Top", "width": "Width", "height": "Height"}),
+    ("__ht", {"left": "htLeft", "top": "htTop", "width": "htWidth", "height": "htHeight"}),
     # Objects.txt
     ("__nTgt", {"fx": "nTgtFX", "fy": "nTgtFY", "bx": "nTgtBX", "by": "nTgtBY"}),
     *make_colgroup(["Offset", "Space"], "--XY{}", ["X{}", "Y{}"]),
