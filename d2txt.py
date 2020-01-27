@@ -354,7 +354,19 @@ def range_1(stop: int) -> range:
     return range(1, stop + 1)
 
 
-ColumnGroupSchema = Union[Mapping[str, str], Sequence[str]]
+ColumnGroupSchema = Union[
+    Mapping[str, "ColumnGroupSchema"], Sequence["ColumnGroupSchema"], str
+]
+
+
+def yield_column_names(schema: ColumnGroupSchema) -> Iterable[str]:
+    """Recursively traverses `schema` and yields member column names."""
+    if isinstance(schema, str):
+        yield schema
+    else:
+        seq = schema.values() if isinstance(schema, collections.abc.Mapping) else schema
+        for value in seq:
+            yield from yield_column_names(value)
 
 
 # Note: I could use a dataclass here, but they are not available in Python 3.6.
@@ -364,7 +376,8 @@ class ColumnGroupRule:
     Attributes:
         alias: Alias of the column group.
         schema: Member columns belonging to the column group. May be a sequence
-            of member columns, or a mapping of column aliases to column names.
+            of member columns, or a mapping of column aliases to column names,
+            or a combination of the two.
     """
 
     def __init__(self, alias: str, schema: ColumnGroupSchema) -> None:
@@ -376,22 +389,24 @@ class ColumnGroupRule:
         return f"<{class_name}: alias={self.alias!r}, schema={self.schema!r}>"
 
     def member_names(self) -> Iterable[str]:
-        """Returns an iterable of member column names."""
-        if isinstance(self.schema, collections.abc.Mapping):
-            return self.schema.values()
-        return self.schema
+        """Returns an iterator of member column names."""
+        return yield_column_names(self.schema)
+
+
+def format_schema(schema: ColumnGroupSchema, param: str) -> ColumnGroupSchema:
+    """Returns a new column group schema parameterized with str.format()."""
+    if isinstance(schema, str):
+        return schema.format(param)
+    if isinstance(schema, collections.abc.Mapping):
+        return {k.format(param): format_schema(v, param) for k, v in schema.items()}
+    return [format_schema(v, param) for v in schema]
 
 
 def make_colgroup(
     params: Iterable[Union[int, str]], alias: str, schema: ColumnGroupSchema
 ) -> Iterator[Tuple[str, ColumnGroupSchema]]:
-    """Generates column group rules by using formatting parameters."""
-    if isinstance(schema, collections.abc.Mapping):
-        return (
-            (alias.format(p), {k.format(p): v.format(p) for k, v in schema.items()})
-            for p in params
-        )
-    return ((alias.format(p), tuple(col.format(p) for col in schema)) for p in params)
+    """Generates column groups by using formatting parameters."""
+    return ((alias.format(p), format_schema(schema, p)) for p in params)
 
 
 def initialize_column_groups(
@@ -407,7 +422,7 @@ def initialize_column_groups(
     """
     return sorted(
         (ColumnGroupRule(*colgroup_def) for colgroup_def in colgroups),
-        key=lambda colgroup: len(colgroup.schema),
+        key=lambda colgroup: sum(1 for _ in colgroup.member_names()),
         reverse=True,
     )
 
@@ -675,6 +690,18 @@ def encode_txt_value(column_name: str, value: Any) -> Union[int, str]:
     return value
 
 
+def recase_schema(
+    obj: ColumnGroupSchema, uncasefold: Mapping[str, str]
+) -> ColumnGroupSchema:
+    """Returns a new column group schema with properly recased member names."""
+    if isinstance(obj, str):
+        return uncasefold[obj.casefold()]
+    elif isinstance(obj, collections.abc.Mapping):
+        return {key: recase_schema(value, uncasefold) for key, value in obj.items()}
+    else:
+        return tuple(recase_schema(value, uncasefold) for value in obj)
+
+
 def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupRule]:
     """Return a list of column groups that match the given column names.
 
@@ -691,32 +718,15 @@ def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupRule]:
     matched_colgroups = []
 
     for group in COLUMN_GROUPS:
-        casefolded_names = []
-        if isinstance(group.schema, collections.abc.Mapping):
-            new_members = {}
-            try:
-                for member_alias, name in group.schema.items():
-                    name_cf = name.casefold()
-                    new_members[member_alias] = casefold_to_normal[name_cf]
-                    casefolded_names.append(name_cf)
-            except KeyError:
-                continue
-        else:
-            new_members = []
-            try:
-                for name in group.schema:
-                    name_cf = name.casefold()
-                    new_members.append(casefold_to_normal[name_cf])
-                    casefolded_names.append(name_cf)
-            except KeyError:
-                continue
-
-        # Precondition: new_members is filled, casefolded_names is a usable iterable
-        matched_colgroups.append(ColumnGroupRule(group.alias, new_members))
+        try:
+            new_schema = recase_schema(group.schema, casefold_to_normal)
+        except KeyError:
+            continue
+        matched_colgroups.append(ColumnGroupRule(group.alias, new_schema))
         # Remove matched member columns in order to avoid overlapping groups.
         # Example: --MinMaxDam and --MinDam0-5
-        for name_cf in casefolded_names:
-            del casefold_to_normal[name_cf]
+        for name_cf in group.member_names():
+            del casefold_to_normal[name_cf.casefold()]
 
     return matched_colgroups
 
@@ -746,50 +756,46 @@ def get_sorted_columns_and_groups(
     return [t[1] for t in sorted(combined, key=lambda t: t[0])]
 
 
-def pack_colgroup_array(
-    toml_row: Mapping[str, Union[int, str, None]], column_group: ColumnGroupRule
-) -> Union[List[int], List[str], None]:
-    """Tries to pack member column values for `column_group` into a list.
+def pack_colgroup(
+    schema: ColumnGroupSchema, toml_row: Mapping[str, Union[int, str, None]]
+) -> Union[list, str, UserDict]:
+    """Tries to pack all member column values into an appropriate data structure.
 
     Args:
-        toml_row: Mapping to read the column values from.
-        column_group: Column group to pack the data for. Must be an array type.
+        schema: The grouping schema to recursively apply.
+        toml_row: Mapping of column name to value to extract values from.
 
     Returns:
-        On success, returns a list of integers, or a list of strings.
-        On failure, returns None.
+        On success, returns a non-empty list, string, or UserDict.
+        On failure, returns an empty list, string, or UserDict.
     """
-    member_values = tuple(map(toml_row.get, column_group.member_names()))
-    if all(value is None for value in member_values):
-        return None
-    if all(isinstance(value, int) for value in member_values):
-        return member_values
-    if sum(1 for value in member_values if value is not None) > 1:
-        # Currently, TOML does not support arrays of mixed types. Therefore
-        # convert all values to strings.
-        return ["" if value is None else str(value) for value in member_values]
-    return None
+    if isinstance(schema, str):
+        return toml_row.get(schema, "")
 
+    elif isinstance(schema, collections.abc.Mapping):
+        inline_table = UserDict()
+        for key, value in schema.items():
+            value = pack_colgroup(value, toml_row)
+            if value or value == 0:
+                inline_table[key] = value
+        return inline_table
 
-def pack_colgroup_table(
-    toml_row: Mapping[str, Union[int, str, None]], column_group: ColumnGroupRule
-) -> Union[UserDict, None]:
-    """Tries to pack member column values for `column_group` into a UserDict.
-
-    Args:
-        toml_row: Mapping to read the column values from.
-        column_group: Column group to pack the data for. Must be an array type.
-
-    Returns:
-        On success, returns a UserDict that maps member aliases to values.
-        On failure, returns None.
-    """
-    member_values = UserDict()
-    for member_alias, column_name in column_group.schema.items():
-        value = toml_row.get(column_name)
-        if value is not None:
-            member_values[member_alias] = value
-    return member_values if member_values else None
+    array = [pack_colgroup(value, toml_row) for value in schema]
+    if all(not (value or value == 0) for value in array):
+        return []
+    if any(isinstance(value, collections.abc.Mapping) for value in array):
+        # TOML spec v0.5.0 does not support arrays of mixed types.
+        # Therefore, assume that all values are inline tables.
+        assert all(isinstance(value, collections.abc.Mapping) for value in array)
+    elif any(isinstance(value, int) for value in array) and any(
+        isinstance(value, str) for value in array
+    ):
+        # The array should not have sub-arrays at this point
+        assert all(isinstance(value, (int, str)) for value in array)
+        # TOML spec v0.5.0 does not support arrays of mixed types.
+        # Therefore, convert all numbers to strings.
+        return list(map(str, array))
+    return array
 
 
 def make_toml_row(
@@ -814,19 +820,25 @@ def make_toml_row(
 
     # Replace member columns if they can be packed into column groups
     for column_group in colgroups:
-        if isinstance(column_group.schema, collections.abc.Mapping):
-            packed_values = pack_colgroup_table(toml_row, column_group)
-        else:
-            packed_values = pack_colgroup_array(toml_row, column_group)
-
-        if packed_values is None:
-            del toml_row[column_group.alias]
-        else:
+        packed_values = pack_colgroup(column_group.schema, toml_row)
+        if packed_values:
             toml_row[column_group.alias] = packed_values
             for name in column_group.member_names():
                 toml_row.pop(name, None)
+        else:
+            del toml_row[column_group.alias]
 
     return toml_row
+
+
+def deepwrap_userdict(obj) -> ColumnGroupSchema:
+    """Returns `obj` wrapped in UserDict to force qtoml to make inline tables."""
+    if isinstance(obj, collections.abc.Mapping):
+        # UserDict trick does not require multi-level UserDict
+        return UserDict(obj)
+    elif isinstance(obj, collections.abc.Sequence) and not isinstance(obj, str):
+        return [deepwrap_userdict(value) for value in obj]
+    return obj
 
 
 def d2txt_to_toml(d2txt: D2TXT) -> str:
@@ -861,15 +873,11 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
 
     toml_body_data = {}
     if colgroups:
-        toml_body_data["column_groups"] = toml_column_groups = {}
-        for column_group in columns_with_colgroups:
-            if not isinstance(column_group, ColumnGroupRule):
-                continue
-            if isinstance(column_group.schema, collections.abc.Mapping):
-                column_group_value = UserDict(column_group.schema)
-            else:
-                column_group_value = column_group.schema
-            toml_column_groups[column_group.alias] = column_group_value
+        toml_body_data["column_groups"] = {
+            column_group.alias: deepwrap_userdict(column_group.schema)
+            for column_group in columns_with_colgroups
+            if isinstance(column_group, ColumnGroupRule)
+        }
     toml_body_data["rows"] = toml_rows
 
     toml_body = toml_encoder.dump_sections(toml_body_data, [], False)

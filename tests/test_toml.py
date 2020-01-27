@@ -316,7 +316,7 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
             if group.alias == "__MissileD":
                 continue
             self.assertGreaterEqual(
-                len(group.schema),
+                sum(1 for _ in group.member_names()),
                 2,
                 f"Column group {group!r} does not have enough member columns",
             )
@@ -327,8 +327,8 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
         group1 = next(groups)
         for group2 in groups:
             self.assertGreaterEqual(
-                len(group1.schema),
-                len(group2.schema),
+                sum(1 for _ in group1.member_names()),
+                sum(1 for _ in group2.member_names()),
                 f"Column group {group1!r} appears before {group2!r}.",
             )
             group2 = group1
@@ -337,23 +337,12 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
         """Tests if column groups do not have duplicate member columns."""
         for colgroup in COLUMN_GROUPS:
             with self.subTest(colgroup=colgroup):
-                if isinstance(colgroup.schema, collections.abc.Mapping):
-                    self.assertEqual(
-                        len(colgroup.schema),
-                        len(set(colgroup.schema)),
-                        "Table member aliases must be unique",
-                    )
-                    self.assertEqual(
-                        len(colgroup.schema.values()),
-                        len(set(colgroup.schema.values())),
-                        "Table member columns must be unique",
-                    )
-                else:
-                    self.assertEqual(
-                        len(colgroup.schema),
-                        len(set(colgroup.schema)),
-                        "Array member columns must be unique",
-                    )
+                member_names = tuple(map(str.casefold, colgroup.member_names()))
+                self.assertEqual(
+                    len(member_names),
+                    len(set(member_names)),
+                    "Member column names in a column group must be unique",
+                )
 
     def test_column_group_unique(self):
         """Tests if column group definitions have unique sets of column names."""
