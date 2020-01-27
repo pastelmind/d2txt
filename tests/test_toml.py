@@ -207,6 +207,96 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
             [["foo", "bar", 225, 45]],
         )
 
+    def test_nested_group_pack(self):
+        """Tests if columns in multilevel groups are properly packed."""
+        COLUMN_GROUPS.extend(
+            initialize_column_groups(
+                [
+                    "--ArrayOfTables",
+                    [
+                        {"min": "RedMin", "max": "RedMax"},
+                        {"min": "BlueMin", "max": "BlueMax"},
+                    ],
+                ],
+                ["__TableOfArrays", {"weight": ["Weight1", "Weight2", "Weight3"]}],
+            )
+        )
+        d2txt = D2TXT(
+            [
+                "RedMin",
+                "BlueMin",
+                "RedMax",
+                "BlueMax",
+                "Weight2",
+                "Weight3",
+                "Weight1",
+                "Misc",
+            ]
+        )
+        d2txt.extend([[10, 20, "unknown", 100, 0, 500, 1000, 4]])
+
+        self.assertEqual(
+            d2txt_to_toml(d2txt),
+            "columns = [\n"
+            "  'RedMin',\n  'BlueMin',\n  'RedMax',\n  'BlueMax',\n"
+            "  'Weight2',\n  'Weight3',\n  'Weight1',\n  'Misc',\n"
+            "]\n\n"
+            "[column_groups]\n"
+            "--ArrayOfTables = ["
+            "{ min = 'RedMin', max = 'RedMax' }, { min = 'BlueMin', max = 'BlueMax' }"
+            "]\n"
+            "__TableOfArrays = { weight = ['Weight1', 'Weight2', 'Weight3'] }\n\n"
+            "[[rows]]\n"
+            "--ArrayOfTables = [{ min = 10, max = 'unknown' }, { min = 20, max = 100 }]\n"
+            "__TableOfArrays = { weight = [1000, 0, 500] }\n"
+            "Misc = 4\n\n",
+        )
+
+    def test_nested_group_unpack(self):
+        """Tests if columns in multilevel groups are properly unpacked."""
+        COLUMN_GROUPS.extend(
+            initialize_column_groups(
+                [
+                    "--ArrayOfTables",
+                    [
+                        {"min": "RedMin", "max": "RedMax"},
+                        {"min": "BlueMin", "max": "BlueMax"},
+                    ],
+                ],
+                ["__TableOfArrays", {"weight": ["Weight1", "Weight2", "Weight3"]}],
+            )
+        )
+        d2txt = toml_to_d2txt(
+            "columns = [\n"
+            "  'RedMin',\n  'BlueMin',\n  'RedMax',\n  'BlueMax',\n"
+            "  'Weight2',\n  'Weight3',\n  'Weight1',\n  'Misc',\n"
+            "]\n\n"
+            "[column_groups]\n"
+            "--ArrayOfTables = ["
+            "{ min = 'RedMin', max = 'RedMax' }, { min = 'BlueMin', max = 'BlueMax' }"
+            "]\n"
+            "__TableOfArrays = { weight = ['Weight1', 'Weight2', 'Weight3'] }\n\n"
+            "[[rows]]\n"
+            "--ArrayOfTables = [{ min = 10, max = 'unknown' }, { min = 20, max = 100 }]\n"
+            "__TableOfArrays = { weight = [1000, 0, 500] }\n"
+            "Misc = 4\n\n"
+        )
+
+        self.compare_d2txt(
+            d2txt,
+            [
+                "RedMin",
+                "BlueMin",
+                "RedMax",
+                "BlueMax",
+                "Weight2",
+                "Weight3",
+                "Weight1",
+                "Misc",
+            ],
+            [[10, 20, "unknown", 100, 0, 500, 1000, 4]],
+        )
+
 
 class TestD2TXTColumnGroupValidators(unittest.TestCase):
     """Contains validators for column group definitions in COLUMN_GROUPS."""
