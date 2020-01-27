@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """Unit test for conversion to and from TOML."""
 
-import os
-from tempfile import NamedTemporaryFile
 import unittest
 
 from d2txt import ColumnGroupType
@@ -67,15 +65,6 @@ class TestD2TXTLoadToml(TestD2TXTBase):
 
 class TestD2TXTSaveToml(unittest.TestCase):
     """Contains tests that convert D2TXT objects to TOML files."""
-
-    @classmethod
-    def setUpClass(cls):
-        with NamedTemporaryFile(delete=False) as temp_toml:
-            cls.temp_toml_path = temp_toml.name
-
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.temp_toml_path)
 
     def test_none_or_empty_string_ignored(self):
         """Tests if None or '' is ignored, but other falsy values are not."""
