@@ -109,8 +109,8 @@ class TestD2TXTSaveToml(unittest.TestCase):
         )
 
 
-class TestD2TXTColumnGroups(TestD2TXTBase):
-    """Contains tests for packing & unpacking column groups."""
+class TestD2TXTColumnGroupValidators(unittest.TestCase):
+    """Contains validators for column group definitions in COLUMN_GROUPS."""
 
     def test_alias_format(self):
         """Tests if column group aliases have consistent names."""
