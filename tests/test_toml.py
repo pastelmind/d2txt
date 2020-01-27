@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Unit test for conversion to and from TOML."""
 
-from collections import Counter
 import os
 from tempfile import NamedTemporaryFile
 import unittest
@@ -174,8 +173,17 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
                     self.fail(f"Unexpected group type {group_type!r}")
 
     def test_column_group_unique(self):
-        """Tests if column group entries are unique."""
-        group_counter = Counter(COLUMN_GROUPS)
-        group_counter.subtract(set(COLUMN_GROUPS))
-        duplicates = list(group_counter.elements())
-        self.assertEqual(len(duplicates), 0, f"Duplicates are {duplicates!r}")
+        """Tests if column group definitions have unique sets of column names."""
+        self.longMessage = False  # pylint:disable=invalid-name
+        member_columns_seen = {}
+        for colgroup in COLUMN_GROUPS:
+            with self.subTest(colgroup=colgroup):
+                member_columns_cf = frozenset(
+                    map(str.casefold, colgroup.member_names())
+                )
+                self.assertNotIn(
+                    member_columns_cf,
+                    member_columns_seen,
+                    f"Is shadowed by {member_columns_seen.get(member_columns_cf)!r}",
+                )
+                member_columns_seen[member_columns_cf] = colgroup
