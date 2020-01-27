@@ -78,7 +78,7 @@ class TestD2TXTSaveToml(unittest.TestCase):
         )
 
     def test_bitfield_decode(self):
-        """Tests if bitfields are corrected decoded when saved to TOML file."""
+        """Tests if bitfields are correctly decoded when saved to TOML file."""
         d2txt = D2TXT(["aurafilter"])
         d2txt.extend([["33025"], ["0"], ["65535"], ["4294901760"]])
 
