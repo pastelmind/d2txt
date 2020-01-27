@@ -7,6 +7,7 @@ from d2txt import ColumnGroupType
 from d2txt import COLUMN_GROUPS
 from d2txt import D2TXT
 from d2txt import d2txt_to_toml
+from d2txt import initialize_column_groups
 from d2txt import toml_to_d2txt
 from tests.test_d2txt import TestD2TXTBase
 
@@ -95,6 +96,115 @@ class TestD2TXTSaveToml(unittest.TestCase):
             "'IgnoreBoss', 'IgnoreAllies'], [0x840]]\n\n"
             "[[rows]]\naurafilter = "
             "[['IgnoreNPC', 'IgnorePrimeEvil', 'IgnoreJustHitUnits'], [0xFFF20000]]\n\n",
+        )
+
+
+class TestD2TXTColumnGroups(TestD2TXTBase):
+    """Contains tests for packing & unpacking column groups."""
+
+    def setUp(self):
+        self.old_column_groups = list(COLUMN_GROUPS)
+        COLUMN_GROUPS.clear()
+
+    def tearDown(self):
+        COLUMN_GROUPS[:] = self.old_column_groups
+
+    def test_array_group_pack(self):
+        """Tests if columns belonging to an array group are properly packed."""
+        COLUMN_GROUPS.extend(
+            initialize_column_groups(
+                ("--ArrayGroup", ("column 2", "column 1", "COLUMN 4"))
+            )
+        )
+        d2txt = D2TXT(["column 1", "column 2", "column 3", "column 4"])
+        d2txt.extend([["foo", "bar", 225, 45]])
+
+        self.assertEqual(
+            d2txt_to_toml(d2txt),
+            "columns = [\n"
+            "  'column 1',\n  'column 2',\n  'column 3',\n  'column 4',\n"
+            "]\n\n"
+            "[column_groups]\n"
+            "--ArrayGroup = ['column 2', 'column 1', 'column 4']\n\n"
+            "[[rows]]\n"
+            "--ArrayGroup = ['bar', 'foo', '45']\n"
+            "'column 3' = 225\n\n",
+        )
+
+    def test_array_group_unpack(self):
+        """Tests if columns belonging to an array group are properly unpacked."""
+        COLUMN_GROUPS.extend(
+            initialize_column_groups(
+                ("--ArrayGroup", ("column 2", "column 1", "COLUMN 4"))
+            )
+        )
+        d2txt = toml_to_d2txt(
+            "columns = [\n"
+            "  'column 1',\n  'column 2',\n  'column 3',\n  'column 4',\n"
+            "]\n\n"
+            "[column_groups]\n"
+            "--ArrayGroup = ['column 2', 'column 1', 'column 4']\n\n"
+            "[[rows]]\n"
+            "--ArrayGroup = ['bar', 'foo', '45']\n"
+            "'column 3' = 225\n\n",
+        )
+
+        self.compare_d2txt(
+            d2txt,
+            ["column 1", "column 2", "column 3", "column 4"],
+            [["foo", "bar", 225, "45"]],
+        )
+
+    def test_table_group_pack(self):
+        """Tests if columns belonging to a table group are properly packed."""
+        COLUMN_GROUPS.extend(
+            initialize_column_groups(
+                (
+                    "__TableGroup",
+                    {"col2": "column 2", "col 1": "column 1", "col4": "COLUMN 4"},
+                )
+            )
+        )
+        d2txt = D2TXT(["column 1", "column 2", "column 3", "column 4"])
+        d2txt.extend([["foo", "bar", 225, 45]])
+
+        self.assertEqual(
+            d2txt_to_toml(d2txt),
+            "columns = [\n"
+            "  'column 1',\n  'column 2',\n  'column 3',\n  'column 4',\n"
+            "]\n\n"
+            "[column_groups]\n"
+            "__TableGroup = { col2 = 'column 2', 'col 1' = 'column 1', col4 = 'column 4' }\n\n"
+            "[[rows]]\n"
+            "__TableGroup = { col2 = 'bar', 'col 1' = 'foo', col4 = 45 }\n"
+            "'column 3' = 225\n\n",
+        )
+
+    def test_table_group_unpack(self):
+        """Tests if columns belonging to a table group are properly unpacked."""
+        COLUMN_GROUPS.extend(
+            initialize_column_groups(
+                (
+                    "__TableGroup",
+                    {"col2": "column 2", "col 1": "column 1", "col4": "COLUMN 4"},
+                )
+            )
+        )
+        d2txt = toml_to_d2txt(
+            "columns = [\n"
+            "  'column 1',\n  'column 2',\n  'column 3',\n  'column 4',\n"
+            "]\n\n"
+            "[column_groups]\n"
+            "__TableGroup = { col2 = 'column 2', 'col 1' = 'column 1', col4 = 'column 4' }\n\n"
+            "[[rows]]\n"
+            "__TableGroup = { col2 = 'bar', 'col 1' = 'foo', col4 = 45 }\n"
+            "'column 3' = 225\n\n"
+        )
+
+        self.compare_d2txt(
+            d2txt,
+            ["column 1", "column 2", "column 3", "column 4"],
+            [["foo", "bar", 225, 45]],
         )
 
 
