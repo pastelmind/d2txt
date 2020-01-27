@@ -406,15 +406,13 @@ def initialize_column_groups(
             (group alias, mapping or sequence of member columns).
 
     Returns:
-        List of unique column group definitions.
+        List of column group definitions.
         The type of collection holding the member columns is used to deduce the
         group type and generate the `members` field accordingly.
         The list is sorted by # of member columns, from greatest to least.
     """
     return sorted(
-        # Rely on preservation of insertion order of dicts Python 3.6+ to ensure
-        # that column groups with equal member count maintain the same order.
-        dict.fromkeys(
+        (
             # Convert mappings to tuples to make them hashable
             ColumnGroupDefinition(
                 type=ColumnGroupType.TABLE, alias=alias, members=tuple(members.items())
