@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Unit test for conversion to and from TOML."""
 
+import collections
 import unittest
 
-from d2txt import ColumnGroupType
 from d2txt import COLUMN_GROUPS
 from d2txt import D2TXT
 from d2txt import d2txt_to_toml
@@ -214,12 +214,10 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
     def test_alias_format(self):
         """Tests if column group aliases have consistent names."""
         for group in COLUMN_GROUPS:
-            if group.type == ColumnGroupType.ARRAY:
-                self.assertRegex(group.alias, r"^--\w")
-            elif group.type == ColumnGroupType.TABLE:
+            if isinstance(group.schema, collections.abc.Mapping):
                 self.assertRegex(group.alias, r"^__\w")
             else:
-                self.fail(f"Unexpected group type {group.type!r}")
+                self.assertRegex(group.alias, r"^--\w")
 
     def test_column_group_non_empty(self):
         """Tests if column groups have at least two member columns."""
@@ -228,7 +226,7 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
             if group.alias == "__MissileD":
                 continue
             self.assertGreaterEqual(
-                len(group.members),
+                len(group.schema),
                 2,
                 f"Column group {group!r} does not have enough member columns",
             )
@@ -239,8 +237,8 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
         group1 = next(groups)
         for group2 in groups:
             self.assertGreaterEqual(
-                len(group1.members),
-                len(group2.members),
+                len(group1.schema),
+                len(group2.schema),
                 f"Column group {group1!r} appears before {group2!r}.",
             )
             group2 = group1
@@ -249,27 +247,23 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
         """Tests if column groups do not have duplicate member columns."""
         for colgroup in COLUMN_GROUPS:
             with self.subTest(colgroup=colgroup):
-                group_type, _, members = colgroup
-
-                if group_type == ColumnGroupType.ARRAY:
+                if isinstance(colgroup.schema, collections.abc.Mapping):
                     self.assertEqual(
-                        len(members),
-                        len(set(members)),
-                        "Array member columns must be unique",
-                    )
-                elif group_type == ColumnGroupType.TABLE:
-                    self.assertEqual(
-                        len(members),
-                        len(set(m[0] for m in members)),
+                        len(colgroup.schema),
+                        len(set(colgroup.schema)),
                         "Table member aliases must be unique",
                     )
                     self.assertEqual(
-                        len(members),
-                        len(set(m[1] for m in members)),
+                        len(colgroup.schema.values()),
+                        len(set(colgroup.schema.values())),
                         "Table member columns must be unique",
                     )
                 else:
-                    self.fail(f"Unexpected group type {group_type!r}")
+                    self.assertEqual(
+                        len(colgroup.schema),
+                        len(set(colgroup.schema)),
+                        "Array member columns must be unique",
+                    )
 
     def test_column_group_unique(self):
         """Tests if column group definitions have unique sets of column names."""

@@ -5,7 +5,6 @@ from argparse import ArgumentParser
 from collections import UserDict
 import collections.abc
 import csv
-import enum
 from itertools import chain
 from itertools import islice
 from itertools import zip_longest
@@ -17,7 +16,6 @@ from typing import Iterable
 from typing import Iterator
 from typing import List
 from typing import Mapping
-from typing import NamedTuple
 from typing import Optional
 from typing import Sequence
 from typing import TextIO
@@ -351,79 +349,65 @@ def encode_aurafilter(flags: List[str]) -> int:
     return aurafilter
 
 
-@enum.unique
-class ColumnGroupType(enum.Enum):
-    """Represents how the column group should be represented in TOML."""
-
-    ARRAY = enum.auto()
-    TABLE = enum.auto()
-
-
 def range_1(stop: int) -> range:
     """Returns a range that starts at 1 and ends at `stop`, inclusive."""
     return range(1, stop + 1)
 
 
-class ColumnGroupDefinition(NamedTuple):
-    """Defines a column group."""
+ColumnGroupSchema = Union[Mapping[str, str], Sequence[str]]
 
-    type: ColumnGroupType
-    alias: str
-    members: Union[Tuple[str, ...], Tuple[Tuple[str, str], ...]]
+
+# Note: I could use a dataclass here, but they are not available in Python 3.6.
+class ColumnGroupRule:
+    """Defines a column group rule.
+
+    Attributes:
+        alias: Alias of the column group.
+        schema: Member columns belonging to the column group. May be a sequence
+            of member columns, or a mapping of column aliases to column names.
+    """
+
+    def __init__(self, alias: str, schema: ColumnGroupSchema) -> None:
+        self.alias = alias
+        self.schema = schema
+
+    def __repr__(self) -> str:
+        class_name = type(self).__name__
+        return f"<{class_name}: alias={self.alias!r}, schema={self.schema!r}>"
 
     def member_names(self) -> Iterable[str]:
-        """Returns an iterator of member column names."""
-        if self.type == ColumnGroupType.ARRAY:
-            return self.members
-        if self.type == ColumnGroupType.TABLE:
-            return (member_name for member_alias, member_name in self.members)
-        raise ValueError(f"Invalid column group definition {self}")
+        """Returns an iterable of member column names."""
+        if isinstance(self.schema, collections.abc.Mapping):
+            return self.schema.values()
+        return self.schema
 
 
 def make_colgroup(
-    params: Iterable[Union[int, str]],
-    colgroup: str,
-    columns: Union[Iterable[str], Mapping[str, str]],
-) -> Iterator[Tuple[str, Union[Tuple[str, ...], Dict[str, str]]]]:
-    """Generates column groups by using formatting parameters."""
-    if isinstance(columns, collections.abc.Mapping):
+    params: Iterable[Union[int, str]], alias: str, schema: ColumnGroupSchema
+) -> Iterator[Tuple[str, ColumnGroupSchema]]:
+    """Generates column group rules by using formatting parameters."""
+    if isinstance(schema, collections.abc.Mapping):
         return (
-            (colgroup.format(p), {k.format(p): v.format(p) for k, v in columns.items()})
+            (alias.format(p), {k.format(p): v.format(p) for k, v in schema.items()})
             for p in params
         )
-    return (
-        (colgroup.format(p), tuple(col.format(p) for col in columns)) for p in params
-    )
+    return ((alias.format(p), tuple(col.format(p) for col in schema)) for p in params)
 
 
 def initialize_column_groups(
-    *colgroups: Sequence[Tuple[str, Union[Mapping[str, str], Sequence[str]]]]
-) -> List[ColumnGroupDefinition]:
-    """Initializes the list of column groups.
+    *colgroups: Sequence[Tuple[str, ColumnGroupSchema]]
+) -> List[ColumnGroupRule]:
+    """Initializes the list of column group rules.
 
     Args:
-        colgroups: Tuples of the form
-            (group alias, mapping or sequence of member columns).
+        colgroups: Tuples of the form (group alias, column group schema).
 
     Returns:
-        List of column group definitions.
-        The type of collection holding the member columns is used to deduce the
-        group type and generate the `members` field accordingly.
-        The list is sorted by # of member columns, from greatest to least.
+        List of rules sorted by # of member columns, from greatest to least.
     """
     return sorted(
-        (
-            # Convert mappings to tuples to make them hashable
-            ColumnGroupDefinition(
-                type=ColumnGroupType.TABLE, alias=alias, members=tuple(members.items())
-            )
-            if isinstance(members, collections.abc.Mapping)
-            else ColumnGroupDefinition(
-                type=ColumnGroupType.ARRAY, alias=alias, members=tuple(members)
-            )
-            for alias, members in colgroups
-        ),
-        key=lambda colgroup: len(colgroup.members),
+        (ColumnGroupRule(*colgroup_def) for colgroup_def in colgroups),
+        key=lambda colgroup: len(colgroup.schema),
         reverse=True,
     )
 
@@ -691,7 +675,7 @@ def encode_txt_value(column_name: str, value: Any) -> Union[int, str]:
     return value
 
 
-def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupDefinition]:
+def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupRule]:
     """Return a list of column groups that match the given column names.
 
     Args:
@@ -707,38 +691,39 @@ def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupDefini
     matched_colgroups = []
 
     for group in COLUMN_GROUPS:
-        if group.type == ColumnGroupType.ARRAY:
-            names_cf = tuple(map(str.casefold, group.members))
-            new_members = (casefold_to_normal[name_cf] for name_cf in names_cf)
-        elif group.type == ColumnGroupType.TABLE:
-            members_alias_cf = tuple(
-                (member_alias, name.casefold()) for member_alias, name in group.members
-            )
-            names_cf = (name_cf for _, name_cf in members_alias_cf)
-            new_members = (
-                (member_alias, casefold_to_normal[name_cf])
-                for member_alias, name_cf in members_alias_cf
-            )
+        casefolded_names = []
+        if isinstance(group.schema, collections.abc.Mapping):
+            new_members = {}
+            try:
+                for member_alias, name in group.schema.items():
+                    name_cf = name.casefold()
+                    new_members[member_alias] = casefold_to_normal[name_cf]
+                    casefolded_names.append(name_cf)
+            except KeyError:
+                continue
         else:
-            raise ValueError(f"Invalid column group definition {group}")
+            new_members = []
+            try:
+                for name in group.schema:
+                    name_cf = name.casefold()
+                    new_members.append(casefold_to_normal[name_cf])
+                    casefolded_names.append(name_cf)
+            except KeyError:
+                continue
 
-        # Precondition: new_members is a generator, names_cf is a usable iterable
-        try:
-            new_members = tuple(new_members)
-        except KeyError:
-            continue
-        matched_colgroups.append(group._replace(members=new_members))
+        # Precondition: new_members is filled, casefolded_names is a usable iterable
+        matched_colgroups.append(ColumnGroupRule(group.alias, new_members))
         # Remove matched member columns in order to avoid overlapping groups.
         # Example: --MinMaxDam and --MinDam0-5
-        for name_cf in names_cf:
+        for name_cf in casefolded_names:
             del casefold_to_normal[name_cf]
 
     return matched_colgroups
 
 
 def get_sorted_columns_and_groups(
-    columns: Sequence[str], colgroups: Iterable[ColumnGroupDefinition]
-) -> List[Union[ColumnGroupDefinition, str]]:
+    columns: Sequence[str], colgroups: Iterable[ColumnGroupRule]
+) -> List[Union[ColumnGroupRule, str]]:
     """Builds a sorted list of column names and column groups.
 
     Args:
@@ -762,7 +747,7 @@ def get_sorted_columns_and_groups(
 
 
 def pack_colgroup_array(
-    toml_row: Mapping[str, Union[int, str, None]], column_group: ColumnGroupDefinition
+    toml_row: Mapping[str, Union[int, str, None]], column_group: ColumnGroupRule
 ) -> Union[List[int], List[str], None]:
     """Tries to pack member column values for `column_group` into a list.
 
@@ -787,7 +772,7 @@ def pack_colgroup_array(
 
 
 def pack_colgroup_table(
-    toml_row: Mapping[str, Union[int, str, None]], column_group: ColumnGroupDefinition
+    toml_row: Mapping[str, Union[int, str, None]], column_group: ColumnGroupRule
 ) -> Union[UserDict, None]:
     """Tries to pack member column values for `column_group` into a UserDict.
 
@@ -800,7 +785,7 @@ def pack_colgroup_table(
         On failure, returns None.
     """
     member_values = UserDict()
-    for member_alias, column_name in column_group.members:
+    for member_alias, column_name in column_group.schema.items():
         value = toml_row.get(column_name)
         if value is not None:
             member_values[member_alias] = value
@@ -809,8 +794,8 @@ def pack_colgroup_table(
 
 def make_toml_row(
     txt_row: Mapping[str, Any],
-    colgroups: Iterable[ColumnGroupDefinition],
-    columns_with_colgroups: Iterable[Union[ColumnGroupDefinition, str]],
+    colgroups: Iterable[ColumnGroupRule],
+    columns_with_colgroups: Iterable[Union[ColumnGroupRule, str]],
 ) -> Dict[str, Any]:
     """Convert a D2TXT row object to a mapping that can be converted to TOML."""
     # Black magic to avoid creating more than one dictionary per row
@@ -818,7 +803,7 @@ def make_toml_row(
 
     # Fill the row dict with colgroups, as well as columns that have value.
     for name_or_colgroup in columns_with_colgroups:
-        if isinstance(name_or_colgroup, ColumnGroupDefinition):
+        if isinstance(name_or_colgroup, ColumnGroupRule):
             # Column groups are pre-assigned in their correct positions
             # Rely on preservation of insertion order of dicts Python 3.6+
             toml_row[name_or_colgroup.alias] = None
@@ -829,13 +814,10 @@ def make_toml_row(
 
     # Replace member columns if they can be packed into column groups
     for column_group in colgroups:
-        if column_group.type == ColumnGroupType.ARRAY:
-            packed_values = pack_colgroup_array(toml_row, column_group)
-        elif column_group.type == ColumnGroupType.TABLE:
+        if isinstance(column_group.schema, collections.abc.Mapping):
             packed_values = pack_colgroup_table(toml_row, column_group)
         else:
-            # Should be unreachable
-            raise ValueError(f"Invalid column group definition {column_group}")
+            packed_values = pack_colgroup_array(toml_row, column_group)
 
         if packed_values is None:
             del toml_row[column_group.alias]
@@ -881,15 +863,12 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
     if colgroups:
         toml_body_data["column_groups"] = toml_column_groups = {}
         for column_group in columns_with_colgroups:
-            if not isinstance(column_group, ColumnGroupDefinition):
+            if not isinstance(column_group, ColumnGroupRule):
                 continue
-            elif column_group.type == ColumnGroupType.ARRAY:
-                column_group_value = column_group.members
-            elif column_group.type == ColumnGroupType.TABLE:
-                column_group_value = UserDict(column_group.members)
+            if isinstance(column_group.schema, collections.abc.Mapping):
+                column_group_value = UserDict(column_group.schema)
             else:
-                # Should be unreachable
-                raise ValueError(f"Invalid column group definition {column_group}")
+                column_group_value = column_group.schema
             toml_column_groups[column_group.alias] = column_group_value
     toml_body_data["rows"] = toml_rows
 
