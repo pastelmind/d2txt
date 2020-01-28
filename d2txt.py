@@ -432,112 +432,112 @@ def initialize_column_groups(
 # fmt: off
 COLUMN_GROUPS = initialize_column_groups(
     # Armor.txt, Misc.txt, Weapons.txt
-    ("__AC", {"min": "MinAC", "max": "MaxAC"}),
-    *make_colgroup(range_1(3), "__Stat{}", {"stat": "stat{}", "calc": "calc{}"}),
-    ("__Damage", {"min": "MinDam", "max": "MaxDam"}),
-    ("__2HandDam", {"min": "2HandMinDam", "max": "2HandMaxDam"}),
-    ("__MisDam", {"min": "MinMisDam", "max": "MaxMisDam"}),
-    ("__Stack", {"min": "MinStack", "max": "MaxStack"}),
+    ("--AC", {"min": "MinAC", "max": "MaxAC"}),
+    *make_colgroup(range_1(3), "--Stat{}", {"stat": "stat{}", "calc": "calc{}"}),
+    ("--Damage", {"min": "MinDam", "max": "MaxDam"}),
+    ("--2HandDam", {"min": "2HandMinDam", "max": "2HandMaxDam"}),
+    ("--MisDam", {"min": "MinMisDam", "max": "MaxMisDam"}),
+    ("--Stack", {"min": "MinStack", "max": "MaxStack"}),
     *make_colgroup(
         ["Akara", "Alkor", "Asheara", "Cain", "Charsi", "Drehya", "Drognan", "Elzix", "Fara", "Gheed", "Halbu", "Hralti", "Jamella", "Larzuk", "Lysander", "Malah", "Ormus"],
-        "__{}",
+        "--{}",
         {"min": "{}min", "max": "{}Max", "MagicMin": "{}MagicMin", "MagicMax": "{}MagicMax", "MagicLvl": "{}MagicLvl"},
     ),
-    ("__Code", {"normal": "NormCode", "uber": "UberCode", "ultra": "UltraCode"}),
-    ("__wClass", {"1hand": "wClass", "2hand": "2HandedWClass"}),
-    ("__Inv", {"width": "InvWidth", "height": "InvHeight"}),
-    ("__Upgrades", {"nightmare": "NightmareUpgrade", "hell": "HellUpgrade"}),
+    ("--Code", {"normal": "NormCode", "uber": "UberCode", "ultra": "UltraCode"}),
+    ("--wClass", {"1hand": "wClass", "2hand": "2HandedWClass"}),
+    ("--Inv", {"width": "InvWidth", "height": "InvHeight"}),
+    ("--Upgrades", {"nightmare": "NightmareUpgrade", "hell": "HellUpgrade"}),
     # AutoMagic.txt, MagicPrefix.txt, MagicSuffix.txt
-    *make_colgroup(range_1(3), "__Mod{}", {"prop": "Mod{}Code", "param": "Mod{}Param", "min": "Mod{}Min", "max": "Mod{}Max"}),
+    *make_colgroup(range_1(3), "--Mod{}", {"prop": "Mod{}Code", "param": "Mod{}Param", "min": "Mod{}Min", "max": "Mod{}Max"}),
     ("--IType1-7", tuple(f"IType{i}" for i in range_1(7))),
     ("--EType1-3", tuple(f"EType{i}" for i in range_1(3))),
     ("--EType1-5", tuple(f"EType{i}" for i in range_1(5))),  # For MagicPrefix.txt
-    ("__Cost", {"divide": "Divide", "multiply": "Multiply", "add": "Add"}),
+    ("--Cost", {"divide": "Divide", "multiply": "Multiply", "add": "Add"}),
     # CharStats.txt
-    *make_colgroup(range_1(10), "__Item{}", {"code": "Item{}", "loc": "Item{}Loc", "count": "Item{}Count"}),
+    *make_colgroup(range_1(10), "--Item{}", {"code": "Item{}", "loc": "Item{}Loc", "count": "Item{}Count"}),
     # CubeMain.txt
-    *make_colgroup(range_1(5), "__Mod{}", {"mod": "mod {}", "chance": "mod {} chance", "param": "mod {} param", "min": "mod {} min", "max": "mod {} max"}),
-    *make_colgroup(range_1(5), "__B_Mod{}", {"mod": "b mod {}", "chance": "b mod {} chance", "param": "b mod {} param", "min": "b mod {} min", "max": "b mod {} max"}),
-    *make_colgroup(range_1(5), "__C_Mod{}", {"mod": "c mod {}", "chance": "c mod {} chance", "param": "c mod {} param", "min": "c mod {} min", "max": "c mod {} max"}),
+    *make_colgroup(range_1(5), "--Mod{}", {"mod": "mod {}", "chance": "mod {} chance", "param": "mod {} param", "min": "mod {} min", "max": "mod {} max"}),
+    *make_colgroup(range_1(5), "--B-Mod{}", {"mod": "b mod {}", "chance": "b mod {} chance", "param": "b mod {} param", "min": "b mod {} min", "max": "b mod {} max"}),
+    *make_colgroup(range_1(5), "--C-Mod{}", {"mod": "c mod {}", "chance": "c mod {} chance", "param": "c mod {} param", "min": "c mod {} min", "max": "c mod {} max"}),
     # Gems.txt
-    *make_colgroup(range_1(3), "__WeaponMod{}", {"prop": "WeaponMod{}Code", "param": "WeaponMod{}Param", "min": "WeaponMod{}Min", "max": "WeaponMod{}Max"}),
-    *make_colgroup(range_1(3), "__HelmMod{}", {"prop": "HelmMod{}Code", "param": "HelmMod{}Param", "min": "HelmMod{}Min", "max": "HelmMod{}Max"}),
-    *make_colgroup(range_1(3), "__ShieldMod{}", {"prop": "ShieldMod{}Code", "param": "ShieldMod{}Param", "min": "ShieldMod{}Min", "max": "ShieldMod{}Max"}),
+    *make_colgroup(range_1(3), "--WeaponMod{}", {"prop": "WeaponMod{}Code", "param": "WeaponMod{}Param", "min": "WeaponMod{}Min", "max": "WeaponMod{}Max"}),
+    *make_colgroup(range_1(3), "--HelmMod{}", {"prop": "HelmMod{}Code", "param": "HelmMod{}Param", "min": "HelmMod{}Min", "max": "HelmMod{}Max"}),
+    *make_colgroup(range_1(3), "--ShieldMod{}", {"prop": "ShieldMod{}Code", "param": "ShieldMod{}Param", "min": "ShieldMod{}Min", "max": "ShieldMod{}Max"}),
     # Hireling.txt
-    ("__Name", {"first": "NameFirst", "last": "NameLast"}),
-    *make_colgroup(["HP", "Str", "Dex", "AR", "Resist"], "__{}", {"base": "{}", "/lvl": "{}/Lvl"}),
-    ("__Defense", {"base": "Defense", "/lvl": "Def/Lvl"}),
-    ("__Damage", {"min": "Dmg-Min", "max": "Dmg-Max", "/lvl": "Dmg/Lvl"}),
+    ("--Name", {"first": "NameFirst", "last": "NameLast"}),
+    *make_colgroup(["HP", "Str", "Dex", "AR", "Resist"], "--{}", {"base": "{}", "/lvl": "{}/Lvl"}),
+    ("--Defense", {"base": "Defense", "/lvl": "Def/Lvl"}),
+    ("--Damage", {"min": "Dmg-Min", "max": "Dmg-Max", "/lvl": "Dmg/Lvl"}),
     *make_colgroup(
         range_1(6),
-        "__Skill{}",
+        "--Skill{}",
         {"name": "Skill{}", "mode": "Mode{}", "chance": "Chance{}", "chance/lvl": "ChancePerLvl{}", "level": "Level{}", "level/lvl": "LvlPerLvl{}"},
     ),
     # Inventory.txt
-    ("__Inv", {"left": "InvLeft", "right": "InvRight", "top": "InvTop", "bottom": "InvBottom"}),
-    ("__Grid", {"left": "GridLeft", "right": "GridRight", "top": "GridTop", "bottom": "GridBottom", "x": "GridX", "y": "GridY"}),
-    ("__GridBox", {"width": "GridBoxWidth", "height": "GridBoxHeight"}),
+    ("--Inv", {"left": "InvLeft", "right": "InvRight", "top": "InvTop", "bottom": "InvBottom"}),
+    ("--Grid", {"left": "GridLeft", "right": "GridRight", "top": "GridTop", "bottom": "GridBottom", "x": "GridX", "y": "GridY"}),
+    ("--GridBox", {"width": "GridBoxWidth", "height": "GridBoxHeight"}),
     *make_colgroup(
         ("Inv", "rArm", "Torso", "lArm", "Head", "Neck", "rHand", "lHand", "Belt", "Feet", "Gloves"),
-        "__{}",
+        "--{}",
         {"left": "{}Left", "right": "{}Right", "top": "{}Top", "bottom": "{}Bottom", "width": "{}Width", "height": "{}Height"},
     ),
     # ItemTypes.txt
     ("--BodyLoc1-2", ("BodyLoc1", "BodyLoc2")),
-    ("__MaxSock", {"L1": "MaxSock1", "L25": "MaxSock25", "L40": "MaxSock40"}),
+    ("--MaxSock", {"L1": "MaxSock1", "L25": "MaxSock25", "L40": "MaxSock40"}),
     # Levels.txt
     ("--Size-RNH", [{"x": "SizeX", "y": "SizeY"}, {"x": "SizeX(N)", "y": "SizeY(N)"}, {"x": "SizeX(H)", "y": "SizeY(H)"}]),
-    ("__Offset", {"x": "OffsetX", "y": "OffsetY"}),
-    *make_colgroup(range(8), "__VizAndWarp{}", {"vis": "Vis{}", "warp": "Warp{}"}),
+    ("--Offset", {"x": "OffsetX", "y": "OffsetY"}),
+    *make_colgroup(range(8), "--VizAndWarp{}", {"vis": "Vis{}", "warp": "Warp{}"}),
     ("--MonLvl-123", ("MonLvl1", "MonLvl2", "MonLvl3")),
     ("--MonLvlEx-123", ("MonLvl1Ex", "MonLvl2Ex", "MonLvl3Ex")),
     ("--MonDen-RNH", ("MonDen", "MonDen(N)", "MonDen(H)")),
     ("--MonU-RNH", [{"min": "MonUMin", "max": "MonUMax"}, {"min": "MonUMin(N)", "max": "MonUMax(N)"}, {"min": "MonUMin(H)", "max": "MonUMax(H)"}]),
-    *make_colgroup(range(8), "__Obj{}", {"grp": "ObjGrp{}", "prb": "ObjPrb{}"}),
+    *make_colgroup(range(8), "--Obj{}", {"grp": "ObjGrp{}", "prb": "ObjPrb{}"}),
     # LvlMaze.txt
     ("--Rooms-RNH", ("Rooms", "Rooms(N)", "Rooms(H)")),
-    ("__Size", {"x": "SizeX", "y": "SizeY"}),
+    ("--Size", {"x": "SizeX", "y": "SizeY"}),
     # LvlPrest.txt
-    # ("__Size", {"x": "SizeX", "y": "SizeY"}),  # Also in LvlPrest.txt
+    # ("--Size", {"x": "SizeX", "y": "SizeY"}),  # Also in LvlPrest.txt
     # Missiles.txt
-    ("__pDoFunc", {"srv": "pSrvDoFunc", "clt": "pCltDoFunc"}),
-    ("__pHitFunc", {"srv": "pSrvHitFunc", "clt": "pCltHitFunc"}),
-    *make_colgroup(range_1(3), "__SubMissile{}", {"srv": "SubMissile{}", "clt": "CltSubMissile{}"}),
-    *make_colgroup(range_1(4), "__HitSubMissile{}", {"srv": "HitSubMissile{}", "clt": "CltHitSubMissile{}"}),
-    *make_colgroup(range_1(5), "__Param{}", {"param": "Param{}", "desc": "*param{} desc"}),
-    *make_colgroup(range_1(5), "__CltParam{}", {"clt": "CltParam{}", "desc": "*client param{} desc"}),
-    *make_colgroup(range_1(3), "__SrvHitParam{}", {"param": "sHitPar{}", "desc": "*server hit param{} desc"}),
-    *make_colgroup(range_1(3), "__CltHitParam{}", {"param": "cHitPar{}", "desc": "*client hit param{} desc"}),
-    *make_colgroup(range_1(2), "__DamageParam{}", {"param": "dParam{}", "desc": "*damage param{} desc"}),
+    ("--pDoFunc", {"srv": "pSrvDoFunc", "clt": "pCltDoFunc"}),
+    ("--pHitFunc", {"srv": "pSrvHitFunc", "clt": "pCltHitFunc"}),
+    *make_colgroup(range_1(3), "--SubMissile{}", {"srv": "SubMissile{}", "clt": "CltSubMissile{}"}),
+    *make_colgroup(range_1(4), "--HitSubMissile{}", {"srv": "HitSubMissile{}", "clt": "CltHitSubMissile{}"}),
+    *make_colgroup(range_1(5), "--Param{}", {"param": "Param{}", "desc": "*param{} desc"}),
+    *make_colgroup(range_1(5), "--CltParam{}", {"clt": "CltParam{}", "desc": "*client param{} desc"}),
+    *make_colgroup(range_1(3), "--SrvHitParam{}", {"param": "sHitPar{}", "desc": "*server hit param{} desc"}),
+    *make_colgroup(range_1(3), "--CltHitParam{}", {"param": "cHitPar{}", "desc": "*client hit param{} desc"}),
+    *make_colgroup(range_1(2), "--DamageParam{}", {"param": "dParam{}", "desc": "*damage param{} desc"}),
     ("--MinDamage0-5", ("MinDamage", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5")),
     ("--MaxDamage0-5", ("MaxDamage", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5")),
     ("--MinE0-5", ("EMin", "MinELev1", "MinELev2", "MinELev3", "MinELev4", "MinELev5")),
     ("--MaxE0-5", ("EMax", "MaxELev1", "MaxELev2", "MaxELev3", "MaxELev4", "MaxELev5")),
     ("--ELen0-3", ("ELen", "ELevLen1", "ELevLen2", "ELevLen3")),
-    ("__RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),
+    ("--RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),
     # MonProp.txt
     *make_colgroup(range_1(6), "--MinMax{}", ["Min{}", "Max{}"]),
     *make_colgroup(range_1(6), "--MinMax{} (N)", ["Min{} (N)", "Max{} (N)"]),
     *make_colgroup(range_1(6), "--MinMax{} (H)", ["Min{} (H)", "Max{} (H)"]),
     # MonStats.txt
-    ("__Spawn", {"place": "PlaceSpawn", "x": "SpawnX", "y": "SpawnY", "mode": "SpawnMode"}),
-    ("__Party", {"min": "PartyMin", "max": "PartyMax"}),
-    ("__Grp", {"min": "MinGrp", "max": "MaxGrp"}),
+    ("--Spawn", {"place": "PlaceSpawn", "x": "SpawnX", "y": "SpawnY", "mode": "SpawnMode"}),
+    ("--Party", {"min": "PartyMin", "max": "PartyMax"}),
+    ("--Grp", {"min": "MinGrp", "max": "MaxGrp"}),
     *make_colgroup(["Level", "Drain", "ColdEffect", "ToBlock", "AC", "Exp"], "--{}-RNH", ["{}", "{}(N)", "{}(H)"]),
-    ("__AI_R", {"delay": "AIDel", "dist": "AIDist", **{f"p{i}": f"aip{i}" for i in range_1(8)}}),
-    ("__AI_N", {"delay": "AIDel(N)", "dist": "AIDist(N)", **{f"p{i}": f"aip{i}(N)" for i in range_1(8)}}),
-    ("__AI_H", {"delay": "AIDel(H)", "dist": "AIDist(H)", **{f"p{i}": f"aip{i}(H)" for i in range_1(8)}}),
-    *make_colgroup(range_1(8), "__Skill{}", {"name": "Skill{}", "mode": "Sk{}Mode", "level": "Sk{}Lvl"}),
-    ("__Res_R", {"phys": "ResDm", "mag": "ResMa", "fire": "ResFi", "ltng": "ResLi", "cold": "ResCo", "pois": "ResPo"}),
-    ("__Res_N", {"phys": "ResDm(N)", "mag": "ResMa(N)", "fire": "ResFi(N)", "ltng": "ResLi(N)", "cold": "ResCo(N)", "pois": "ResPo(N)"}),
-    ("__Res_H", {"phys": "ResDm(H)", "mag": "ResMa(H)", "fire": "ResFi(H)", "ltng": "ResLi(H)", "cold": "ResCo(H)", "pois": "ResPo(H)"}),
+    ("--AI-R", {"delay": "AIDel", "dist": "AIDist", **{f"p{i}": f"aip{i}" for i in range_1(8)}}),
+    ("--AI-N", {"delay": "AIDel(N)", "dist": "AIDist(N)", **{f"p{i}": f"aip{i}(N)" for i in range_1(8)}}),
+    ("--AI-H", {"delay": "AIDel(H)", "dist": "AIDist(H)", **{f"p{i}": f"aip{i}(H)" for i in range_1(8)}}),
+    *make_colgroup(range_1(8), "--Skill{}", {"name": "Skill{}", "mode": "Sk{}Mode", "level": "Sk{}Lvl"}),
+    ("--Res-R", {"phys": "ResDm", "mag": "ResMa", "fire": "ResFi", "ltng": "ResLi", "cold": "ResCo", "pois": "ResPo"}),
+    ("--Res-N", {"phys": "ResDm(N)", "mag": "ResMa(N)", "fire": "ResFi(N)", "ltng": "ResLi(N)", "cold": "ResCo(N)", "pois": "ResPo(N)"}),
+    ("--Res-H", {"phys": "ResDm(H)", "mag": "ResMa(H)", "fire": "ResFi(H)", "ltng": "ResLi(H)", "cold": "ResCo(H)", "pois": "ResPo(H)"}),
     ("--HP-RNH", [{"min": "MinHP", "max": "MaxHP"}, {"min": "MinHP(N)", "max": "MaxHP(N)"}, {"min": "MinHP(H)", "max": "MaxHP(H)"}]),
     *make_colgroup(
         ["A1", "A2", "S1"],
         "--{}-RNH",
         [{"min": "{}MinD", "max": "{}MaxD", "TH": "{}TH"}, {"min": "{}MinD(N)", "max": "{}MaxD(N)", "TH": "{}TH(N)"}, {"min": "{}MinD(H)", "max": "{}MaxD(H)", "TH": "{}TH(H)"}],
     ),
-    *make_colgroup(["El1", "El2", "El3"], "__{}", {"mode": "{}Mode", "type": "{}Type"}),
+    *make_colgroup(["El1", "El2", "El3"], "--{}", {"mode": "{}Mode", "type": "{}Type"}),
     *make_colgroup(
         ["El1", "El2", "El3"],
         "--{}-RNH",
@@ -548,69 +548,69 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--TreasureClass-H", [f"TreasureClass{i}(H)" for i in range_1(4)]),
     # MonStats2.txt
     # ("--Size", {"x": "SizeX", "y": "SizeY"}),  # Also in LvlPrest.txt
-    ("__Light", {"R": "Light-R", "G": "Light-G", "B": "Light-B"}),
+    ("--Light", {"R": "Light-R", "G": "Light-G", "B": "Light-B"}),
     ("--uTrans-RNH", ("uTrans", "uTrans(N)", "uTrans(H)")),
-    *make_colgroup(("HD", "TR", "LG", "RA", "LA", "RH", "SH"), "__{}", {"on": "{}", "v": "{}v"}),
-    *make_colgroup(("DT", "NU", "WL", "GH", "BL", "DD", "KB", "SQ", "RN"), "__{}", {"m": "m{}", "d": "d{}"}),
-    *make_colgroup(("A1", "A2", "SC", "S3", "S4"), "__{}", {"m": "m{}", "d": "d{}", "mv": "{}mv"}),
-    *make_colgroup(("S1", "S2"), "__{}", {"on": "{}", "v": "{}v", "m": "m{}", "d": "d{}", "mv": "{}mv"}),
-    ("__ht", {"left": "htLeft", "top": "htTop", "width": "htWidth", "height": "htHeight"}),
+    *make_colgroup(("HD", "TR", "LG", "RA", "LA", "RH", "SH"), "--{}", {"on": "{}", "v": "{}v"}),
+    *make_colgroup(("DT", "NU", "WL", "GH", "BL", "DD", "KB", "SQ", "RN"), "--{}", {"m": "m{}", "d": "d{}"}),
+    *make_colgroup(("A1", "A2", "SC", "S3", "S4"), "--{}", {"m": "m{}", "d": "d{}", "mv": "{}mv"}),
+    *make_colgroup(("S1", "S2"), "--{}", {"on": "{}", "v": "{}v", "m": "m{}", "d": "d{}", "mv": "{}mv"}),
+    ("--ht", {"left": "htLeft", "top": "htTop", "width": "htWidth", "height": "htHeight"}),
     # Objects.txt
-    ("__nTgt", {"fx": "nTgtFX", "fy": "nTgtFY", "bx": "nTgtBX", "by": "nTgtBY"}),
+    ("--nTgt", {"fx": "nTgtFX", "fy": "nTgtFY", "bx": "nTgtBX", "by": "nTgtBY"}),
     *make_colgroup(["Offset", "Space"], "--XY{}", ["X{}", "Y{}"]),
     *make_colgroup(
         ("Selectable", "FrameCnt", "FrameDelta", "CycleAnim", "Lit", "BlocksLight", "HasCollision", "Start", "OrderFlag", "Mode", "Parm"),
-        "__{}",
+        "--{}",
         {mode: f"{{}}{index}" for index, mode in enumerate(["NU", "OP", "ON", "S1", "S2", "S3", "S4", "S5"])},
     ),
-    ("__Selectable", {"NU": "Selectable0", "OP": "Selectable1"}),
-    ("__FrameCnt", {"NU": "FrameCnt0", "OP": "FrameCnt1"}),
-    ("__Box", {"left": "Left", "top": "Top", "width": "Width", "height": "Height"}),
+    ("--Selectable", {"NU": "Selectable0", "OP": "Selectable1"}),
+    ("--FrameCnt", {"NU": "FrameCnt0", "OP": "FrameCnt1"}),
+    ("--Box", {"left": "Left", "top": "Top", "width": "Width", "height": "Height"}),
     # Overlay.txt
-    # ("__Offset", {"x": "xOffset", "y", "yOffset"}),  # Also in Objects.txt
-    # ("__RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),  # Also in Missiles.txt
+    # ("--Offset", {"x": "xOffset", "y", "yOffset"}),  # Also in Objects.txt
+    # ("--RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),  # Also in Missiles.txt
     # Runes.txt
     ("--IType1-6", tuple(f"IType{i}" for i in range_1(6))),
     # ("--EType1-3", tuple(f"IType{i}" for i in range_1(3))),  # Also in AutoMagic.txt
     ("--Rune1-6", tuple(f"Rune{i}" for i in range_1(6))),
-    *make_colgroup(range_1(7), "__T1_{}", {"prop": "T1Code{}", "param": "T1Param{}", "min": "T1Min{}", "max": "T1Max{}"}),
+    *make_colgroup(range_1(7), "--T1-{}", {"prop": "T1Code{}", "param": "T1Param{}", "min": "T1Min{}", "max": "T1Max{}"}),
     # Sets.txt
-    *make_colgroup(range(2, 6), "__P{}A", {"prop": "pCode{}A", "param": "pParam{}A", "min": "pMin{}A", "max": "pMax{}A"}),
-    *make_colgroup(range(2, 6), "__P{}B", {"prop": "pCode{}B", "param": "pParam{}B", "min": "pMin{}B", "max": "pMax{}B"}),
-    *make_colgroup(range_1(8), "__F{}", {"prop": "fCode{}", "param": "fParam{}", "min": "fMin{}", "max": "fMax{}"}),
+    *make_colgroup(range(2, 6), "--P{}A", {"prop": "pCode{}A", "param": "pParam{}A", "min": "pMin{}A", "max": "pMax{}A"}),
+    *make_colgroup(range(2, 6), "--P{}B", {"prop": "pCode{}B", "param": "pParam{}B", "min": "pMin{}B", "max": "pMax{}B"}),
+    *make_colgroup(range_1(8), "--F{}", {"prop": "fCode{}", "param": "fParam{}", "min": "fMin{}", "max": "fMax{}"}),
     # SetItems.txt
-    # *make_colgroup(range_1(9), "__Prop{}", {"prop": "Prop{}", "param": "Par{}", "min": "Min{}", "max": "Max{}"}),  # Also in UniqueItems.txt
-    *make_colgroup(range_1(5), "__aProp{}A", {"prop": "aProp{}A", "param": "aPar{}A", "min": "aMin{}A", "max": "aMax{}A"}),
-    *make_colgroup(range_1(5), "__aProp{}B", {"prop": "aProp{}B", "param": "aPar{}B", "min": "aMin{}B", "max": "aMax{}B"}),
+    # *make_colgroup(range_1(9), "--Prop{}", {"prop": "Prop{}", "param": "Par{}", "min": "Min{}", "max": "Max{}"}),  # Also in UniqueItems.txt
+    *make_colgroup(range_1(5), "--aProp{}A", {"prop": "aProp{}A", "param": "aPar{}A", "min": "aMin{}A", "max": "aMax{}A"}),
+    *make_colgroup(range_1(5), "--aProp{}B", {"prop": "aProp{}B", "param": "aPar{}B", "min": "aMin{}B", "max": "aMax{}B"}),
     # Skills.txt
-    ("__StartFunc", {"srv": "SrvStFunc", "clt": "CltStFunc"}),
-    ("__DoFunc", {"srv": "SrvDoFunc", "clt": "CltDoFunc"}),
-    *make_colgroup(["", "A", "B", "C"], "__Missile{}", {"srv": "SrvMissile{}", "clt": "CltMissile{}"}),
-    ("__MissileD", {"clt": "CltMissileD"}),  # No matching server-side missile field, but added for consistency's sake
-    *make_colgroup(range_1(6), "__AuraStat{}", {"stat": "AuraStat{}", "calc": "AuraStatCalc{}"}),
-    *make_colgroup(range_1(6), "__PassiveStat{}", {"stat": "PassiveStat{}", "calc": "PassiveCalc{}"}),
-    *make_colgroup(range_1(3), "__AuraEvent{}", {"event": "AuraEvent{}", "func": "AuraEventFunc{}"}),
-    ("__AuraTargetEvent", {"event": "AuraTgtEvent", "func": "AuraTgtEventFunc"}),
-    ("__PassiveEvent", {"event": "PassiveEvent", "func": "PassiveEventFunc"}),
-    *make_colgroup(range_1(8), "__Param{}", {"param": "Param{}", "desc": "*Param{} Description"}),
+    ("--StartFunc", {"srv": "SrvStFunc", "clt": "CltStFunc"}),
+    ("--DoFunc", {"srv": "SrvDoFunc", "clt": "CltDoFunc"}),
+    *make_colgroup(["", "A", "B", "C"], "--Missile{}", {"srv": "SrvMissile{}", "clt": "CltMissile{}"}),
+    ("--MissileD", {"clt": "CltMissileD"}),  # No matching server-side missile field, but added for consistency's sake
+    *make_colgroup(range_1(6), "--AuraStat{}", {"stat": "AuraStat{}", "calc": "AuraStatCalc{}"}),
+    *make_colgroup(range_1(6), "--PassiveStat{}", {"stat": "PassiveStat{}", "calc": "PassiveCalc{}"}),
+    *make_colgroup(range_1(3), "--AuraEvent{}", {"event": "AuraEvent{}", "func": "AuraEventFunc{}"}),
+    ("--AuraTargetEvent", {"event": "AuraTgtEvent", "func": "AuraTgtEventFunc"}),
+    ("--PassiveEvent", {"event": "PassiveEvent", "func": "PassiveEventFunc"}),
+    *make_colgroup(range_1(8), "--Param{}", {"param": "Param{}", "desc": "*Param{} Description"}),
     ("--MinDam0-5", ("MinDam", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5")),
     ("--MaxDam0-5", ("MaxDam", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5")),
     ("--EMin0-5", ("EMin", "EMinLev1", "EMinLev2", "EMinLev3", "EMinLev4", "EMinLev5")),
     ("--EMax0-5", ("EMax", "EMaxLev1", "EMaxLev2", "EMaxLev3", "EMaxLev4", "EMaxLev5")),
     # ("--ELen0-3", ("ELen", "ELevLen1", "ELevLen2", "ELevLen3")),  # Also in Skills.txt
-    ("__Cost", {"multiply": "cost mult", "add": "cost add"}),
+    ("--Cost", {"multiply": "cost mult", "add": "cost add"}),
     # SkillDesc.txt
-    ("__SkillPage", {"page": "SkillPage", "row": "SkillRow", "column": "SkillColumn"}),
+    ("--SkillPage", {"page": "SkillPage", "row": "SkillRow", "column": "SkillColumn"}),
     # States.txt
-    # ("__Light", {"R": "Light-R", "G": "Light-G", "B": "Light-B"}),  # Also in MonStats2.txt
+    # ("--Light", {"R": "Light-R", "G": "Light-G", "B": "Light-B"}),  # Also in MonStats2.txt
     # SuperUniques.txt
-    # ("__Grp", {"min": "MinGrp", "max": "MaxGrp"}),  # Also in MonStats.txt
+    # ("--Grp", {"min": "MinGrp", "max": "MaxGrp"}),  # Also in MonStats.txt
     # ("--uTrans-RNH", ("uTrans", "uTrans(N)", "uTrans(H)")),  # Also in MonStats2.txt
     # TreasureClassEx.txt
-    *make_colgroup(range_1(10), "__Item{}", {"code": "Item{}", "prob": "Prob{}"}),
+    *make_colgroup(range_1(10), "--Item{}", {"code": "Item{}", "prob": "Prob{}"}),
     # UniqueItems.txt
-    *make_colgroup(range_1(12), "__Prop{}", {"prop": "Prop{}", "param": "Par{}", "min": "Min{}", "max": "Max{}"}),
-    # ("__Cost", {"multiply": "cost mult", "add": "cost add"}),  # Also in Skills.txt
+    *make_colgroup(range_1(12), "--Prop{}", {"prop": "Prop{}", "param": "Par{}", "min": "Min{}", "max": "Max{}"}),
+    # ("--Cost", {"multiply": "cost mult", "add": "cost add"}),  # Also in Skills.txt
 )
 # fmt: on
 # pylint: enable=line-too-long

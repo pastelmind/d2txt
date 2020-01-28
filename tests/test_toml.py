@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Unit test for conversion to and from TOML."""
 
-import collections
 import unittest
 
 from d2txt import COLUMN_GROUPS
@@ -160,7 +159,7 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
         COLUMN_GROUPS.extend(
             initialize_column_groups(
                 (
-                    "__TableGroup",
+                    "--TableGroup",
                     {"col2": "column 2", "col 1": "column 1", "col4": "COLUMN 4"},
                 )
             )
@@ -174,9 +173,9 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
             "  'column 1',\n  'column 2',\n  'column 3',\n  'column 4',\n"
             "]\n\n"
             "[column_groups]\n"
-            "__TableGroup = { col2 = 'column 2', 'col 1' = 'column 1', col4 = 'column 4' }\n\n"
+            "--TableGroup = { col2 = 'column 2', 'col 1' = 'column 1', col4 = 'column 4' }\n\n"
             "[[rows]]\n"
-            "__TableGroup = { col2 = 'bar', 'col 1' = 'foo', col4 = 45 }\n"
+            "--TableGroup = { col2 = 'bar', 'col 1' = 'foo', col4 = 45 }\n"
             "'column 3' = 225\n\n",
         )
 
@@ -185,7 +184,7 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
         COLUMN_GROUPS.extend(
             initialize_column_groups(
                 (
-                    "__TableGroup",
+                    "--TableGroup",
                     {"col2": "column 2", "col 1": "column 1", "col4": "COLUMN 4"},
                 )
             )
@@ -195,9 +194,9 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
             "  'column 1',\n  'column 2',\n  'column 3',\n  'column 4',\n"
             "]\n\n"
             "[column_groups]\n"
-            "__TableGroup = { col2 = 'column 2', 'col 1' = 'column 1', col4 = 'column 4' }\n\n"
+            "--TableGroup = { col2 = 'column 2', 'col 1' = 'column 1', col4 = 'column 4' }\n\n"
             "[[rows]]\n"
-            "__TableGroup = { col2 = 'bar', 'col 1' = 'foo', col4 = 45 }\n"
+            "--TableGroup = { col2 = 'bar', 'col 1' = 'foo', col4 = 45 }\n"
             "'column 3' = 225\n\n"
         )
 
@@ -218,7 +217,7 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
                         {"min": "BlueMin", "max": "BlueMax"},
                     ],
                 ],
-                ["__TableOfArrays", {"weight": ["Weight1", "Weight2", "Weight3"]}],
+                ["--TableOfArrays", {"weight": ["Weight1", "Weight2", "Weight3"]}],
             )
         )
         d2txt = D2TXT(
@@ -245,10 +244,10 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
             "--ArrayOfTables = ["
             "{ min = 'RedMin', max = 'RedMax' }, { min = 'BlueMin', max = 'BlueMax' }"
             "]\n"
-            "__TableOfArrays = { weight = ['Weight1', 'Weight2', 'Weight3'] }\n\n"
+            "--TableOfArrays = { weight = ['Weight1', 'Weight2', 'Weight3'] }\n\n"
             "[[rows]]\n"
             "--ArrayOfTables = [{ min = 10, max = 'unknown' }, { min = 20, max = 100 }]\n"
-            "__TableOfArrays = { weight = [1000, 0, 500] }\n"
+            "--TableOfArrays = { weight = [1000, 0, 500] }\n"
             "Misc = 4\n\n",
         )
 
@@ -263,7 +262,7 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
                         {"min": "BlueMin", "max": "BlueMax"},
                     ],
                 ],
-                ["__TableOfArrays", {"weight": ["Weight1", "Weight2", "Weight3"]}],
+                ["--TableOfArrays", {"weight": ["Weight1", "Weight2", "Weight3"]}],
             )
         )
         d2txt = toml_to_d2txt(
@@ -275,10 +274,10 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
             "--ArrayOfTables = ["
             "{ min = 'RedMin', max = 'RedMax' }, { min = 'BlueMin', max = 'BlueMax' }"
             "]\n"
-            "__TableOfArrays = { weight = ['Weight1', 'Weight2', 'Weight3'] }\n\n"
+            "--TableOfArrays = { weight = ['Weight1', 'Weight2', 'Weight3'] }\n\n"
             "[[rows]]\n"
             "--ArrayOfTables = [{ min = 10, max = 'unknown' }, { min = 20, max = 100 }]\n"
-            "__TableOfArrays = { weight = [1000, 0, 500] }\n"
+            "--TableOfArrays = { weight = [1000, 0, 500] }\n"
             "Misc = 4\n\n"
         )
 
@@ -304,16 +303,13 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
     def test_alias_format(self):
         """Tests if column group aliases have consistent names."""
         for group in COLUMN_GROUPS:
-            if isinstance(group.schema, collections.abc.Mapping):
-                self.assertRegex(group.alias, r"^__\w")
-            else:
-                self.assertRegex(group.alias, r"^--\w")
+            self.assertRegex(group.alias, r"^--\w")
 
     def test_column_group_non_empty(self):
         """Tests if column groups have at least two member columns."""
         for group in COLUMN_GROUPS:
             # Make an exception for CltMissileD in Skills.txt
-            if group.alias == "__MissileD":
+            if group.alias == "--MissileD":
                 continue
             self.assertGreaterEqual(
                 sum(1 for _ in group.member_names()),
