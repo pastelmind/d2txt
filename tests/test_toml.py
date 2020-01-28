@@ -299,7 +299,7 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
 
 
 class TestD2TXTColumnGroupValidators(unittest.TestCase):
-    """Contains validators for column group definitions in COLUMN_GROUPS."""
+    """Contains validators for column group rules in COLUMN_GROUPS."""
 
     def test_alias_format(self):
         """Tests if column group aliases have consistent names."""
@@ -345,7 +345,7 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
                 )
 
     def test_column_group_unique(self):
-        """Tests if column group definitions have unique sets of column names."""
+        """Tests if column group rules have unique sets of column names."""
         self.longMessage = False  # pylint:disable=invalid-name
         member_columns_seen = {}
         for colgroup in COLUMN_GROUPS:

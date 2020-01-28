@@ -427,7 +427,7 @@ def initialize_column_groups(
     )
 
 
-# List of column group definitions
+# List of column group rules
 # pylint: disable=line-too-long
 # fmt: off
 COLUMN_GROUPS = initialize_column_groups(
@@ -687,13 +687,12 @@ def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupRule]:
     """Return a list of column groups that match the given column names.
 
     Args:
-        Iterable of column name strings to compare with column group definitions
+        Iterable of column name strings to compare with column group rules
         in `COLUMN_GROUPS`. Column names are compared case-insensitively.
 
     Returns:
-        List of applicable column group definitions. Each definition's member
-        column names are cased correctly to match those in `column_names`
-        without calling str.casefold().
+        List of applicable column group rules. Each rule's member column names
+        are recased to match those in `column_names` without casefolding them.
     """
     casefold_to_normal = {name.casefold(): name for name in column_names}
     matched_colgroups = []
@@ -719,10 +718,10 @@ def get_sorted_columns_and_groups(
 
     Args:
         columns: Sequence of column names.
-        colgroups: Iterable of usable column group definitions.
+        colgroups: Iterable of usable column group rules.
 
     Returns:
-        Sorted list containing column names and column group definitions.
+        Sorted list containing column names and column group rules.
     """
     column_to_index = {name: index for index, name in enumerate(columns)}
     # Build an iterable of tuples of (index, column name or colgroup).
