@@ -884,25 +884,18 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
     return toml_header + toml_body
 
 
-def decode_toml_row(
-    d2txt_row: D2TXTRow,
-    toml_row: Mapping[str, Any],
-    column_groups: Mapping[str, Union[Mapping[str, str], Sequence[str]]],
-) -> Dict[str, Union[int, str]]:
-    """Decodes a TOML row to a normal dictionary."""
-    for key, value in toml_row.items():
-        try:
-            members = column_groups[key]
-        except KeyError:
-            d2txt_row[key] = encode_txt_value(key, value)
-        else:
-            # Unpack column groups
-            if isinstance(members, collections.abc.Mapping):
-                for m_alias, name in members.items():
-                    d2txt_row[name] = value[m_alias]
-            else:
-                for index, name in enumerate(members):
-                    d2txt_row[name] = value[index]
+def unpack_colgroup(
+    schema: ColumnGroupSchema, value: Union[Mapping, Sequence, str]
+) -> Iterable[Tuple[str, Union[int, str]]]:
+    """Recursively unpacks a column group, yielding column names and values."""
+    if isinstance(value, (int, str)):
+        yield schema, value
+    elif isinstance(value, collections.abc.Mapping):
+        for key, sub_value in value.items():
+            yield from unpack_colgroup(schema[key], sub_value)
+    else:
+        for index, sub_value in enumerate(value):
+            yield from unpack_colgroup(schema[index], sub_value)
 
 
 def toml_to_d2txt(toml_data: str) -> D2TXT:
@@ -919,9 +912,21 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
     d2txt_data = D2TXT(toml_data["columns"])
     column_groups = toml_data.get("column_groups", {})
 
-    for row in toml_data["rows"]:
+    for toml_row in toml_data["rows"]:
+        # Create and use a D2TXTRow object to catch invalid column names
         d2txt_data.append([])
-        decode_toml_row(d2txt_data[-1], row, column_groups)
+        d2txt_row = d2txt_data[-1]
+
+        for key, value in toml_row.items():
+            try:
+                schema = column_groups[key]
+            except KeyError:
+                # Assume that columns in colgroups are not specially encoded
+                d2txt_row[key] = encode_txt_value(key, value)
+            else:
+                # Unpack column groups
+                for column_name, column_value in unpack_colgroup(schema, value):
+                    d2txt_row[column_name] = column_value
 
     return d2txt_data
 
