@@ -504,10 +504,15 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--pHitFunc", {"srv": "pSrvHitFunc", "clt": "pCltHitFunc"}),
     *make_colgroup(range_1(3), "--SubMissile{}", {"srv": "SubMissile{}", "clt": "CltSubMissile{}"}),
     *make_colgroup(range_1(4), "--HitSubMissile{}", {"srv": "HitSubMissile{}", "clt": "CltHitSubMissile{}"}),
+    ("--SrvCalc1", {"calc": "SrvCalc1", "desc": "*srv calc 1 desc"}),
     *make_colgroup(range_1(5), "--Param{}", {"param": "Param{}", "desc": "*param{} desc"}),
-    *make_colgroup(range_1(5), "--CltParam{}", {"clt": "CltParam{}", "desc": "*client param{} desc"}),
+    ("--CltCalc1", {"calc": "CltCalc1", "desc": "*client calc 1 desc"}),
+    *make_colgroup(range_1(5), "--CltParam{}", {"param": "CltParam{}", "desc": "*client param{} desc"}),
+    ("--SHitCalc1", {"calc": "SHitCalc1", "desc": "*server hit calc 1 desc"}),
     *make_colgroup(range_1(3), "--SrvHitParam{}", {"param": "sHitPar{}", "desc": "*server hit param{} desc"}),
+    ("--CHitCalc1", {"calc": "CHitCalc1", "desc": "*client hit calc1 desc"}),
     *make_colgroup(range_1(3), "--CltHitParam{}", {"param": "cHitPar{}", "desc": "*client hit param{} desc"}),
+    ("--DmgCalc1", {"calc": "DmgCalc1", "desc": "*damage calc 1"}),
     *make_colgroup(range_1(2), "--DamageParam{}", {"param": "dParam{}", "desc": "*damage param{} desc"}),
     ("--MinDamage0-5", ("MinDamage", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5")),
     ("--MaxDamage0-5", ("MaxDamage", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5")),
@@ -515,10 +520,16 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--MaxE0-5", ("EMax", "MaxELev1", "MaxELev2", "MaxELev3", "MaxELev4", "MaxELev5")),
     ("--ELen0-3", ("ELen", "ELevLen1", "ELevLen2", "ELevLen3")),
     ("--RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),
+    # MonLvl.txt
+    *make_colgroup(
+        ["AC", "TH", "HP", "DM", "XP"],
+        "--{}-RNH",
+        {"bnet": ["{}", "{}(N)", "{}(H)"], "ladder": ["L-{}", "L-{}(N)", "L-{}(H)"]},
+    ),
     # MonProp.txt
-    *make_colgroup(range_1(6), "--MinMax{}", ["Min{}", "Max{}"]),
-    *make_colgroup(range_1(6), "--MinMax{} (N)", ["Min{} (N)", "Max{} (N)"]),
-    *make_colgroup(range_1(6), "--MinMax{} (H)", ["Min{} (H)", "Max{} (H)"]),
+    *make_colgroup(range_1(6), "--Prop{}-R", {"prop": "Prop{}", "chance": "Chance{}", "param": "Par{}", "min": "Min{}", "max": "Max{}"}),
+    *make_colgroup(range_1(6), "--Prop{}-N", {"prop": "Prop{} (N)", "chance": "Chance{} (N)", "param": "Par{} (N)", "min": "Min{} (N)", "max": "Max{} (N)"}),
+    *make_colgroup(range_1(6), "--Prop{}-H", {"prop": "Prop{} (H)", "chance": "Chance{} (H)", "param": "Par{} (H)", "min": "Min{} (H)", "max": "Max{} (H)"}),
     # MonStats.txt
     ("--Spawn", {"place": "PlaceSpawn", "x": "SpawnX", "y": "SpawnY", "mode": "SpawnMode"}),
     ("--Party", {"min": "PartyMin", "max": "PartyMax"}),
@@ -557,7 +568,7 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--ht", {"left": "htLeft", "top": "htTop", "width": "htWidth", "height": "htHeight"}),
     # Objects.txt
     ("--nTgt", {"fx": "nTgtFX", "fy": "nTgtFY", "bx": "nTgtBX", "by": "nTgtBY"}),
-    *make_colgroup(["Offset", "Space"], "--XY{}", ["X{}", "Y{}"]),
+    *make_colgroup(["Offset", "Space"], "--{}", {"x": "X{}", "y": "Y{}"}),
     *make_colgroup(
         ("Selectable", "FrameCnt", "FrameDelta", "CycleAnim", "Lit", "BlocksLight", "HasCollision", "Start", "OrderFlag", "Mode", "Parm"),
         "--{}",
@@ -592,6 +603,9 @@ COLUMN_GROUPS = initialize_column_groups(
     *make_colgroup(range_1(3), "--AuraEvent{}", {"event": "AuraEvent{}", "func": "AuraEventFunc{}"}),
     ("--AuraTargetEvent", {"event": "AuraTgtEvent", "func": "AuraTgtEventFunc"}),
     ("--PassiveEvent", {"event": "PassiveEvent", "func": "PassiveEventFunc"}),
+    *make_colgroup(range_1(5), "--SumSkill{}", {"skill": "SumSkill{}", "calc": "SumSk{}Calc"}),
+    *make_colgroup(range_1(4), "--CltCalc{}", {"calc": "CltCalc{}", "desc": "*cltcalc{} desc"}),
+    *make_colgroup(range_1(4), "--Calc{}", {"calc": "Calc{}", "desc": "*calc{} desc"}),
     *make_colgroup(range_1(8), "--Param{}", {"param": "Param{}", "desc": "*Param{} Description"}),
     ("--MinDam0-5", ("MinDam", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5")),
     ("--MaxDam0-5", ("MaxDam", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5")),
@@ -601,6 +615,10 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--Cost", {"multiply": "cost mult", "add": "cost add"}),
     # SkillDesc.txt
     ("--SkillPage", {"page": "SkillPage", "row": "SkillRow", "column": "SkillColumn"}),
+    *make_colgroup(range_1(3), "--P{}Dm", {"elem": "P{}DmElem", "min": "P{}DmMin", "max": "P{}DmMax", }),
+    *make_colgroup(range_1(6), "--Desc-{}", {"line": "DescLine{}", "textA": "DescTextA{}", "textB": "DescTextB{}", "calcA": "DescCalcA{}", "calcB": "DescCalcB{}"}),
+    *make_colgroup(range_1(6), "--Dsc2-{}", {"line": "Dsc2Line{}", "textA": "Dsc2TextA{}", "textB": "Dsc2TextB{}", "calcA": "Dsc2CalcA{}", "calcB": "Dsc2CalcB{}"}),
+    *make_colgroup(range_1(6), "--Dsc3-{}", {"line": "Dsc3Line{}", "textA": "Dsc3TextA{}", "textB": "Dsc3TextB{}", "calcA": "Dsc3CalcA{}", "calcB": "Dsc3CalcB{}"}),
     # States.txt
     # ("--Light", {"R": "Light-R", "G": "Light-G", "B": "Light-B"}),  # Also in MonStats2.txt
     # SuperUniques.txt
