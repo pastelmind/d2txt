@@ -427,27 +427,6 @@ def initialize_column_groups(
     )
 
 
-# Vendor names used in column names of Armor.txt, Misc.txt, Weapons.txt
-_VENDORS = [
-    "Akara",
-    "Alkor",
-    "Asheara",
-    "Cain",
-    "Charsi",
-    "Drehya",
-    "Drognan",
-    "Elzix",
-    "Fara",
-    "Gheed",
-    "Halbu",
-    "Hralti",
-    "Jamella",
-    "Larzuk",
-    "Lysander",
-    "Malah",
-    "Ormus",
-]
-
 # List of column group definitions
 # pylint: disable=line-too-long
 # fmt: off
@@ -460,9 +439,9 @@ COLUMN_GROUPS = initialize_column_groups(
     ("__MisDam", {"min": "MinMisDam", "max": "MaxMisDam"}),
     ("__Stack", {"min": "MinStack", "max": "MaxStack"}),
     *make_colgroup(
-        _VENDORS,
-        "__{}MinMax",
-        {"Min": "{}Min", "Max": "{}Max", "MagicMin": "{}MagicMin", "MagicMax": "{}MagicMax", "MagicLvl": "{}MagicLvl"},
+        ["Akara", "Alkor", "Asheara", "Cain", "Charsi", "Drehya", "Drognan", "Elzix", "Fara", "Gheed", "Halbu", "Hralti", "Jamella", "Larzuk", "Lysander", "Malah", "Ormus"],
+        "__{}",
+        {"min": "{}min", "max": "{}Max", "MagicMin": "{}MagicMin", "MagicMax": "{}MagicMax", "MagicLvl": "{}MagicLvl"},
     ),
     ("__Code", {"normal": "NormCode", "uber": "UberCode", "ultra": "UltraCode"}),
     ("__wClass", {"1hand": "wClass", "2hand": "2HandedWClass"}),
