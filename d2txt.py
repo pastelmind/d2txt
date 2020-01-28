@@ -505,21 +505,21 @@ COLUMN_GROUPS = initialize_column_groups(
     ),
     # ItemTypes.txt
     ("--BodyLoc1-2", ("BodyLoc1", "BodyLoc2")),
-    ("--MaxSock1-25-40", ("MaxSock1", "MaxSock25", "MaxSock40")),
+    ("__MaxSock", {"L1": "MaxSock1", "L25": "MaxSock25", "L40": "MaxSock40"}),
     # Levels.txt
-    *make_colgroup(["", "(N)", "(H)"], "--SizeXY{}", ["SizeX{}", "SizeY{}"]),
-    ("--OffsetXY", ("OffsetX", "OffsetY")),
-    *make_colgroup(range(8), "--VizAndWarp{}", ["Vis{}", "Warp{}"]),
+    ("--Size-RNH", [{"x": "SizeX", "y": "SizeY"}, {"x": "SizeX(N)", "y": "SizeY(N)"}, {"x": "SizeX(H)", "y": "SizeY(H)"}]),
+    ("__Offset", {"x": "OffsetX", "y": "OffsetY"}),
+    *make_colgroup(range(8), "__VizAndWarp{}", {"vis": "Vis{}", "warp": "Warp{}"}),
     ("--MonLvl-123", ("MonLvl1", "MonLvl2", "MonLvl3")),
     ("--MonLvlEx-123", ("MonLvl1Ex", "MonLvl2Ex", "MonLvl3Ex")),
     ("--MonDen-RNH", ("MonDen", "MonDen(N)", "MonDen(H)")),
-    *make_colgroup(["", "(N)", "(H)"], "--MonUMinMax{}", ["MonUMin{}", "MonUMax{}"]),
-    *make_colgroup(range(8), "--ObjGrpAndPrb{}", ["ObjGrp{}", "ObjPrb{}"]),
+    ("--MonU-RNH", [{"min": "MonUMin", "max": "MonUMax"}, {"min": "MonUMin(N)", "max": "MonUMax(N)"}, {"min": "MonUMin(H)", "max": "MonUMax(H)"}]),
+    *make_colgroup(range(8), "__Obj{}", {"grp": "ObjGrp{}", "prb": "ObjPrb{}"}),
     # LvlMaze.txt
     ("--Rooms-RNH", ("Rooms", "Rooms(N)", "Rooms(H)")),
-    # ("--SizeXY", ("SizeX", "SizeY")),  # Also in Levels.txt
+    ("__Size", {"x": "SizeX", "y": "SizeY"}),
     # LvlPrest.txt
-    # ("--SizeXY", ("SizeX", "SizeY")),  # Also in Levels.txt
+    # ("__Size", {"x": "SizeX", "y": "SizeY"}),  # Also in LvlPrest.txt
     # Missiles.txt
     ("__pDoFunc", {"srv": "pSrvDoFunc", "clt": "pCltDoFunc"}),
     ("__pHitFunc", {"srv": "pSrvHitFunc", "clt": "pCltHitFunc"}),
@@ -535,7 +535,7 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--MinE0-5", ("EMin", "MinELev1", "MinELev2", "MinELev3", "MinELev4", "MinELev5")),
     ("--MaxE0-5", ("EMax", "MaxELev1", "MaxELev2", "MaxELev3", "MaxELev4", "MaxELev5")),
     ("--ELen0-3", ("ELen", "ELevLen1", "ELevLen2", "ELevLen3")),
-    ("--RedGreenBlue", ("Red", "Green", "Blue")),
+    ("__RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),
     # MonProp.txt
     *make_colgroup(range_1(6), "--MinMax{}", ["Min{}", "Max{}"]),
     *make_colgroup(range_1(6), "--MinMax{} (N)", ["Min{} (N)", "Max{} (N)"]),
@@ -552,22 +552,24 @@ COLUMN_GROUPS = initialize_column_groups(
     ("__Res_R", {"phys": "ResDm", "mag": "ResMa", "fire": "ResFi", "ltng": "ResLi", "cold": "ResCo", "pois": "ResPo"}),
     ("__Res_N", {"phys": "ResDm(N)", "mag": "ResMa(N)", "fire": "ResFi(N)", "ltng": "ResLi(N)", "cold": "ResCo(N)", "pois": "ResPo(N)"}),
     ("__Res_H", {"phys": "ResDm(H)", "mag": "ResMa(H)", "fire": "ResFi(H)", "ltng": "ResLi(H)", "cold": "ResCo(H)", "pois": "ResPo(H)"}),
-    ("__HP_R", {"min": "MinHP", "max": "MaxHP"}),
-    ("__HP_N", {"min": "MinHP(N)", "max": "MaxHP(N)"}),
-    ("__HP_H", {"min": "MinHP(H)", "max": "MaxHP(H)"}),
-    *make_colgroup(["A1", "A2", "S1"], "__{}_R", {"MinD": "{}MinD", "MaxD": "{}MaxD", "TH": "{}TH"}),
-    *make_colgroup(["A1", "A2", "S1"], "__{}_N", {"MinD": "{}MinD(N)", "MaxD": "{}MaxD(N)", "TH": "{}TH(N)"}),
-    *make_colgroup(["A1", "A2", "S1"], "__{}_H", {"MinD": "{}MinD(H)", "MaxD": "{}MaxD(H)", "TH": "{}TH(H)"}),
-    *make_colgroup(range_1(3), "__El{}", {"mode": "El{}Mode", "type": "El{}Type"}),
-    *make_colgroup(range_1(3), "__El{}_R", {"Pct": "El{}Pct", "MinD": "El{}MinD", "MaxD": "El{}MaxD", "Dur": "El{}Dur"}),
-    *make_colgroup(range_1(3), "__El{}_N", {"Pct": "El{}Pct(N)", "MinD": "El{}MinD(N)", "MaxD": "El{}MaxD(N)", "Dur": "El{}Dur(N)"}),
-    *make_colgroup(range_1(3), "__El{}_H", {"Pct": "El{}Pct(H)", "MinD": "El{}MinD(H)", "MaxD": "El{}MaxD(H)", "Dur": "El{}Dur(H)"}),
+    ("--HP-RNH", [{"min": "MinHP", "max": "MaxHP"}, {"min": "MinHP(N)", "max": "MaxHP(N)"}, {"min": "MinHP(H)", "max": "MaxHP(H)"}]),
+    *make_colgroup(
+        ["A1", "A2", "S1"],
+        "--{}-RNH",
+        [{"min": "{}MinD", "max": "{}MaxD", "TH": "{}TH"}, {"min": "{}MinD(N)", "max": "{}MaxD(N)", "TH": "{}TH(N)"}, {"min": "{}MinD(H)", "max": "{}MaxD(H)", "TH": "{}TH(H)"}],
+    ),
+    *make_colgroup(["El1", "El2", "El3"], "__{}", {"mode": "{}Mode", "type": "{}Type"}),
+    *make_colgroup(
+        ["El1", "El2", "El3"],
+        "--{}-RNH",
+        [{"pct": "{}Pct", "min": "{}MinD", "max": "{}MaxD", "dur": "{}Dur"}, {"pct": "{}Pct(N)", "min": "{}MinD(N)", "max": "{}MaxD(N)", "dur": "{}Dur(N)"}, {"pct": "{}Pct(H)", "min": "{}MinD(H)", "max": "{}MaxD(H)", "dur": "{}Dur(H)"}],
+    ),
     ("--TreasureClass-R", [f"TreasureClass{i}" for i in range_1(4)]),
     ("--TreasureClass-N", [f"TreasureClass{i}(N)" for i in range_1(4)]),
     ("--TreasureClass-H", [f"TreasureClass{i}(H)" for i in range_1(4)]),
     # MonStats2.txt
-    # ("--SizeXY", ("SizeX", "SizeY")),  # Also in Levels.txt
-    ("--Light-RGB", ("Light-R", "Light-G", "Light-B")),
+    # ("--Size", {"x": "SizeX", "y": "SizeY"}),  # Also in LvlPrest.txt
+    ("__Light", {"R": "Light-R", "G": "Light-G", "B": "Light-B"}),
     ("--uTrans-RNH", ("uTrans", "uTrans(N)", "uTrans(H)")),
     *make_colgroup(("HD", "TR", "LG", "RA", "LA", "RH", "SH"), "__{}", {"on": "{}", "v": "{}v"}),
     *make_colgroup(("DT", "NU", "WL", "GH", "BL", "DD", "KB", "SQ", "RN"), "__{}", {"m": "m{}", "d": "d{}"}),
@@ -586,8 +588,8 @@ COLUMN_GROUPS = initialize_column_groups(
     ("__FrameCnt", {"NU": "FrameCnt0", "OP": "FrameCnt1"}),
     ("__Box", {"left": "Left", "top": "Top", "width": "Width", "height": "Height"}),
     # Overlay.txt
-    # ("--XYOffset", ("xOffset", "yOffset")),  # Also in Objects.txt
-    # ("--RedGreenBlue", ("Red", "Green", "Blue")),  # Also in Missiles.txt
+    # ("__Offset", {"x": "xOffset", "y", "yOffset"}),  # Also in Objects.txt
+    # ("__RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),  # Also in Missiles.txt
     # Runes.txt
     ("--IType1-6", tuple(f"IType{i}" for i in range_1(6))),
     # ("--EType1-3", tuple(f"IType{i}" for i in range_1(3))),  # Also in AutoMagic.txt
@@ -621,9 +623,9 @@ COLUMN_GROUPS = initialize_column_groups(
     # SkillDesc.txt
     ("__SkillPage", {"page": "SkillPage", "row": "SkillRow", "column": "SkillColumn"}),
     # States.txt
-    # ("--Light-RGB", ("Light-R", "Light-G", "Light-B")),  # Also in MonStats2.txt
+    # ("__Light", {"R": "Light-R", "G": "Light-G", "B": "Light-B"}),  # Also in MonStats2.txt
     # SuperUniques.txt
-    # ("--MinMaxGrp", ("MinGrp", "MaxGrp")),  # Also in MonStats.txt
+    # ("__Grp", {"min": "MinGrp", "max": "MaxGrp"}),  # Also in MonStats.txt
     # ("--uTrans-RNH", ("uTrans", "uTrans(N)", "uTrans(H)")),  # Also in MonStats2.txt
     # TreasureClassEx.txt
     *make_colgroup(range_1(10), "__Item{}", {"code": "Item{}", "prob": "Prob{}"}),
