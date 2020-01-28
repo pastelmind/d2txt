@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Unit test for conversion to and from TOML."""
 
+import collections
 import unittest
 
-from d2txt import ColumnGroupType
 from d2txt import COLUMN_GROUPS
 from d2txt import D2TXT
 from d2txt import d2txt_to_toml
@@ -207,6 +207,96 @@ class TestD2TXTColumnGroups(TestD2TXTBase):
             [["foo", "bar", 225, 45]],
         )
 
+    def test_nested_group_pack(self):
+        """Tests if columns in multilevel groups are properly packed."""
+        COLUMN_GROUPS.extend(
+            initialize_column_groups(
+                [
+                    "--ArrayOfTables",
+                    [
+                        {"min": "RedMin", "max": "RedMax"},
+                        {"min": "BlueMin", "max": "BlueMax"},
+                    ],
+                ],
+                ["__TableOfArrays", {"weight": ["Weight1", "Weight2", "Weight3"]}],
+            )
+        )
+        d2txt = D2TXT(
+            [
+                "RedMin",
+                "BlueMin",
+                "RedMax",
+                "BlueMax",
+                "Weight2",
+                "Weight3",
+                "Weight1",
+                "Misc",
+            ]
+        )
+        d2txt.extend([[10, 20, "unknown", 100, 0, 500, 1000, 4]])
+
+        self.assertEqual(
+            d2txt_to_toml(d2txt),
+            "columns = [\n"
+            "  'RedMin',\n  'BlueMin',\n  'RedMax',\n  'BlueMax',\n"
+            "  'Weight2',\n  'Weight3',\n  'Weight1',\n  'Misc',\n"
+            "]\n\n"
+            "[column_groups]\n"
+            "--ArrayOfTables = ["
+            "{ min = 'RedMin', max = 'RedMax' }, { min = 'BlueMin', max = 'BlueMax' }"
+            "]\n"
+            "__TableOfArrays = { weight = ['Weight1', 'Weight2', 'Weight3'] }\n\n"
+            "[[rows]]\n"
+            "--ArrayOfTables = [{ min = 10, max = 'unknown' }, { min = 20, max = 100 }]\n"
+            "__TableOfArrays = { weight = [1000, 0, 500] }\n"
+            "Misc = 4\n\n",
+        )
+
+    def test_nested_group_unpack(self):
+        """Tests if columns in multilevel groups are properly unpacked."""
+        COLUMN_GROUPS.extend(
+            initialize_column_groups(
+                [
+                    "--ArrayOfTables",
+                    [
+                        {"min": "RedMin", "max": "RedMax"},
+                        {"min": "BlueMin", "max": "BlueMax"},
+                    ],
+                ],
+                ["__TableOfArrays", {"weight": ["Weight1", "Weight2", "Weight3"]}],
+            )
+        )
+        d2txt = toml_to_d2txt(
+            "columns = [\n"
+            "  'RedMin',\n  'BlueMin',\n  'RedMax',\n  'BlueMax',\n"
+            "  'Weight2',\n  'Weight3',\n  'Weight1',\n  'Misc',\n"
+            "]\n\n"
+            "[column_groups]\n"
+            "--ArrayOfTables = ["
+            "{ min = 'RedMin', max = 'RedMax' }, { min = 'BlueMin', max = 'BlueMax' }"
+            "]\n"
+            "__TableOfArrays = { weight = ['Weight1', 'Weight2', 'Weight3'] }\n\n"
+            "[[rows]]\n"
+            "--ArrayOfTables = [{ min = 10, max = 'unknown' }, { min = 20, max = 100 }]\n"
+            "__TableOfArrays = { weight = [1000, 0, 500] }\n"
+            "Misc = 4\n\n"
+        )
+
+        self.compare_d2txt(
+            d2txt,
+            [
+                "RedMin",
+                "BlueMin",
+                "RedMax",
+                "BlueMax",
+                "Weight2",
+                "Weight3",
+                "Weight1",
+                "Misc",
+            ],
+            [[10, 20, "unknown", 100, 0, 500, 1000, 4]],
+        )
+
 
 class TestD2TXTColumnGroupValidators(unittest.TestCase):
     """Contains validators for column group definitions in COLUMN_GROUPS."""
@@ -214,12 +304,10 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
     def test_alias_format(self):
         """Tests if column group aliases have consistent names."""
         for group in COLUMN_GROUPS:
-            if group.type == ColumnGroupType.ARRAY:
-                self.assertRegex(group.alias, r"^--\w")
-            elif group.type == ColumnGroupType.TABLE:
+            if isinstance(group.schema, collections.abc.Mapping):
                 self.assertRegex(group.alias, r"^__\w")
             else:
-                self.fail(f"Unexpected group type {group.type!r}")
+                self.assertRegex(group.alias, r"^--\w")
 
     def test_column_group_non_empty(self):
         """Tests if column groups have at least two member columns."""
@@ -228,7 +316,7 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
             if group.alias == "__MissileD":
                 continue
             self.assertGreaterEqual(
-                len(group.members),
+                sum(1 for _ in group.member_names()),
                 2,
                 f"Column group {group!r} does not have enough member columns",
             )
@@ -239,8 +327,8 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
         group1 = next(groups)
         for group2 in groups:
             self.assertGreaterEqual(
-                len(group1.members),
-                len(group2.members),
+                sum(1 for _ in group1.member_names()),
+                sum(1 for _ in group2.member_names()),
                 f"Column group {group1!r} appears before {group2!r}.",
             )
             group2 = group1
@@ -249,27 +337,12 @@ class TestD2TXTColumnGroupValidators(unittest.TestCase):
         """Tests if column groups do not have duplicate member columns."""
         for colgroup in COLUMN_GROUPS:
             with self.subTest(colgroup=colgroup):
-                group_type, _, members = colgroup
-
-                if group_type == ColumnGroupType.ARRAY:
-                    self.assertEqual(
-                        len(members),
-                        len(set(members)),
-                        "Array member columns must be unique",
-                    )
-                elif group_type == ColumnGroupType.TABLE:
-                    self.assertEqual(
-                        len(members),
-                        len(set(m[0] for m in members)),
-                        "Table member aliases must be unique",
-                    )
-                    self.assertEqual(
-                        len(members),
-                        len(set(m[1] for m in members)),
-                        "Table member columns must be unique",
-                    )
-                else:
-                    self.fail(f"Unexpected group type {group_type!r}")
+                member_names = tuple(map(str.casefold, colgroup.member_names()))
+                self.assertEqual(
+                    len(member_names),
+                    len(set(member_names)),
+                    "Member column names in a column group must be unique",
+                )
 
     def test_column_group_unique(self):
         """Tests if column group definitions have unique sets of column names."""
