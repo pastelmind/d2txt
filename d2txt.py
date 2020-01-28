@@ -761,6 +761,8 @@ def pack_colgroup(
         return inline_table
 
     array = [pack_colgroup(value, toml_row) for value in schema]
+    while array and array[-1] == "":
+        array.pop()
     if all(not (value or value == 0) for value in array):
         return []
     if any(isinstance(value, collections.abc.Mapping) for value in array):
