@@ -5,9 +5,7 @@ from argparse import ArgumentParser
 from collections import UserDict
 import collections.abc
 import csv
-from itertools import chain
-from itertools import islice
-from itertools import zip_longest
+import itertools
 from os import PathLike
 import sys
 from typing import Any
@@ -78,7 +76,7 @@ class D2TXTRow(collections.abc.Mapping):
                 except KeyError:
                     pass
         else:
-            self._row = list(islice(row, num_columns))
+            self._row = list(itertools.islice(row, num_columns))
             self._row += [None] * (num_columns - len(self._row))
 
     def __getitem__(self, key: str) -> Any:
@@ -750,7 +748,7 @@ def get_sorted_columns_and_groups(
     )
     # Place colgroups before normal columns to take advantage of stable sort,
     # which ensures that a column group always comes before any of its members.
-    combined = chain(indices_and_colgroups, enumerate(columns))
+    combined = itertools.chain(indices_and_colgroups, enumerate(columns))
     return [t[1] for t in sorted(combined, key=lambda t: t[0])]
 
 
@@ -941,7 +939,7 @@ def grouper(iterable: Iterable, n: int, fillvalue: Any = None) -> Iterator[tuple
     # pylint: disable=invalid-name
     args = [iter(iterable)] * n
     # pylint: enable=invalid-name
-    return zip_longest(*args, fillvalue=fillvalue)
+    return itertools.zip_longest(*args, fillvalue=fillvalue)
 
 
 def main(argv: List[str]) -> None:
