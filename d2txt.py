@@ -123,10 +123,13 @@ class D2TXT(collections.abc.MutableSequence):
         Raises:
             DuplicateColumnNameError: If a duplicate column name is found.
         """
-        self._column_names = self.__class__._make_column_names(column_names)
-        self._column_indices = {
-            name: index for index, name in enumerate(self._column_names)
-        }
+        self._column_indices = {}
+        for index, name in enumerate(column_names):
+            if name in self._column_indices:
+                raise DuplicateColumnNameError(name=name, index=index)
+            self._column_indices[name] = index
+
+        self._column_names = list(self._column_indices)
         self._rows = []
 
     def __getitem__(self, index: Union[int, slice]) -> Union[D2TXTRow, List[D2TXTRow]]:
@@ -229,31 +232,6 @@ class D2TXT(collections.abc.MutableSequence):
         )
         txt_writer.writerow(self._column_names)
         txt_writer.writerows(row.values() for row in self._rows)
-
-    @staticmethod
-    def _make_column_names(column_names: Iterable[str]) -> List[str]:
-        """Extracts a list of strings taken from `column_names`.
-
-        Args:
-            column_names: Iterable of unique strings. Column names are
-                case-sensitive.
-
-        Raises:
-            DuplicateColumnNameError: If a duplicate column name is found.
-                The `name` and `index` attributes are set, but `filename` is not.
-        """
-        # Build a list rather than yielding each name, as using a generator can
-        # obfuscate the warning message when nested inside another generator.
-        deduped_column_names = []
-        column_names_seen = set()
-
-        for column_index, name in enumerate(column_names):
-            if name in column_names_seen:
-                raise DuplicateColumnNameError(name=name, index=column_index)
-            column_names_seen.add(name)
-            deduped_column_names.append(name)
-
-        return deduped_column_names
 
 
 # See https://d2mods.info/forum/viewtopic.php?t=43737 for more information
