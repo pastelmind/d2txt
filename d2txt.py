@@ -632,8 +632,8 @@ COLUMN_GROUPS = initialize_column_groups(
 # pylint: enable=line-too-long
 
 
-def decode_txt_value(column_name: str, value: Union[int, str]) -> Any:
-    """Decodes a value from a TXT cell so that it can be converted to TOML.
+def encode_toml_value(column_name: str, value: Union[int, str]) -> Any:
+    """Encodes a value from a TXT cell so that it can be converted to TOML.
 
     Args:
         column_name: Column name of the cell, used to determine the appropriate
@@ -641,7 +641,7 @@ def decode_txt_value(column_name: str, value: Union[int, str]) -> Any:
         value: Value of the cell.
 
     Returns:
-        Decoded value suitable for passing to a TOML dumper.
+        Encoded value suitable for passing to a TOML dumper.
     """
     # If possible, attempt to convert strings to integers (but not other types)
     if isinstance(value, str):
@@ -662,8 +662,8 @@ def decode_txt_value(column_name: str, value: Union[int, str]) -> Any:
     return value
 
 
-def encode_txt_value(column_name: str, value: Any) -> Union[int, str]:
-    """Encodes a value loaded from TOML so that it can be stored in D2TXT.
+def decode_toml_value(column_name: str, value: Any) -> Union[int, str]:
+    """Decodes a value loaded from TOML so that it can be stored in D2TXT.
 
     Args:
         column_name: Column name of the cell, used to determine the appropriate
@@ -814,7 +814,7 @@ def make_toml_row(
         else:
             value = txt_row[name_or_colgroup]
             if not (value is None or value == ""):
-                toml_row[name_or_colgroup] = decode_txt_value(name_or_colgroup, value)
+                toml_row[name_or_colgroup] = encode_toml_value(name_or_colgroup, value)
 
     # Replace member columns if they can be packed into column groups
     for column_group in colgroups:
@@ -920,7 +920,7 @@ def toml_to_d2txt(toml_data: str) -> D2TXT:
                 schema = column_groups[key]
             except KeyError:
                 # Assume that columns in colgroups are not specially encoded
-                d2txt_row[key] = encode_txt_value(key, value)
+                d2txt_row[key] = decode_toml_value(key, value)
             else:
                 # Unpack column groups
                 for column_name, column_value in unpack_colgroup(schema, value):
