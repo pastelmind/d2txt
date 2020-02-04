@@ -9,6 +9,7 @@ import itertools
 from os import PathLike
 import sys
 from typing import Any
+from typing import Collection
 from typing import Dict
 from typing import Iterable
 from typing import Iterator
@@ -45,7 +46,7 @@ class DuplicateColumnNameError(Exception):
         self.filename = filename
 
 
-_RowPrototype = Union[Mapping[str, Any], Sequence[Any]]
+_RowPrototype = Union[Mapping[str, Any], Collection[Any]]
 
 
 class D2TXTRow(collections.abc.Mapping):
@@ -331,7 +332,7 @@ def range_1(stop: int) -> range:
 
 
 ColumnGroupSchema = Union[
-    Mapping[str, "ColumnGroupSchema"], Sequence["ColumnGroupSchema"], str
+    Mapping[str, "ColumnGroupSchema"], Collection["ColumnGroupSchema"], str
 ]
 
 
@@ -386,7 +387,7 @@ def make_colgroup(
 
 
 def initialize_column_groups(
-    *colgroups: Sequence[Tuple[str, ColumnGroupSchema]]
+    *colgroups: Iterable[Tuple[str, ColumnGroupSchema]]
 ) -> List[ColumnGroupRule]:
     """Initializes the list of column group rules.
 
@@ -706,12 +707,12 @@ def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupRule]:
 
 
 def get_sorted_columns_and_groups(
-    columns: Sequence[str], colgroups: Iterable[ColumnGroupRule]
+    columns: Collection[str], colgroups: Iterable[ColumnGroupRule]
 ) -> List[Union[ColumnGroupRule, str]]:
     """Builds a sorted list of column names and column groups.
 
     Args:
-        columns: Sequence of column names.
+        columns: Collection of column names.
         colgroups: Iterable of usable column group rules.
 
     Returns:
@@ -812,7 +813,7 @@ def deepwrap_userdict(obj) -> ColumnGroupSchema:
     if isinstance(obj, collections.abc.Mapping):
         # UserDict trick does not require multi-level UserDict
         return UserDict(obj)
-    elif isinstance(obj, collections.abc.Sequence) and not isinstance(obj, str):
+    elif isinstance(obj, collections.abc.Collection) and not isinstance(obj, str):
         return [deepwrap_userdict(value) for value in obj]
     return obj
 
@@ -861,7 +862,7 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
 
 
 def unpack_colgroup(
-    schema: ColumnGroupSchema, value: Union[Mapping, Sequence, str]
+    schema: ColumnGroupSchema, value: Union[Mapping, Collection, str]
 ) -> Iterable[Tuple[str, Union[int, str]]]:
     """Recursively unpacks a column group, yielding column names and values."""
     if isinstance(value, (int, str)):
