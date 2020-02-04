@@ -426,9 +426,9 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--Upgrades", {"nightmare": "NightmareUpgrade", "hell": "HellUpgrade"}),
     # AutoMagic.txt, MagicPrefix.txt, MagicSuffix.txt
     *make_colgroup(range_1(3), "--Mod{}", {"prop": "Mod{}Code", "param": "Mod{}Param", "min": "Mod{}Min", "max": "Mod{}Max"}),
-    ("--IType1-7", tuple(f"IType{i}" for i in range_1(7))),
-    ("--EType1-3", tuple(f"EType{i}" for i in range_1(3))),
-    ("--EType1-5", tuple(f"EType{i}" for i in range_1(5))),  # For MagicPrefix.txt
+    ("--IType1-7", [f"IType{i}" for i in range_1(7)]),
+    ("--EType1-3", [f"EType{i}" for i in range_1(3)]),
+    ("--EType1-5", [f"EType{i}" for i in range_1(5)]),  # For MagicPrefix.txt
     ("--Cost", {"divide": "Divide", "multiply": "Multiply", "add": "Add"}),
     # CharStats.txt
     *make_colgroup(range_1(10), "--Item{}", {"code": "Item{}", "loc": "Item{}Loc", "count": "Item{}Count"}),
@@ -460,19 +460,19 @@ COLUMN_GROUPS = initialize_column_groups(
         {"left": "{}Left", "right": "{}Right", "top": "{}Top", "bottom": "{}Bottom", "width": "{}Width", "height": "{}Height"},
     ),
     # ItemTypes.txt
-    ("--BodyLoc1-2", ("BodyLoc1", "BodyLoc2")),
+    ("--BodyLoc1-2", ["BodyLoc1", "BodyLoc2"]),
     ("--MaxSock", {"L1": "MaxSock1", "L25": "MaxSock25", "L40": "MaxSock40"}),
     # Levels.txt
     ("--Size-RNH", [{"x": "SizeX", "y": "SizeY"}, {"x": "SizeX(N)", "y": "SizeY(N)"}, {"x": "SizeX(H)", "y": "SizeY(H)"}]),
     ("--Offset", {"x": "OffsetX", "y": "OffsetY"}),
     *make_colgroup(range(8), "--VizAndWarp{}", {"vis": "Vis{}", "warp": "Warp{}"}),
-    ("--MonLvl-123", ("MonLvl1", "MonLvl2", "MonLvl3")),
-    ("--MonLvlEx-123", ("MonLvl1Ex", "MonLvl2Ex", "MonLvl3Ex")),
-    ("--MonDen-RNH", ("MonDen", "MonDen(N)", "MonDen(H)")),
+    ("--MonLvl-123", ["MonLvl1", "MonLvl2", "MonLvl3"]),
+    ("--MonLvlEx-123", ["MonLvl1Ex", "MonLvl2Ex", "MonLvl3Ex"]),
+    ("--MonDen-RNH", ["MonDen", "MonDen(N)", "MonDen(H)"]),
     ("--MonU-RNH", [{"min": "MonUMin", "max": "MonUMax"}, {"min": "MonUMin(N)", "max": "MonUMax(N)"}, {"min": "MonUMin(H)", "max": "MonUMax(H)"}]),
     *make_colgroup(range(8), "--Obj{}", {"grp": "ObjGrp{}", "prb": "ObjPrb{}"}),
     # LvlMaze.txt
-    ("--Rooms-RNH", ("Rooms", "Rooms(N)", "Rooms(H)")),
+    ("--Rooms-RNH", ["Rooms", "Rooms(N)", "Rooms(H)"]),
     ("--Size", {"x": "SizeX", "y": "SizeY"}),
     # LvlPrest.txt
     # ("--Size", {"x": "SizeX", "y": "SizeY"}),  # Also in LvlPrest.txt
@@ -491,11 +491,11 @@ COLUMN_GROUPS = initialize_column_groups(
     *make_colgroup(range_1(3), "--CltHitParam{}", {"param": "cHitPar{}", "desc": "*client hit param{} desc"}),
     ("--DmgCalc1", {"calc": "DmgCalc1", "desc": "*damage calc 1"}),
     *make_colgroup(range_1(2), "--DamageParam{}", {"param": "dParam{}", "desc": "*damage param{} desc"}),
-    ("--MinDamage0-5", ("MinDamage", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5")),
-    ("--MaxDamage0-5", ("MaxDamage", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5")),
-    ("--MinE0-5", ("EMin", "MinELev1", "MinELev2", "MinELev3", "MinELev4", "MinELev5")),
-    ("--MaxE0-5", ("EMax", "MaxELev1", "MaxELev2", "MaxELev3", "MaxELev4", "MaxELev5")),
-    ("--ELen0-3", ("ELen", "ELevLen1", "ELevLen2", "ELevLen3")),
+    ("--MinDamage0-5", ["MinDamage", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5"]),
+    ("--MaxDamage0-5", ["MaxDamage", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"]),
+    ("--MinE0-5", ["EMin", "MinELev1", "MinELev2", "MinELev3", "MinELev4", "MinELev5"]),
+    ("--MaxE0-5", ["EMax", "MaxELev1", "MaxELev2", "MaxELev3", "MaxELev4", "MaxELev5"]),
+    ("--ELen0-3", ["ELen", "ELevLen1", "ELevLen2", "ELevLen3"]),
     ("--RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),
     # MonLvl.txt
     *make_colgroup(
@@ -558,9 +558,9 @@ COLUMN_GROUPS = initialize_column_groups(
     # ("--Offset", {"x": "xOffset", "y", "yOffset"}),  # Also in Objects.txt
     # ("--RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),  # Also in Missiles.txt
     # Runes.txt
-    ("--IType1-6", tuple(f"IType{i}" for i in range_1(6))),
-    # ("--EType1-3", tuple(f"IType{i}" for i in range_1(3))),  # Also in AutoMagic.txt
-    ("--Rune1-6", tuple(f"Rune{i}" for i in range_1(6))),
+    ("--IType1-6", [f"IType{i}" for i in range_1(6)]),
+    # ("--EType1-3", [f"IType{i}" for i in range_1(3)]),  # Also in AutoMagic.txt
+    ("--Rune1-6", [f"Rune{i}" for i in range_1(6)]),
     *make_colgroup(range_1(7), "--T1-{}", {"prop": "T1Code{}", "param": "T1Param{}", "min": "T1Min{}", "max": "T1Max{}"}),
     # Sets.txt
     *make_colgroup(range(2, 6), "--P{}A", {"prop": "pCode{}A", "param": "pParam{}A", "min": "pMin{}A", "max": "pMax{}A"}),
@@ -584,11 +584,11 @@ COLUMN_GROUPS = initialize_column_groups(
     *make_colgroup(range_1(4), "--CltCalc{}", {"calc": "CltCalc{}", "desc": "*cltcalc{} desc"}),
     *make_colgroup(range_1(4), "--Calc{}", {"calc": "Calc{}", "desc": "*calc{} desc"}),
     *make_colgroup(range_1(8), "--Param{}", {"param": "Param{}", "desc": "*Param{} Description"}),
-    ("--MinDam0-5", ("MinDam", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5")),
-    ("--MaxDam0-5", ("MaxDam", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5")),
-    ("--EMin0-5", ("EMin", "EMinLev1", "EMinLev2", "EMinLev3", "EMinLev4", "EMinLev5")),
-    ("--EMax0-5", ("EMax", "EMaxLev1", "EMaxLev2", "EMaxLev3", "EMaxLev4", "EMaxLev5")),
-    # ("--ELen0-3", ("ELen", "ELevLen1", "ELevLen2", "ELevLen3")),  # Also in Skills.txt
+    ("--MinDam0-5", ["MinDam", "MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5"]),
+    ("--MaxDam0-5", ["MaxDam", "MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"]),
+    ("--EMin0-5", ["EMin", "EMinLev1", "EMinLev2", "EMinLev3", "EMinLev4", "EMinLev5"]),
+    ("--EMax0-5", ["EMax", "EMaxLev1", "EMaxLev2", "EMaxLev3", "EMaxLev4", "EMaxLev5"]),
+    # ("--ELen0-3", ["ELen", "ELevLen1", "ELevLen2", "ELevLen3"]),  # Also in Skills.txt
     ("--Cost", {"multiply": "cost mult", "add": "cost add"}),
     # SkillDesc.txt
     ("--SkillPage", {"page": "SkillPage", "row": "SkillRow", "column": "SkillColumn"}),
@@ -675,7 +675,7 @@ def recase_schema(
     elif isinstance(obj, collections.abc.Mapping):
         return {key: recase_schema(value, uncasefold) for key, value in obj.items()}
     else:
-        return tuple(recase_schema(value, uncasefold) for value in obj)
+        return [recase_schema(value, uncasefold) for value in obj]
 
 
 def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupRule]:
