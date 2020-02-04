@@ -336,7 +336,7 @@ ColumnGroupSchema = Union[
 ]
 
 
-def yield_column_names(schema: ColumnGroupSchema) -> Iterable[str]:
+def yield_column_names(schema: ColumnGroupSchema) -> Iterator[str]:
     """Recursively traverses `schema` and yields member column names."""
     if isinstance(schema, str):
         yield schema
@@ -365,7 +365,7 @@ class ColumnGroupRule:
         class_name = type(self).__name__
         return f"<{class_name}: alias={self.alias!r}, schema={self.schema!r}>"
 
-    def member_names(self) -> Iterable[str]:
+    def member_names(self) -> Iterator[str]:
         """Returns an iterator of member column names."""
         return yield_column_names(self.schema)
 
@@ -863,7 +863,7 @@ def d2txt_to_toml(d2txt: D2TXT) -> str:
 
 def unpack_colgroup(
     schema: ColumnGroupSchema, value: Union[Mapping, Collection, str]
-) -> Iterable[Tuple[str, Union[int, str]]]:
+) -> Iterator[Tuple[str, Union[int, str]]]:
     """Recursively unpacks a column group, yielding column names and values."""
     if isinstance(value, (int, str)):
         yield schema, value
