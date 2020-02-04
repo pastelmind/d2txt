@@ -8,11 +8,15 @@ d2txt requires Python 3.6 or higher.
 The latest version of d2txt is 0.2.0. To install, run:
 
 ```
-pip install git+https://github.com/pastelmind/d2txt.git@v0.2.0
+pip install https://github.com/pastelmind/d2txt/releases/download/v0.2.0/d2txt-0.2.0-py3-none-any.whl
 ```
 
-If you're feeling adventurous, remove `@` and everything after it to install
-from the tip of the `master` branch.
+If you have Git installed and feel adventurous, you can also install directly
+from the tip of the `master` branch:
+
+```
+pip install git+https://github.com/pastelmind/d2txt
+```
 
 ## Command Line Interface
 
