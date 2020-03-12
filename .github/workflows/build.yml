@@ -63,10 +63,15 @@ jobs:
     # for YAML aliases and anchors.
     strategy:
       matrix:
-        lint-tool: [black, pylint]
+        lint-tool:
+          - black
+          - isort
+          - pylint
         include:
           - lint-tool: black
             run: black --check .
+          - lint-tool: isort
+            run: isort --check-only
           - lint-tool: pylint
             run: pylint src tests
       # Make all lint jobs run to completion for combined diagnosis
@@ -93,9 +98,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ${{ env.PIP_REQUIREMENTS }}
 
-    # Pylint needs project dependencies to lint imports
+    # isort and Pylint needs project dependencies to lint imports
     - name: Install dependencies (requirements.txt)
-      if: matrix.lint-tool == 'pylint'
+      if: matrix.lint-tool == 'isort' || matrix.lint-tool == 'pylint'
       run: pip install -r requirements.txt
 
     - name: Run ${{ matrix.lint-tool }}
