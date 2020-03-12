@@ -10,7 +10,6 @@ from colorama import Fore
 
 from d2txt import D2TXT
 
-
 colorama.init()
 
 

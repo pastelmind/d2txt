@@ -3,11 +3,13 @@
 
 import unittest
 
-from d2txt import COLUMN_GROUPS
-from d2txt import D2TXT
-from d2txt import d2txt_to_toml
-from d2txt import initialize_column_groups
-from d2txt import toml_to_d2txt
+from d2txt import (
+    COLUMN_GROUPS,
+    D2TXT,
+    d2txt_to_toml,
+    initialize_column_groups,
+    toml_to_d2txt,
+)
 from tests.test_d2txt import TestD2TXTBase
 
 

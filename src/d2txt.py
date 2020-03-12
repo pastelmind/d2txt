@@ -3,24 +3,26 @@
 
 __version__ = "0.3.0"
 
-from argparse import ArgumentParser
-from collections import UserDict
 import collections.abc
 import csv
 import itertools
+from argparse import ArgumentParser
+from collections import UserDict
 from os import PathLike
-from typing import Any
-from typing import Collection
-from typing import Dict
-from typing import Iterable
-from typing import Iterator
-from typing import List
-from typing import Mapping
-from typing import Optional
-from typing import Sequence
-from typing import TextIO
-from typing import Tuple
-from typing import Union
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    TextIO,
+    Tuple,
+    Union,
+)
 
 import qtoml
 import toml

@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 """Unit test for d2txt.py"""
 
-from io import StringIO
 import os
+import unittest
+from io import StringIO
 from os import path
 from tempfile import NamedTemporaryFile
 from typing import Iterable, Sequence
-import unittest
 
-from d2txt import D2TXT
-from d2txt import DuplicateColumnNameError
+from d2txt import D2TXT, DuplicateColumnNameError
 
 
 class TestD2TXTBase(unittest.TestCase):
