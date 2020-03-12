@@ -15,6 +15,7 @@ setuptools.setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/pastelmind/d2txt",
+    package_dir={"": "src"},
     py_modules=["d2txt"],
     install_requires=["qtoml >= 0.3.0, <1", "toml >= 0.10.0, <1",],
     entry_points={"console_scripts": ["d2txt = d2txt:main"]},
