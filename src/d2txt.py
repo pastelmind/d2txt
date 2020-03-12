@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""Provides the D2TXT class for loading and saving Diablo 2 TXT files."""
+"""Parses Diablo II's TXT files and converts them to TOML files."""
+
+__version__ = "0.3.0"
 
 from argparse import ArgumentParser
 from collections import UserDict
