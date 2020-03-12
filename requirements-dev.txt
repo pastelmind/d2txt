@@ -1,4 +1,5 @@
 -r requirements.txt
 black~=19.10b0
+flit~=2.2.0
 pipdeptree~=0.13.2
 pylint~=2.4.4
