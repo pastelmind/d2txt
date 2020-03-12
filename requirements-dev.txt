@@ -1,5 +1,28 @@
 -r requirements.txt
-black~=19.10b0
-flit~=2.2.0
-pipdeptree~=0.13.2
-pylint~=2.4.4
+black==19.10b0
+  appdirs==1.4.3
+  attrs==19.3.0
+  click==7.1.1
+  pathspec==0.7.0
+  regex==2020.2.20
+  toml==0.10.0
+  typed-ast==1.4.1
+flit==2.2.0
+  docutils==0.16
+  flit-core==2.2.0
+    pytoml==0.1.21
+  pytoml==0.1.21
+  requests==2.23.0
+    certifi==2019.11.28
+    chardet==3.0.4
+    idna==2.9
+    urllib3==1.25.8
+pipdeptree==0.13.2
+pylint==2.4.4
+  astroid==2.3.3
+    lazy-object-proxy==1.4.3
+    six==1.14.0
+    wrapt==1.11.2
+  colorama==0.4.3
+  isort==4.3.21
+  mccabe==0.6.1
