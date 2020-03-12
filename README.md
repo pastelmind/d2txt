@@ -164,3 +164,40 @@ For more examples, check out the scripts in the `/samples/` directory.
 [mod]: https://en.wikipedia.org/wiki/Mod_(video_gaming)
 [Diablo 2]: http://blizzard.com/diablo2/
 [sequence]: https://docs.python.org/3/glossary.html#term-sequence
+
+## Development
+
+To develop d2txt, you will want a good Python editor. I recommend [Visual Studio Code] with the [Microsoft Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python).
+
+To develop d2txt, clone this repository and create a [virtual environment]. Then run the following command to install development dependencies:
+
+```sh
+# For Windows
+python -m pip install -r requirements-dev.txt
+# For non-Windows
+pip install -r requirements-dev.txt
+```
+
+To run tests within VS Code, you must install d2txt in "development" mode:
+
+```sh
+# For Windows
+flit install --pth-file
+# For non-Windows
+flit install
+```
+
+d2txt uses the following tools for development.
+
+* [Flit] to build source distributions and wheels.
+* [Tox] to run tests.
+* [Black] and [isort] to format code.
+* [Pylint] to check code.
+
+[Black]: https://github.com/psf/black
+[Flit]: https://flit.readthedocs.io/
+[isort]: https://timothycrosley.github.io/isort/
+[Pylint]: https://www.pylint.org/
+[Tox]: https://tox.readthedocs.io/
+[virtual environment]: https://packaging.python.org/tutorials/installing-packages/#creating-virtual-environments
+[Visual Studio Code]: https://code.visualstudio.com/
