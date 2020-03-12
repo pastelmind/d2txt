@@ -1,5 +1,5 @@
 The sample scripts in this directory are intended to be called from the command
-line. Read each script's docstring and source code to see how `d2txt.py` can be
+line. Read each script's docstring and source code to see how `d2txt` can be
 used.
 
 Some scripts use [`colorama`](https://pypi.org/project/colorama/) to color their

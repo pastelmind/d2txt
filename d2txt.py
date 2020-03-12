@@ -7,7 +7,6 @@ import collections.abc
 import csv
 import itertools
 from os import PathLike
-import sys
 from typing import Any
 from typing import Collection
 from typing import Dict
@@ -921,7 +920,7 @@ def grouper(iterable: Iterable, n: int, fillvalue: Any = None) -> Iterator[tuple
     return itertools.zip_longest(*args, fillvalue=fillvalue)
 
 
-def main(argv: List[str]) -> None:
+def main(argv: List[str] = None) -> None:
     """Entrypoint of the command line script."""
     arg_parser = ArgumentParser()
     arg_subparsers = arg_parser.add_subparsers(dest="command")
@@ -973,4 +972,4 @@ def main(argv: List[str]) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
