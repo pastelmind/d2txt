@@ -1,7 +1,7 @@
 # d2txt
 
 d2txt is a Python script that can be used to make [mods][mod] for [Diablo 2].
-It consists of a single module: `d2txt.py`.
+It consists of a single module: `d2txt`.
 
 d2txt requires Python 3.6 or higher.
 
@@ -27,8 +27,8 @@ more readable diffs, and play nice with version control systems like Git.
 Call the script using the command line:
 
 ```
-d2txt.py decompile <txt_path> <toml_path> [<txt_path> <toml_path>...]
-d2txt.py compile <toml_path> <txt_path> [<txt_path> <toml_path>...]
+d2txt decompile <txt_path> <toml_path> [<txt_path> <toml_path>...]
+d2txt compile <toml_path> <txt_path> [<txt_path> <toml_path>...]
 ```
 
 You can specify multiple files as arguments to (de)compile all of them at once.
@@ -84,9 +84,10 @@ MinLevDam5 = 30
 
 - Each decompiled TOML file contains a list named `columns`, as well as a table
   named `column_groups` at the top of the file. Do not touch these, as they are
-  used by `d2txt.py` to compile the TOML back to a TXT file.
-- d2txt a TXT file with duplicate column names (e.g. the unused `mindam` and
-  `maxdam` columns in **`Armor.txt`**). You must remove or rename such columns.
+  used by `d2txt` to compile the TOML back to a TXT file.
+- d2txt warns if a TXT file contains duplicate column names (e.g. the unused
+  `mindam` and `maxdam` columns in **`Armor.txt`**). You must remove or rename
+  such columns.
 - While Diablo 2 treats column names in a case-insensitive manner, d2txt treats
   them case-sensitively. Since this is how Python and TOML handles strings,
   there are no plans to fix them.
