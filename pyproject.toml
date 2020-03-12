@@ -29,3 +29,12 @@ exclude = [
     "requirements*.txt",
     "tests/",
 ]
+
+[tool.isort]
+# Based on sample isort config at:
+#   https://github.com/psf/black#how-black-wraps-lines
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
