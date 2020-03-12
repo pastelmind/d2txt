@@ -73,7 +73,7 @@ jobs:
         - lint-tool: isort
           run: isort --check-only
         - lint-tool: pylint
-          run: pylint src tests
+          run: pylint samples src tests
       # Make all lint jobs run to completion for combined diagnosis
       fail-fast: false
 
