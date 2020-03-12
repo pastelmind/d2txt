@@ -1,0 +1,11 @@
+[build-system]
+requires = ["flit_core >=2,<3"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "d2txt"
+author = "pastelmind"
+author-email = "keepyourhonor@gmail.com"
+home-page = "https://github.com/pastelmind/d2txt"
+classifiers = ["License :: OSI Approved :: MIT License"]
+
