@@ -7,5 +7,25 @@ module = "d2txt"
 author = "pastelmind"
 author-email = "keepyourhonor@gmail.com"
 home-page = "https://github.com/pastelmind/d2txt"
-classifiers = ["License :: OSI Approved :: MIT License"]
+requires = [
+    "qtoml >= 0.3.0, < 1",
+    "toml >= 0.10.0, < 1",
+]
+description-file = "README.md"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.6",
+]
+requires-python = ">= 3.6"
 
+[tool.flit.scripts]
+d2txt = "d2txt:main"
+
+[tool.flit.sdist]
+exclude = [
+    ".*",
+    "requirements*.txt",
+    "tests/",
+]
