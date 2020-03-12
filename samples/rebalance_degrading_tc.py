@@ -51,8 +51,8 @@ def match_in_patterns(text, patterns):
     return any(pattern.search(text) for pattern in patterns)
 
 
-def main(argv):
-    """Entrypoint of the command line script."""
+def parse_args(argv=None):
+    """Parses command line arguments and returns them in a namespace."""
     arg_parser = argparse.ArgumentParser(description=__doc__)
     arg_parser.add_argument("tcex_txt", help="Path to TreasureClassEx.txt")
     arg_parser.add_argument(
@@ -62,7 +62,12 @@ def main(argv):
         "-i", "--ignore-case", action="store_true", help="Use case-insensitive matching"
     )
 
-    args = arg_parser.parse_args(argv)
+    return arg_parser.parse_args(argv)
+
+
+def main(argv):
+    """Entrypoint of the command line script."""
+    args = parse_args(argv)
 
     tcex_txt = D2TXT.load_txt(args.tcex_txt)
     tc_dict = make_tc_dict(tcex_txt)

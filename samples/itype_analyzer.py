@@ -16,6 +16,8 @@ colorama.init()
 class ITypeNode:
     """Represents a node in an itype tree."""
 
+    # pylint: disable= too-few-public-methods
+
     def __init__(self, code):
         self.code = code
         self.children = []
