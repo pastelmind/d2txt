@@ -115,6 +115,8 @@ class D2TXT(collections.abc.MutableSequence):
     Represents a tab-separated TXT file used in Diablo 2.
     """
 
+    # pylint: disable=too-many-ancestors
+
     def __init__(self, column_names: Iterable[str]) -> None:
         """Create a D2TXT object.
 
@@ -673,10 +675,9 @@ def recase_schema(
     """Returns a new column group schema with properly recased member names."""
     if isinstance(obj, str):
         return uncasefold[obj.casefold()]
-    elif isinstance(obj, collections.abc.Mapping):
+    if isinstance(obj, collections.abc.Mapping):
         return {key: recase_schema(value, uncasefold) for key, value in obj.items()}
-    else:
-        return [recase_schema(value, uncasefold) for value in obj]
+    return [recase_schema(value, uncasefold) for value in obj]
 
 
 def get_matched_colgroups(column_names: Iterable[str]) -> List[ColumnGroupRule]:
@@ -748,7 +749,7 @@ def pack_colgroup(
     if isinstance(schema, str):
         return toml_row.get(schema, "")
 
-    elif isinstance(schema, collections.abc.Mapping):
+    if isinstance(schema, collections.abc.Mapping):
         inline_table = UserDict()
         for key, value in schema.items():
             value = pack_colgroup(value, toml_row)
@@ -814,7 +815,7 @@ def deepwrap_userdict(obj) -> ColumnGroupSchema:
     if isinstance(obj, collections.abc.Mapping):
         # UserDict trick does not require multi-level UserDict
         return UserDict(obj)
-    elif isinstance(obj, collections.abc.Collection) and not isinstance(obj, str):
+    if isinstance(obj, collections.abc.Collection) and not isinstance(obj, str):
         return [deepwrap_userdict(value) for value in obj]
     return obj
 

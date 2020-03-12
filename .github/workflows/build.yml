@@ -1,0 +1,182 @@
+# This workflow provides jobs for building, linting, and testing the project.
+# It can also publish artifacts to PyPI.
+# Based on https://github.com/actions/starter-workflows/blob/master/ci/python-package.yml
+
+name: Build
+
+on:
+  push:
+  # Run this workflow when a release is published using GitHub's web UI.
+  # Pre-releases (but not draft releases) will also trigger the workflow.
+  release:
+    types: [published]
+
+env:
+  # Default Python version for running build and lint jobs
+  python-version: 3.8
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      PIP_REQUIREMENTS: requirements-build.txt
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ env.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ env.python-version }}
+
+    - name: Cache dependencies
+      uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ env.python-version }}-${{ hashFiles(env.PIP_REQUIREMENTS) }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ env.python-version }}-
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies (${{ env.PIP_REQUIREMENTS }})
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ${{ env.PIP_REQUIREMENTS }}
+
+    # Manual build step required because tox only builds an sdist and not wheels
+    - name: Build distributions
+      run: flit build
+
+    - name: Upload distributions
+      uses: actions/upload-artifact@v1
+      with:
+        name: distributions
+        path: dist
+
+  lint:
+
+    runs-on: ubuntu-latest
+    env:
+      PIP_REQUIREMENTS: requirements-lint.txt
+    # Use the build matrix to reuse steps across lint jobs
+    # TODO: Separate this into individual jobs when GitHub Actions gain support
+    # for YAML aliases and anchors.
+    strategy:
+      matrix:
+        lint-tool: [black, pylint]
+        include:
+          - lint-tool: black
+            run: black --check .
+          - lint-tool: pylint
+            run: pylint src tests
+      # Make all lint jobs run to completion for combined diagnosis
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ env.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ env.python-version }}
+
+    - name: Cache dependencies
+      uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ env.python-version }}-${{ hashFiles(env.PIP_REQUIREMENTS) }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ env.python-version }}-
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies (${{ env.PIP_REQUIREMENTS }})
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ${{ env.PIP_REQUIREMENTS }}
+
+    # Pylint needs project dependencies to lint imports
+    - name: Install dependencies (requirements.txt)
+      if: matrix.lint-tool == 'pylint'
+      run: pip install -r requirements.txt
+
+    - name: Run ${{ matrix.lint-tool }}
+      run: ${{ matrix.run }}
+
+  test:
+
+    needs: build
+    runs-on: ${{ matrix.os }}
+    env:
+      PIP_REQUIREMENTS: requirements-test.txt
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    # Load different caches for each runner.os
+    # Based on https://github.com/actions/cache/blob/master/examples.md#multiple-oss-in-a-workflow
+    - name: Cache dependencies (Linux)
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'Linux')
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles(env.PIP_REQUIREMENTS) }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+    - name: Cache dependencies (Windows)
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'Windows')
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles(env.PIP_REQUIREMENTS) }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies (${{ env.PIP_REQUIREMENTS }})
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ${{ env.PIP_REQUIREMENTS }}
+
+    - name: Download distributions
+      uses: actions/download-artifact@v1
+      with:
+        name: distributions
+        path: dist
+
+    # Use wildcard expansion to select a single distribution file to test
+    # (requires bash)
+    - name: Test with tox (sdist)
+      run: tox -e py --installpkg dist/*.tar.gz
+      shell: bash
+    - name: Test with tox (wheel)
+      run: tox -e py --installpkg dist/*-any.whl
+      shell: bash
+
+  publish:
+
+    needs:
+      - lint
+      - test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    steps:
+    - name: Download distributions
+      uses: actions/download-artifact@v1
+      with:
+        name: distributions
+        path: dist
+
+    - name: Publish package to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.1.0
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_TOKEN }}
