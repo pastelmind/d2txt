@@ -64,16 +64,16 @@ jobs:
     strategy:
       matrix:
         lint-tool:
-          - black
-          - isort
-          - pylint
+        - black
+        - isort
+        - pylint
         include:
-          - lint-tool: black
-            run: black --check .
-          - lint-tool: isort
-            run: isort --check-only
-          - lint-tool: pylint
-            run: pylint src tests
+        - lint-tool: black
+          run: black --check .
+        - lint-tool: isort
+          run: isort --check-only
+        - lint-tool: pylint
+          run: pylint src tests
       # Make all lint jobs run to completion for combined diagnosis
       fail-fast: false
 
@@ -168,8 +168,8 @@ jobs:
   publish:
 
     needs:
-      - lint
-      - test
+    - lint
+    - test
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
 
