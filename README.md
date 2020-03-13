@@ -1,21 +1,13 @@
 # d2txt
 
-d2txt is a Python script that can be used to make [mods][mod] for [Diablo 2].
-It consists of a single module: `d2txt`.
+d2txt is a command line program that converts tabbed text (*.TXT) files used by [Diablo 2] into TOML files and back. It is intended to be a [mod-making][mod] tool.
 
 d2txt requires Python 3.6 or higher.
 
-The latest version of d2txt is 0.3.0. To install, run:
+To install d2txt, run the following command in your terminal:
 
 ```
-pip install https://github.com/pastelmind/d2txt/releases/download/v0.3.0/d2txt-0.3.0-py3-none-any.whl
-```
-
-If you have Git installed and feel adventurous, you can also install directly
-from the tip of the `master` branch:
-
-```
-pip install git+https://github.com/pastelmind/d2txt
+pip install d2txt
 ```
 
 ## Command Line Interface
