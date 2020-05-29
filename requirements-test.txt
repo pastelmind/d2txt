@@ -8,7 +8,7 @@ tox==3.14.5
   pluggy==0.13.1
   py==1.8.1
   six==1.14.0
-  toml==0.10.0
+  toml==0.10.1
   virtualenv==20.0.10
     appdirs==1.4.3
     distlib==0.3.0
