@@ -25,12 +25,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ env.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ env.python-version }}
 
     - name: Cache dependencies
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ env.python-version }}-${{ hashFiles(env.PIP_REQUIREMENTS) }}
@@ -48,7 +48,7 @@ jobs:
       run: flit build
 
     - name: Upload distributions
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: distributions
         path: dist
@@ -80,12 +80,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ env.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ env.python-version }}
 
     - name: Cache dependencies
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ env.python-version }}-${{ hashFiles(env.PIP_REQUIREMENTS) }}
@@ -120,14 +120,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
 
     # Load different caches for each runner.os
     # Based on https://github.com/actions/cache/blob/master/examples.md#multiple-oss-in-a-workflow
     - name: Cache dependencies (Linux)
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       if: startsWith(runner.os, 'Linux')
       with:
         path: ~/.cache/pip
@@ -136,7 +136,7 @@ jobs:
           ${{ runner.os }}-pip-${{ matrix.python-version }}-
           ${{ runner.os }}-pip-
     - name: Cache dependencies (Windows)
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       if: startsWith(runner.os, 'Windows')
       with:
         path: ~\AppData\Local\pip\Cache
@@ -151,7 +151,7 @@ jobs:
         pip install -r ${{ env.PIP_REQUIREMENTS }}
 
     - name: Download distributions
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2
       with:
         name: distributions
         path: dist
@@ -175,7 +175,7 @@ jobs:
 
     steps:
     - name: Download distributions
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2
       with:
         name: distributions
         path: dist
