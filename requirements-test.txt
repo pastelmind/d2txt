@@ -10,7 +10,7 @@ tox==3.14.5
   six==1.14.0
   toml==0.10.1
   virtualenv==20.0.10
-    appdirs==1.4.3
+    appdirs==1.4.4
     distlib==0.3.0
     filelock==3.0.12
     six==1.14.0
