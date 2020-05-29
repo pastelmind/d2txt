@@ -9,7 +9,7 @@ author-email = "keepyourhonor@gmail.com"
 home-page = "https://github.com/pastelmind/d2txt"
 requires = [
     "qtoml >= 0.3.0, < 1",
-    "toml >= 0.10.0, < 1",
+    "toml >= 0.10.1, < 1",
 ]
 description-file = "README.md"
 classifiers = [
@@ -42,3 +42,8 @@ skip_glob = [
     "var",
     "venv",
 ]
+
+[tool.pylint.messages-control]
+disable = """
+    bad-continuation,
+"""

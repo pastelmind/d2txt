@@ -20,7 +20,7 @@ class TestD2TXTLoadToml(TestD2TXTBase):
         """Tests if a key that is not specified in the [Columns] section raises
         an exception."""
 
-        toml_source = "columns=['column1']\n\n" "[[rows]]\ncolumn1=1\ncolumn2=2\n\n"
+        toml_source = "columns=['column1']\n\n[[rows]]\ncolumn1=1\ncolumn2=2\n\n"
 
         with self.assertRaises(KeyError):
             toml_to_d2txt(toml_source)
