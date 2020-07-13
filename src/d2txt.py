@@ -599,8 +599,8 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--SkillPage", {"page": "SkillPage", "row": "SkillRow", "column": "SkillColumn"}),
     *make_colgroup(range_1(3), "--P{}Dm", {"elem": "P{}DmElem", "min": "P{}DmMin", "max": "P{}DmMax", }),
     *make_colgroup(range_1(6), "--Desc-{}", {"line": "DescLine{}", "textA": "DescTextA{}", "textB": "DescTextB{}", "calcA": "DescCalcA{}", "calcB": "DescCalcB{}"}),
-    *make_colgroup(range_1(6), "--Dsc2-{}", {"line": "Dsc2Line{}", "textA": "Dsc2TextA{}", "textB": "Dsc2TextB{}", "calcA": "Dsc2CalcA{}", "calcB": "Dsc2CalcB{}"}),
-    *make_colgroup(range_1(6), "--Dsc3-{}", {"line": "Dsc3Line{}", "textA": "Dsc3TextA{}", "textB": "Dsc3TextB{}", "calcA": "Dsc3CalcA{}", "calcB": "Dsc3CalcB{}"}),
+    *make_colgroup(range_1(4), "--Dsc2-{}", {"line": "Dsc2Line{}", "textA": "Dsc2TextA{}", "textB": "Dsc2TextB{}", "calcA": "Dsc2CalcA{}", "calcB": "Dsc2CalcB{}"}),
+    *make_colgroup(range_1(7), "--Dsc3-{}", {"line": "Dsc3Line{}", "textA": "Dsc3TextA{}", "textB": "Dsc3TextB{}", "calcA": "Dsc3CalcA{}", "calcB": "Dsc3CalcB{}"}),
     # States.txt
     # ("--Light", {"R": "Light-R", "G": "Light-G", "B": "Light-B"}),  # Also in MonStats2.txt
     # SuperUniques.txt
