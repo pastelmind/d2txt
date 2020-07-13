@@ -4,8 +4,8 @@ flit==2.3.0
   flit-core==2.3.0
     pytoml==0.1.21
   pytoml==0.1.21
-  requests==2.23.0
-    certifi==2020.4.5.1
+  requests==2.24.0
+    certifi==2020.6.20
     chardet==3.0.4
-    idna==2.9
+    idna==2.10
     urllib3==1.25.9
