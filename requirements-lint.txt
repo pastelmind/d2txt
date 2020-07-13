@@ -8,8 +8,8 @@ black==19.10b0
   toml==0.10.1
   typed-ast==1.4.1
 isort==4.3.21
-pylint==2.5.2
-  astroid==2.4.1
+pylint==2.5.3
+  astroid==2.4.2
     lazy-object-proxy==1.4.3
     six==1.15.0
     wrapt==1.12.1
