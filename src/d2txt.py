@@ -516,7 +516,8 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--Spawn", {"place": "PlaceSpawn", "x": "SpawnX", "y": "SpawnY", "mode": "SpawnMode"}),
     ("--Party", {"min": "PartyMin", "max": "PartyMax"}),
     ("--Grp", {"min": "MinGrp", "max": "MaxGrp"}),
-    *make_colgroup(["Level", "Drain", "ColdEffect", "ToBlock", "AC", "Exp"], "--{}-RNH", ["{}", "{}(N)", "{}(H)"]),
+    # "--AC-RNH" is already provided by MonLvl.txt
+    *make_colgroup(["Level", "Drain", "ColdEffect", "ToBlock", "Exp"], "--{}-RNH", ["{}", "{}(N)", "{}(H)"]),
     ("--AI-R", {"delay": "AIDel", "dist": "AIDist", **{f"p{i}": f"aip{i}" for i in range_1(8)}}),
     ("--AI-N", {"delay": "AIDel(N)", "dist": "AIDist(N)", **{f"p{i}": f"aip{i}(N)" for i in range_1(8)}}),
     ("--AI-H", {"delay": "AIDel(H)", "dist": "AIDist(H)", **{f"p{i}": f"aip{i}(H)" for i in range_1(8)}}),
