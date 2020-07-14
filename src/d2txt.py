@@ -504,9 +504,9 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),
     # MonLvl.txt
     *make_colgroup(
-        ["AC", "TH", "HP", "DM", "XP"],
+        ["AC", "TH", "HP", "DM", "XP", "L-AC", "L-TH", "L-HP", "L-DM", "L-XP"],
         "--{}-RNH",
-        {"bnet": ["{}", "{}(N)", "{}(H)"], "ladder": ["L-{}", "L-{}(N)", "L-{}(H)"]},
+        ["{}", "{}(N)", "{}(H)"],
     ),
     # MonProp.txt
     *make_colgroup(range_1(6), "--Prop{}-R", {"prop": "Prop{}", "chance": "Chance{}", "param": "Par{}", "min": "Min{}", "max": "Max{}"}),
@@ -516,7 +516,8 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--Spawn", {"place": "PlaceSpawn", "x": "SpawnX", "y": "SpawnY", "mode": "SpawnMode"}),
     ("--Party", {"min": "PartyMin", "max": "PartyMax"}),
     ("--Grp", {"min": "MinGrp", "max": "MaxGrp"}),
-    *make_colgroup(["Level", "Drain", "ColdEffect", "ToBlock", "AC", "Exp"], "--{}-RNH", ["{}", "{}(N)", "{}(H)"]),
+    # "--AC-RNH" is already provided by MonLvl.txt
+    *make_colgroup(["Level", "Drain", "ColdEffect", "ToBlock", "Exp"], "--{}-RNH", ["{}", "{}(N)", "{}(H)"]),
     ("--AI-R", {"delay": "AIDel", "dist": "AIDist", **{f"p{i}": f"aip{i}" for i in range_1(8)}}),
     ("--AI-N", {"delay": "AIDel(N)", "dist": "AIDist(N)", **{f"p{i}": f"aip{i}(N)" for i in range_1(8)}}),
     ("--AI-H", {"delay": "AIDel(H)", "dist": "AIDist(H)", **{f"p{i}": f"aip{i}(H)" for i in range_1(8)}}),
