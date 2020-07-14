@@ -504,9 +504,9 @@ COLUMN_GROUPS = initialize_column_groups(
     ("--RGB", {"red": "Red", "green": "Green", "blue": "Blue"}),
     # MonLvl.txt
     *make_colgroup(
-        ["AC", "TH", "HP", "DM", "XP"],
+        ["AC", "TH", "HP", "DM", "XP", "L-AC", "L-TH", "L-HP", "L-DM", "L-XP"],
         "--{}-RNH",
-        {"bnet": ["{}", "{}(N)", "{}(H)"], "ladder": ["L-{}", "L-{}(N)", "L-{}(H)"]},
+        ["{}", "{}(N)", "{}(H)"],
     ),
     # MonProp.txt
     *make_colgroup(range_1(6), "--Prop{}-R", {"prop": "Prop{}", "chance": "Chance{}", "param": "Par{}", "min": "Min{}", "max": "Max{}"}),
