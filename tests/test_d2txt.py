@@ -15,7 +15,10 @@ class TestD2TXTBase(unittest.TestCase):
     """Base class for D2TXT-related tests. Provides convenience methods."""
 
     def compare_d2txt(
-        self, d2txt: D2TXT, column_names: Iterable[str], rows: Sequence[Iterable[str]],
+        self,
+        d2txt: D2TXT,
+        column_names: Iterable[str],
+        rows: Sequence[Iterable[str]],
     ):
         """Compares a D2TXT object with the given column names and rows.
 
@@ -111,7 +114,8 @@ class TestD2TXT(unittest.TestCase):
 
         d2txt.append(["lowercase", "capital letters", "uppercase"])
         self.assertEqual(
-            list(d2txt[0].values()), ["lowercase", "capital letters", "uppercase"],
+            list(d2txt[0].values()),
+            ["lowercase", "capital letters", "uppercase"],
         )
         with self.assertRaises(KeyError):
             d2txt[0]["column NAME"]  # pylint:disable=pointless-statement
@@ -174,7 +178,10 @@ class TestD2TXT(unittest.TestCase):
         d2txt.extend([[]])
         self.assertEqual(len(d2txt), 1)
         d2txt.extend(
-            [["foo", "bar"], ["1", "2", "3", "these", "strings", "are", "ignored"],]
+            [
+                ["foo", "bar"],
+                ["1", "2", "3", "these", "strings", "are", "ignored"],
+            ]
         )
         self.assertEqual(len(d2txt), 3)
 
@@ -278,7 +285,13 @@ class TestD2TXTLoadFile(TestD2TXTBase):
 
         self.compare_d2txt(
             d2txt,
-            ["column name", "column 2", "column 3", "", "COLUMN NAME",],
+            [
+                "column name",
+                "column 2",
+                "column 3",
+                "",
+                "COLUMN NAME",
+            ],
             [
                 [
                     "lowercase column name",
@@ -317,8 +330,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
         )
 
     def test_duplicate_column_names(self):
-        """Tests if duplicate column names raise an error loading a TXT file.
-        """
+        """Tests if duplicate column names raise an error loading a TXT file."""
         with self.assertRaises(DuplicateColumnNameError):
             D2TXT.load_txt(
                 StringIO(
@@ -345,8 +357,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
         )
 
     def test_column_name_whitespace(self):
-        """Tests if whitespace in columns are preserved when loading a TXT file.
-        """
+        """Tests if whitespace in columns are preserved when loading a TXT file."""
         d2txt = D2TXT.load_txt(
             StringIO(
                 "   column 1\tcolumn 2    \t  column 3  \t\t  \r\n"
@@ -375,8 +386,7 @@ class TestD2TXTLoadFile(TestD2TXTBase):
         )
 
     def test_cell_whitespace(self):
-        """Tests if whitespace in cells are preserved when loading a TXT file.
-        """
+        """Tests if whitespace in cells are preserved when loading a TXT file."""
         d2txt = D2TXT.load_txt(
             StringIO(
                 "column 1\tcolumn 2\tcolumn 3\r\n"
@@ -539,8 +549,7 @@ class TestD2TXTSaveFile(unittest.TestCase):
         )
 
     def test_cell_whitespace(self):
-        """Tests if whitespace in cells are preserved when saved to a TXT file.
-        """
+        """Tests if whitespace in cells are preserved when saved to a TXT file."""
         d2txt = D2TXT(["column 1", "column 2", "column 3"])
         d2txt.extend([["  2 leading spaces", "3 trailing spaces   ", "     "]])
 
@@ -554,8 +563,7 @@ class TestD2TXTSaveFile(unittest.TestCase):
         )
 
     def test_surrounding_quotes(self):
-        """Tests if surrounding quotes are preserved when saved to a TXT file.
-        """
+        """Tests if surrounding quotes are preserved when saved to a TXT file."""
         d2txt = D2TXT(["'single quotes'", '"double quotes"', "`backticks`"])
         d2txt.extend([["'single quotes'", '"double quotes"', "`backticks`"]])
 

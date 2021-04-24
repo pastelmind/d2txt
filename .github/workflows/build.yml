@@ -13,7 +13,7 @@ on:
 
 env:
   # Default Python version for running build and lint jobs
-  python-version: 3.8
+  python-version: 3.9
 
 jobs:
   build:
@@ -71,7 +71,7 @@ jobs:
         - lint-tool: black
           run: black --check .
         - lint-tool: isort
-          run: isort --check-only
+          run: isort --check --diff .
         - lint-tool: pylint
           run: pylint samples src tests
       # Make all lint jobs run to completion for combined diagnosis
@@ -115,7 +115,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
     - uses: actions/checkout@v2

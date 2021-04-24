@@ -1,11 +1,11 @@
 # Dependencies for building
-flit==2.3.0
-  docutils==0.16
-  flit-core==2.3.0
-    pytoml==0.1.21
-  pytoml==0.1.21
-  requests==2.24.0
-    certifi==2020.6.20
-    chardet==3.0.4
+flit==3.2.0
+  docutils==0.17.1
+  flit-core==3.2.0
+    toml==0.10.2
+  requests==2.25.1
+    certifi==2020.12.5
+    chardet==4.0.0
     idna==2.10
-    urllib3==1.25.9
+    urllib3==1.26.4
+  toml==0.10.2
