@@ -10,6 +10,9 @@ on:
   # Pre-releases (but not draft releases) will also trigger the workflow.
   release:
     types: [published]
+  schedule:
+    # Run at 16:10 UTC on the 2nd day of every month
+    - cron: '10 16 2 * *'
 
 env:
   # Default Python version for running build and lint jobs
