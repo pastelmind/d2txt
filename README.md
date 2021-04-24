@@ -1,4 +1,5 @@
 # d2txt
+[![Build status](https://github.com/pastelmind/d2txt/actions/workflows/build.yml/badge.svg)](https://github.com/pastelmind/d2txt/actions/workflows/build.yml) [![PyPI](https://img.shields.io/pypi/v/d2txt)](https://pypi.org/project/d2txt) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/d2txt)
 
 d2txt is a command line program that converts tabbed text (*.TXT) files used by [Diablo 2] into TOML files and back. It is intended to be a [mod-making][mod] tool.
 
