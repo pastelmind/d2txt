@@ -1,6 +1,6 @@
 # Dependencies for testing
 tox==3.24.5
-  filelock==3.6.0
+  filelock==3.6.0; python_version >= '3.7'
   packaging==21.3
     pyparsing==3.0.8
   pluggy==1.0.0
@@ -9,6 +9,6 @@ tox==3.24.5
   toml==0.10.2
   virtualenv==20.14.0
     distlib==0.3.4
-    filelock==3.6.0
-    platformdirs==2.5.1
+    filelock==3.6.0; python_version >= '3.7'
+    platformdirs==2.5.1; python_version >= '3.7'
     six==1.16.0
