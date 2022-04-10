@@ -3,4 +3,4 @@
 -r requirements-lint.txt
 -r requirements-test.txt
 -r requirements.txt
-pipdeptree==2.0.0
+pipdeptree==2.2.1

@@ -1,4 +1,4 @@
-qtoml==0.3.0
-  attrs==19.3.0
-  click==7.1.2
+qtoml==0.3.1
+  attrs==21.4.0
+  click==8.1.2
 toml==0.10.2
