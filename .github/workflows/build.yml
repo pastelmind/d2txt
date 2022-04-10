@@ -25,14 +25,14 @@ jobs:
       PIP_REQUIREMENTS: requirements-build.txt
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ env.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ env.python-version }}
 
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ env.python-version }}-${{ hashFiles(env.PIP_REQUIREMENTS) }}
@@ -50,7 +50,7 @@ jobs:
         run: flit build
 
       - name: Upload distributions
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: distributions
           path: dist
@@ -79,14 +79,14 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ env.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ env.python-version }}
 
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ env.python-version }}-${{ hashFiles(env.PIP_REQUIREMENTS) }}
@@ -118,16 +118,16 @@ jobs:
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
       # Load different caches for each runner.os
       # Based on https://github.com/actions/cache/blob/master/examples.md#multiple-oss-in-a-workflow
       - name: Cache dependencies (Linux)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: startsWith(runner.os, 'Linux')
         with:
           path: ~/.cache/pip
@@ -136,7 +136,7 @@ jobs:
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
             ${{ runner.os }}-pip-
       - name: Cache dependencies (Windows)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: startsWith(runner.os, 'Windows')
         with:
           path: ~\AppData\Local\pip\Cache
@@ -151,7 +151,7 @@ jobs:
           pip install -r ${{ env.PIP_REQUIREMENTS }}
 
       - name: Download distributions
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: distributions
           path: dist
@@ -174,13 +174,13 @@ jobs:
 
     steps:
       - name: Download distributions
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: distributions
           path: dist
 
       - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.3.1
+        uses: pypa/gh-action-pypi-publish@v1.5.0
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
