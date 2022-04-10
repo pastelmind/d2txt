@@ -5,8 +5,8 @@
 import argparse
 import sys
 
-import colorama
-from colorama import Fore
+import colorama  # pylint: disable=import-error
+from colorama import Fore  # pylint: disable=import-error
 
 from d2txt import D2TXT
 
