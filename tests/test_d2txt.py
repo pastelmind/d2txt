@@ -452,7 +452,7 @@ class TestD2TXTSaveFile(unittest.TestCase):
 
         d2txt.to_txt(type(self).save_txt_path)
         # newline='' is required to make csv.writer work correctly
-        with open(type(self).save_txt_path, newline="") as save_txt:
+        with open(type(self).save_txt_path, newline="", encoding="utf-8") as save_txt:
             saved_contents = save_txt.read()
 
         self.assertEqual(
