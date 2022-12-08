@@ -3,7 +3,7 @@ flit==3.7.1
   docutils==0.18.1
   flit_core==3.7.1
   requests==2.27.1
-    certifi==2021.10.8
+    certifi==2022.12.7
     charset-normalizer==2.0.12
     idna==3.3
     urllib3==1.26.9
